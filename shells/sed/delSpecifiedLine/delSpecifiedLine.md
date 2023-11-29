@@ -1,3 +1,4 @@
+### 删除指定字符串所在行
 `sed -e '/xxx/d' testfile > tmpfile`  
 该命令表示从名为testfile的文件中删除包含字符串"xxx"的行，并将结果输出到名为tmpfile的文件中。
 
