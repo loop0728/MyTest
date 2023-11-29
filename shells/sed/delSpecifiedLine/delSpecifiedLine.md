@@ -2,7 +2,7 @@
 `sed -e '/xxx/d' testfile > tmpfile`  
 该命令表示从名为testfile的文件中删除包含字符串"xxx"的行，并将结果输出到名为tmpfile的文件中。
 
-命令说明：   
+### 命令说明：   
 `sed`：表示要执行sed命令。   
 `-e`：表示后面跟着的是要执行的sed命令。   
 `'/xxx/d'`：是一个sed命令，其中/xxx/是一个模式匹配，表示匹配包含"xxx"的行，d是sed命令，表示删除匹配到的行。   
@@ -13,5 +13,56 @@
 
 请注意，在执行这个命令之后，原始文件testfile不会受到任何更改，删除操作只会在输出文件tmpfile中进行。   
 如果要在原始文件testfile上修改，可以将tmpfile再写回testfile:   
-`cat tmpfile > testfile`
+`cat tmpfile > testfile`   
+
+### 测试:   
+测试脚本:   
+```
+#!/bin/sh
+
+echo "mdev.conf content:"
+cat mdev.conf
+
+echo
+echo "app_mdev.conf content:"
+cat app_mdev.conf
+
+echo
+echo "remove DEVNAME line in mdev.conf, then merge app_mdev.conf to mdev.conf"
+
+sed -e '/DEVNAME/d' mdev.conf > mdev.tmp
+cat mdev.tmp > mdev.conf
+cat app_mdev.conf >> mdev.conf
+rm mdev.tmp
+
+echo "show mdev.conf content after del & merge options:"
+cat mdev.conf
+```
+测试结果:   
+```
+# ./test.sh 
+mdev.conf content:
+mice 0:0 0660 =input/
+mouse.* 0:0 0660 =input/
+event.* 0:0 0660 =input/
+pcm.* 0:0 0660 =snd/
+control.* 0:0 0660 =snd/
+timer 0:0 0660 =snd/
+$DEVNAME=bus/usb/([0-9]+)/([0-9]+) 0:0 0660 =bus/usb/%1/%2
+
+app_mdev.conf content:
+sd[a-z][0-9]+   0:0 666 * /etc/usb/usb_hotplug.sh
+sd[a-z] 0:0 666 * /etc/usb/usb_hotplug.sh
+
+remove DEVNAME line in mdev.conf, then merge app_mdev.conf to mdev.conf
+show mdev.conf content after del & merge options:
+mice 0:0 0660 =input/
+mouse.* 0:0 0660 =input/
+event.* 0:0 0660 =input/
+pcm.* 0:0 0660 =snd/
+control.* 0:0 0660 =snd/
+timer 0:0 0660 =snd/
+sd[a-z][0-9]+   0:0 666 * /etc/usb/usb_hotplug.sh
+sd[a-z] 0:0 666 * /etc/usb/usb_hotplug.sh
+```
 
