@@ -1,0 +1,190 @@
+new scripts:
+server.py:
+server_start
+	uartlog_contrl_handle.start_record
+		log_to_file   // thread func
+	get_client_data   // thread func
+		thread_callfun		// threadpool传入执行函数，retry发送cmd
+			client.recv(self.rev_max_datalen)
+			self.uartlog_contrl_handle.send_command(cmd)  若timeout设置为0
+			
+			self.uartlog_contrl_handle.send_command(cmd)
+			self.uartlog_contrl_handle.cmd_run_stat()  	  若timeout设置为 n，表示最多执行n*1000+1次此操作。若cmd_run_stat执行成功，check_key被清空，结束循环
+			self.uartlog_contrl_handle.get_searia_buf()
+			client.sendall(respond_msg.encode('utf-8'))
+	
+write_data
+	threadLock.acquire
+	self.console.write
+	self.console.flushInput
+	threadLock.release
+
+read_data
+	threadLock.acquire
+	self.console.readall
+	threadLock.release
+	
+set_check_keyword_and_send_cmd
+	threadLock.acquire
+	设置 keyword，cmd和retry次数
+	threadLock.release
+	
+clear_check_keyword_and_send_cmd
+	threadLock.acquire
+	清除 keyword，cmd和retry次数
+	threadLock.release
+	
+log_to_file
+	threadLock.acquire
+	self.console.readline
+	threadLock.release
+	
+	threadLock.acquire
+	修改 self.board_state状态，如果 self.check_keyword有匹配，则清除
+	threadLock.release
+	
+get_borad_cur_state 和 clear_borad_cur_state 会读/写 self.board_state，需要对变量加锁。
+
+
+发命令，等结果
+def client_send_cmd_to_server(self, cmd = '', is_wait_response = True, wait_keyword='',check_keyword='', timeout=0)
+	构造msg字典
+	self.client_send_cmd(msg, is_wait_response)
+		self.client.sendall(msg.encode('utf-8'))
+		self.client.recv(self.rev_max_datalen)
+
+---------------------------------------
+serial:
+.is_open   # 串口是否成功打开，成功打开为True，打开失败为False；
+调用serial构造函数时就会尝试打开串口；
+调用close方法时，is_open会设置为Flase
+
+.in_waiting   # 串口输入缓冲区中等待读取的字节数
+
+
+
+---------------------------------------
+case template：
+
+class xxx_case():
+    cnt_check_keyword_dict = {}
+
+    def __init__(self, client_handle, case_name, case_log_path, case_run_cnt=1):
+        self.case_name = case_name
+        self.borad_cur_state = ''
+        self.client_handle = client_handle
+        self.protocol = 'uart'
+        self.case_run_cnt = int(case_run_cnt)
+        self.client_running = False
+        self.client_handle.add_case_name_to_uartlog()           
+        self.case_log_path = case_log_path.replace('uart.log', '') + case_name + '_uart.log'
+        self.client_handle.open_case_uart_bak_file(self.case_log_path)
+        self.set_check_keyword_dict = {}
+        self.other_case_json_path = './AOV/reboot/reboot_keyword.json'    # 额外的关键字过滤
+        self.reboot_timeout = 180
+        super().__init__()
+		
+	@logger.print_line_info
+    def runcase(self):
+		result = 255
+		self.set_check_keyword_dict = {'bug on':0, 'unknown symbol': 0, 'Call trace':0, 'Exception stack':0, 'oom-killer':0, 'fifo full bypass':0, 'Sensor is abnormal':0}
+		result = self.cold_reboot()
+		return result
+
+	@logger.print_line_info
+    def cold_reboot(self):
+		if self.case_run_cnt <= 0:
+			logger.print_error(f"case run time more than {self.case_run_cnt} !\n")
+			return result
+		set_check_keyword_list = []
+		for keyword,num in self.set_check_keyword_dict.items():
+			set_check_keyword_list.append(keyword)
+		self.client_handle.client_set_check_uartlog_keyword_arr('set_check_uartlog_keyword_list', set_check_keyword_list)
+		self.client_handle.cold_reboot()
+		self.client_handle.clear_borad_cur_state()
+		time.sleep(1)
+		trywait_time = 0
+		result = 255
+		while True:
+			self.borad_cur_state = self.client_handle.get_borad_cur_state()
+			if self.borad_cur_state == 'at kernel':
+				result = 0
+				break
+			elif self.borad_cur_state == 'at uboot':
+				break
+			trywait_time = trywait_time + 1
+			if trywait_time > 180:
+				break
+			time.sleep(1)
+		return result  
+		
+def system_runcase(args, client_handle):
+	if len(args) < 3:
+       logger.print_error(f"len:{len(args)} {args[0]} {args[1]} {args[2]} \n")
+       return 255
+	input_case_name = args[0]
+    case_run_cnt = args[1] 
+    case_log_path = args[2]
+    if input_case_name[len(input_case_name)-1:].isdigit() and '_stress_' in input_case_name:
+       parase_list = input_case_name.split('_stress_')
+       if len(parase_list) != 2:
+          return 255
+       print(f"parase_list:{parase_list}!\n")
+       case_run_cnt = int(parase_list[1])
+       case_name = parase_list[0]
+       logger.print_info(f"case_run_cnt: {case_run_cnt} case_name:{case_name}\n")
+    else:
+       case_name = input_case_name
+    ret_str = '[Fail]'
+    result = 255
+	
+	if int(case_run_cnt) > 0:   
+		ret = 0
+		for cnt in range(0, int(case_run_cnt)):
+			xxxcase_handle = xxx_case(client_handle, case_name, case_log_path, case_run_cnt)
+			if int(case_run_cnt) > 1:
+				tmp_case_name = input_case_name+':'+ '{}'.format(cnt+1)
+				client_handle.add_case_name_to_uartlog(tmp_case_name)
+			ret |= xxxcase_handle.runcase()     
+			if ret == 0:
+				ret_str = '[success][cnt={}][maxcnt={}]'.format(cnt+1, case_run_cnt)
+				logger.print_info("[AUTO_TEST][%s][%s][ret:%s]:" %(case_name, ret_str, ret))
+			else:
+				ret_str = '[Fail][cnt={}][maxcnt={}]'.format(cnt+1, case_run_cnt)
+				logger.print_info("[AUTO_TEST][%s][%s][ret:%s]:" %(case_name, ret_str, ret))
+			result = ret
+		client_handle.client_close()
+    else:
+		logger.print_info("[AUTO_TEST][%s][%s][ret:%s]:" %(case_name, ret_str, result))
+    return result
+	
+@logger.print_line_info
+def system_help(args):
+    logger.print_warning("only for cold_reboot kernel_reboot uboot_rest_reboot\n")
+    logger.print_warning("python client.py ./AOV/reboot/reboot.py reboot 2\n")
+	
+
+发送命令和解析示例：
+result = 255
+suspend_crc_bootargs="suspend_crc=" + str(suspend_crc_start_addr) + "," + str(suspend_crc_end_addr)
+cmd = 'cat /proc/cmdline'
+wait_keyword = self.board_state_in_kernel_str
+check_keyword = 'root='
+cmd_exc_sta,ret_buf,ret_match_buffer = self.client_handle.client_send_cmd_to_server(cmd, True, wait_keyword, check_keyword, 10)
+if cmd_exc_sta == 'run_ok':
+	logger.print_info(f"check_cmdline_suspend_crc cmd_exc_sta:{cmd_exc_sta}, ret_buf:{ret_buf} ret_match_buffer:{ret_match_buffer},check_keyword:{check_keyword}\n")
+	logger.print_info(f"suspend_crc_bootargs:{suspend_crc_bootargs}\n")
+	if str(suspend_crc_bootargs) in ret_match_buffer:
+		self.is_suspend_crc_on = 1
+		result = 0
+		logger.print_info(f"suspend_crc is enabled!\n")
+	else:
+		self.is_suspend_crc_on = 0
+		result = 255  
+else:
+	self.is_suspend_crc_on = 0
+	result = 0
+	if cmd_exc_sta == 'cmd_no_run':
+	result = 255
+	logger.print_error(f"fail,wait_keyword:{wait_keyword}, exec cmd:{cmd}:suspend_crc is disabled\n")   
+	return result
