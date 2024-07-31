@@ -1,0 +1,11 @@
+{
+  "kernel_reboot":{
+     "check_keyword_list":"{'insmod':0, 'unknown symbol': 0, 'Call trace':0, 'Exception stack':0, 'oom-killer':0, 'fifo full bypass':0, 'Sensor is abnormal':0}"
+  },
+  "cold_reboot":{
+     "check_keyword_list":"{'bug on':0, 'unknown symbol': 0, 'Call trace':0, 'MI ERR':0, 'oom-killer':0, 'FIFO FULL':0, 'WAIT_TRIG_TIMEOUT':0}"
+  },
+  "uboot_reset":{
+     "check_keyword_list":"{'bug on':0, 'unknown symbol': 0, 'Call trace':0, 'MI ERR':0, 'oom-killer':0, 'FIFO FULL':0, 'WAIT_TRIG_TIMEOUT':0}"
+  }
+}
