@@ -30,7 +30,6 @@ class str_case():
         self.client_running = False
         self.client_handle.add_case_name_to_uartlog()
         self.case_log_path = case_log_path.replace('uart.log', '') + case_name + '_uart.log'
-        self.client_handle.open_case_uart_bak_file(self.case_log_path)
 
         """ case internal params start """
         self.board_state_in_kernel_str = '/ #'
@@ -76,31 +75,32 @@ class str_case():
     def reboot_dev(self):
         trywait_time = 0
         result = 255
-        self.client_handle.client_send_cmd_to_server('')
-        self.borad_cur_state = self.client_handle.get_borad_cur_state()
+        self.client_handle.write('')
+        self.borad_cur_state = self.client_handle.get_borad_cur_state()[1]
         if self.borad_cur_state == 'Unknow':
             for i in range(1,20):
-                self.client_handle.client_send_cmd_to_server('')
-                self.borad_cur_state = self.client_handle.get_borad_cur_state()
+                self.client_handle.write('')
+                self.borad_cur_state = self.client_handle.get_borad_cur_state()[1]
                 if self.borad_cur_state != 'Unknow':
                     break
         if self.borad_cur_state == 'Unknow':
             return result
         if self.borad_cur_state == 'at uboot':
             self.client_handle.clear_borad_cur_state()
-            self.client_handle.client_send_cmd_to_server(self.cmd_uboot_reset)
+            self.client_handle.write(self.cmd_uboot_reset)
+
         if self.borad_cur_state == 'at kernel':
-            self.client_handle.client_send_cmd_to_server(self.cmd_kernel_reboot)
+            self.client_handle.write(self.cmd_kernel_reboot)
             time.sleep(2)
             self.client_handle.clear_borad_cur_state()
         while True:
-            self.borad_cur_state = self.client_handle.get_borad_cur_state()
+            self.borad_cur_state = self.client_handle.get_borad_cur_state()[1]
             if self.borad_cur_state == 'at kernel':
                 result = 0
                 logger.print_info("borad_cur_state:%s \n" % self.borad_cur_state)
                 break
             elif self.borad_cur_state == 'at uboot':
-                self.client_handle.client_send_cmd_to_server(self.cmd_uboot_reset)
+                self.client_handle.write(self.cmd_uboot_reset)
                 self.client_handle.clear_borad_cur_state()
             else:
                 time.sleep(1)
@@ -112,28 +112,28 @@ class str_case():
     # show timestamp of printk log
     @logger.print_line_info
     def enable_printk_time(self):
-        self.client_handle.client_send_cmd_to_server(self.cmd_printk_time_on)
+        self.client_handle.write(self.cmd_printk_time_on)
 
     # hide timestamp of printk log
     @logger.print_line_info
     def disable_printk_time(self):
-        self.client_handle.client_send_cmd_to_server(self.cmd_printk_time_off)
+        self.client_handle.write(self.cmd_printk_time_off)
 
     # run aov demo in test mode
     @logger.print_line_info
     def run_aov_demo_test(self):
         logger.print_info("start app\n")
-        self.client_handle.client_send_cmd_to_server(self.cmd_aov_run)
+        self.client_handle.write(self.cmd_aov_run)
         time.sleep(10)
         logger.print_info("send str cmd to app\n")
-        self.client_handle.client_send_cmd_to_server(self.cmd_aov_test)
+        self.client_handle.write(self.cmd_aov_test)
         time.sleep(10)
 
         logger.print_info("enter 'q' to exit app\n")
         retryCnt = 0
         while retryCnt < 10:
-            self.client_handle.client_send_cmd_to_server(self.cmd_aov_quit)
-            #self.client_handle.client_send_cmd_to_server("\n")
+            self.client_handle.write(self.cmd_aov_quit)
+            #self.client_handle.write("\n")
             retryCnt = retryCnt + 1
             time.sleep(0.1)
         time.sleep(2)
@@ -143,25 +143,18 @@ class str_case():
     @logger.print_line_info
     def redirect_kmsg(self):
         logger.print_info("redirect kmsg to %s\n" %(str_kmsg))
-        self.client_handle.client_send_cmd_to_server(self.cmd_redirect_kmsg)
+        self.client_handle.write(self.cmd_redirect_kmsg)
         time.sleep(5)
-        self.client_handle.client_send_cmd_to_server(self.cmd_kill_kmsg)
-
-
-    # get read pos in file before send cmd
-    @logger.print_line_info
-    def _update_log_read_pos(self):
-        with open(self.case_log_path, 'r') as file:
-            file.seek(0, 2)
-            self.log_read_pos = file.tell()
+        self.client_handle.write(self.cmd_kill_kmsg)
 
     @logger.print_line_info
     def _parse_kmsg(self):
         testCnt = 1
         logger.print_warning("it will do suspend and resume %d times ...\n" %(self.str_cnt))
-        with open(self.case_log_path, 'r') as file:
-            file.seek(self.log_read_pos, 0)
-            for line in file:
+        while True:
+            result,line = self.client_handle.read()
+            print(f'line: {line}')
+            if result == True:
                 if isinstance(line, bytes):
                     line = line.decode('utf-8').strip()
 
@@ -203,12 +196,14 @@ class str_case():
                         testCnt = testCnt + 1
                     else:
                         break
+            else:
+                logger.print_error("_parse_kmsg read line timeout!!")
+                break
 
     # cat kmsg saved in tmpfile
     @logger.print_line_info
     def cat_kmsg(self):
-        self._update_log_read_pos()
-        self.client_handle.client_send_cmd_to_server(self.cmd_cat_tmpfile)
+        self.client_handle.write(self.cmd_cat_tmpfile)
         time.sleep(5)
         self._parse_kmsg()
 
@@ -216,10 +211,10 @@ class str_case():
     # parse booting_time from case loacl log file
     @logger.print_line_info
     def _parse_booting_time(self):
-        with open(self.case_log_path, 'r') as file:
-            is_kernel_part = 0
-            file.seek(self.log_read_pos, 0)
-            for line in file:
+        is_kernel_part = 0
+        while True:
+            result,line = self.client_handle.read()
+            if result == True:
                 if isinstance(line, bytes):
                     line = line.decode('utf-8').strip()
                 if self.ipl_resume_time == 0 and self.str_booting_time in line:
@@ -243,12 +238,14 @@ class str_case():
 
                 if self.ipl_resume_time !=0 and self.kernel_resume_time != 0:
                     break
+            else:
+                logger.print_error("_parse_booting_time read line timeout!!")
+                break
 
     # get booting time after resume
     @logger.print_line_info
     def cat_booting_time(self):
-        self._update_log_read_pos()
-        self.client_handle.client_send_cmd_to_server(self.cmd_cat_booting_time)
+        self.client_handle.write(self.cmd_cat_booting_time)
         time.sleep(5)
         self._parse_booting_time()
 
@@ -336,6 +333,16 @@ class str_case():
 
 @logger.print_line_info
 def system_runcase(args, client_handle):
+    case_name = args[0]
+    case_run_cnt = args[1]
+    case_log_path = args[2]
+    result = 255
+
+    str_case_handle = str_case(client_handle, case_name, case_log_path, case_run_cnt)
+    result = str_case_handle.runcase()
+
+@logger.print_line_info
+def system_runcase2(args, client_handle):
     if len(args) < 3:
         logger.print_error(f"len:{len(args)} {args[0]} {args[1]} {args[2]} \n")
         return 255
@@ -372,7 +379,8 @@ def system_runcase(args, client_handle):
                 ret_str = '[Fail][cnt={}][maxcnt={}]'.format(cnt+1, case_run_cnt)
                 logger.print_info("[AUTO_TEST][%s][%s][ret:%s]:" %(case_name, ret_str, ret))
             result = ret
-        client_handle.client_close()
+        client_handle.clear_case_name_in_uartlog()
+        client_handle.close_client()
     else:
         logger.print_info("[AUTO_TEST][%s][%s][ret:%s]:" %(case_name, ret_str, result))
     return result

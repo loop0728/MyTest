@@ -13,9 +13,9 @@
 
 str_l2l_target = 120000
 str_h2l_target = 120000
-str_target = 120000
-str_kmsg = "/tmp/.str_kmsg"
-suspend_entry = "PM: suspend entry"
-suspend_exit = "PM: suspend exit"
-app_resume = "PM: app resume"
-booting_time = "Total cost:"
+str_target     = 120000
+str_kmsg       = "/tmp/.str_kmsg"
+suspend_entry  = "PM: suspend entry"
+suspend_exit   = "PM: suspend exit"
+app_resume     = "PM: app resume"
+booting_time   = "Total cost:"

@@ -1,7 +1,7 @@
 #!/bin/sh
 CHIP_NAME=iford
 APP=/customer
-LOG=xxx
+LOG=./out/uart.log
 
 # Check_Register   : Whether to determine by the register,1 yes ,0 no
 # DEBUG_LEVEL      : Print grade, 0: juset error; 1: error + warn; 2: error + warn + info
@@ -36,7 +36,7 @@ PLATFORM_mount_mode=cifs
 # PLATFORM_UART: the device of uart, for Windows,it's COM, and for Linux,it's /dev/ttyUSB
 # PLATFORM_RELAY: the device of relay in Linux, such as /dev/ttyUSB1
 # PLATFORM_RELAY_PORT: the port number of relay, such as 1
-PLATFORM_UART=xxxx
-PLATFORM_RELAY=xxxx
-PLATFORM_RELAY_PORT=x
-PLATFORM_NET_CONNECT_PORT=xxxx
+PLATFORM_UART=/dev/i6dw_nand_uart_7
+PLATFORM_RELAY=/dev/relay_uart
+PLATFORM_RELAY_PORT=7
+PLATFORM_NET_CONNECT_PORT=8807

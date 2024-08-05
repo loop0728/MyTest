@@ -4,6 +4,7 @@ import socket
 import threading
 import json
 import re
+import errno
 import numpy as np
 from concurrent.futures import ThreadPoolExecutor
 
@@ -24,6 +25,7 @@ class server_handle():
     def __init__(self, max_workers=5, listen_client_num=5, rev_max_datalen=1024):
         self.server_handler = None
         self.server_thread_running = True
+        self.server_run_state_lock = threading.Lock()
         self.max_workers = max_workers
         self.listen_client_num = listen_client_num
         self.rev_max_datalen = rev_max_datalen
@@ -73,7 +75,7 @@ class server_handle():
         full_msg = f"{msg}mstar"
         client.sendall(full_msg.encode('utf-8'))
 
-    def response_msg_to_client(self, client, status):
+    def response_msg_to_client(self, client, status, data=''):
         """
         回复消息, 保证回复消息时统一格式
 
@@ -85,11 +87,12 @@ class server_handle():
             NA
         """
         if status == True:
-            response = {"status": "recv_ok"}
+            response = {"status": "recv_ok", "data": data}
         else:
-            response = {"status": "recv_fail"}
+            response = {"status": "recv_fail", "data": ""}
         response = json.dumps(response)
         full_msg = f"{response}mstar"
+        print(f"response msg: {full_msg}")
         client.sendall(full_msg.encode('utf-8'))
 
     def check_send_status(self):
@@ -151,33 +154,6 @@ class server_handle():
         """
         self.serial_port.disconnect()
 
-    def read_serial_data_continue(self, client):
-        """
-        读取串口数据并返回给client端
-
-        Args:
-            NA
-
-        Returns:
-            NA
-        """
-        self.serial_port.read_data_running = True
-        self.serial_port.read_data_and_send(client)
-        client.close()
-
-    def stop_read_serial_data(self, client, msg):
-        """
-        停止发送串口数据的线程
-
-        Args:
-            NA
-
-        Returns:
-            NA
-        """
-        self.serial_port.read_data_running = False
-        self.response_msg_to_client(client, True)
-
     def write_serial(self, client, msg):
         """
         写入命令到串口
@@ -191,6 +167,11 @@ class server_handle():
         data_to_write = msg["data"]
         self.serial_port.send_data(data_to_write.encode('utf-8'))
         self.response_msg_to_client(client, True)
+
+    def read_serial(self, client, msg):
+        print(f'server read_serial')
+        ret, data = self.serial_port.read_line()
+        self.response_msg_to_client(client, ret, data)
 
     def client_close(self, client, msg):
         """
@@ -227,10 +208,22 @@ class server_handle():
 
     def add_case_name_to_uartlog(self, client, msg):
         case_name = msg['case_name']
-        self.serial_port.add_case_name_to_uartlog(case_name)
+        self.serial_port.set_log_prefix(case_name)
         self.response_msg_to_client(client, True)
 
-    def server_exit(self, client):
+    def clear_case_name_in_uartlog(self, client, msg):
+        self.serial_port.clear_log_prefix()
+        self.response_msg_to_client(client, True)
+
+    def get_borad_cur_state(self, client, msg):
+        status = self.serial_port.get_bootstage()
+        self.response_msg_to_client(client, True, status)
+
+    def clear_borad_cur_state(self, client, msg):
+        self.serial_port.clear_bootstage()
+        self.response_msg_to_client(client, True)
+
+    def server_exit(self, client, msg):
         """
         cmd server_exit对应动作,退出server.py主进程
 
@@ -240,7 +233,11 @@ class server_handle():
         Returns:
             NA
         """
+        with self.server_run_state_lock:
+            self.server_thread_running = False
+        logger.print_warning(f"server exit now!!")
         self.response_msg_to_client(client, True)
+        self.server_handler.join()
         client.close()
         self.server_socket.close()
         self.server_stop()
@@ -257,12 +254,18 @@ class server_handle():
         """
         request_msg_list = []
         while True:
+            with self.server_run_state_lock:
+                run_state = self.server_thread_running
+            if run_state == False:
+                break
             request = client.recv(self.rev_max_datalen)
             request_msg_list = self.parasing_data(request)
             for item in request_msg_list:
                 param = json.loads(item)
                 cmd = param['cmd']
+                print(f'thread_callfun: {cmd}')
                 if hasattr(server_handle, cmd):
+                    print(f'cmd_callback, {cmd}, param: {param}')
                     cmd_callback = getattr(server_handle, cmd)
                     cmd_callback(client, param)
             request_msg_list = []
@@ -278,28 +281,38 @@ class server_handle():
         Returns:
             NA
         """
-        while self.server_thread_running:
+        while True:
+            with self.server_run_state_lock:
+                run_state = self.server_thread_running
+            if run_state == False:
+                print(f'shutdown thread pool =================')
+                self.thread_pool.shutdown(wait=True)
+                break
             # 阻塞等待client端连接
-            client, addr = self.server_socket.accept()
-            logger.print_info(f"[INFO] Accepted connection from {addr[0]}:{addr[1]}")
-            # 每次client的第一条消息特殊处理，判断是否是退出server命令
-            request = client.recv(self.rev_max_datalen)
-            request_msg_list = self.parasing_data(request)
-            for item in request_msg_list:
-                # logger.print_info("item" + item)
-                param = json.loads(item)
-                cmd = param['cmd']
-                if cmd == 'server_exit':
-                    self.server_exit(client)
-                    return 0
-                if cmd == 'read_serial_data_continue':
-                    self.thread_pool.submit(self.read_serial_data_continue, client)
-                    continue
-                if hasattr(server_handle, cmd):
-                    cmd_callback = getattr(server_handle, cmd)
-                    cmd_callback(client, param)
-            # 将每个client连接加入到线程池
-            self.thread_pool.submit(self.thread_callfun, client)
+            try:
+                client, addr = self.server_socket.accept()
+                logger.print_info(f"[INFO] Accepted connection from {addr[0]}:{addr[1]}")
+                # 每次client的第一条消息特殊处理，判断是否是退出server命令
+                    # request = client.recv(self.rev_max_datalen)
+                    # request_msg_list = self.parasing_data(request)
+                    # for item in request_msg_list:
+                    #     # logger.print_info("item" + item)
+                    #     param = json.loads(item)
+                    #     cmd = param['cmd']
+                    #     print(f"cmd: {cmd}")
+                    #     if cmd == 'server_exit':
+                    #         self.server_exit(client)
+                    #         return 0
+                    #     if hasattr(server_handle, cmd):
+                    #         cmd_callback = getattr(server_handle, cmd)
+                    #         cmd_callback(client, param)
+                # 将每个client连接加入到线程池
+                self.thread_pool.submit(self.thread_callfun, client)
+            except socket.error as e:
+                if e.errno != errno.EAGAIN and e.errno != errno.EWOULDBLOCK:
+                    raise
+        #self.server_exit(client)
+        print(f'get_client_data stop =====================')
 
     def server_start(self):
         logger.print_info("server_start\n")
@@ -315,9 +328,10 @@ class server_handle():
         return 0
 
     def server_stop(self):
-        self.server_thread_running = False
         # 关闭各设备
         self.device_deinit()
+        print(f'exit server python')
+        sys.exit()
 
 if __name__ == "__main__":
     server_handle = server_handle()
