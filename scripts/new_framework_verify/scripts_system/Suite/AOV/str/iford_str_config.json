@@ -1,0 +1,15 @@
+{
+  "str":{ 
+    "run_case_callback":"run_case_general",
+    "suspend_entry" : "PM: suspend entry",
+    "suspend_exit" : "PM: suspend exit",
+    "app_resume": "PM: app resume",
+    "str_target": "1200",
+    "str_cnt":"6",
+    "is_support_run":"0",
+    "is_support_debug_mode_asan": "1",
+    "is_support_debug_mode_ksan": "1",
+    "is_support_debug_mode_memleak":"1",
+    "is_support_debug_mode_lockdep":"1"
+  }
+}
