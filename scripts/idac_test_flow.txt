@@ -1,0 +1,77 @@
+/ # hexdump -C /sys/firmware/devicetree/base/soc/core_power/status > /customer/status
+/ # cat /customer/status 
+00000000  6f 6b 00                                          |ok.|
+00000003
+
+hexdump -C yourfile.bin | grep -v ' *.$'
+
+/ # hexdump -C /sys/firmware/devicetree/base/soc/core_power/status | grep -v ' *
+.$' > /customer/status_1
+/ # cat /customer/status_1 
+/ # 
+
+
+hexdump -C yourfile.bin | awk '$3 ~ /[ -~]+$/'
+/ # hexdump -C /sys/firmware/devicetree/base/soc/core_power/status | awk '$3 ~ /[ -~]+$/' > /customer/status_1
+/ # cat /customer/status_1 
+00000000  6f 6b 00                                          |ok.|
+
+hexdump -C yourfile.bin | awk '{print $8}'
+
+
+mount  -t nfs -o filemode=0700,dirmode=0755 169.254.149.250:/e/test_I6DW /mnt 
+mount -o filemode=0700,dirmode=0755 -t nfs 169.254.149.250:/e/test_I6DW /mnt
+mount -o filemode=0700 -t nfs 169.254.149.250:/e/test_I6DW /mnt
+
+
+cifs mount & cp fdt devicetree/base ok:
+insmod /config/modules/5.10/sstar_emac.ko \r
+ifconfig eth0 hw ether 00:76:41:00:00:01;ifconfig eth0 10.34.17.186;
+mount -t cifs //10.31.20.67/test_I6DW /mnt -o username="koda.xu",password="PAsswd111;",sec=ntlm,iocharset=utf8,nounix,noserverino,vers=1.0,file_mode=0700; cd /mnt \r
+
+
+nfs mount: (not ok)
+insmod /config/modules/5.10/sstar_emac.ko \r
+ifconfig eth0 169.254.149.211;
+mount -o nolock -t nfs 169.254.149.250:/e/test_I6DW /mnt -o username="koda.xu",password="PAsswd111;",sec=ntlm,iocharset=utf8,nounix,noserverino,vers=1.0,file_mode=0700; cd /mnt \r
+
+mount -t nfs -o nolock,file_mode=0755 169.254.149.250:/e/test_I6DW /mnt
+
+
+dtc -I fs -O dts /sys/firmware/devicetree/base > devicetree.dts
+dtc -I dtb -O dts /sys/firmware/fdt > devicetree.dts
+
+
+./dtc -I dtb -O dts fdt -o fdt.dts
+./dtc -I fs -O dts base -o base.dts
+
+
+1.判断是否进到kernel，已经在kernel阶段，下一步dump dts；不在kernel阶段一段时间内获取状态，一直是非kernel和uboot状态，判断超时case结束返回失败。
+如果获取到uboot的状态，执行reset等正常进到kernel；
+2. 1执行成功，则保证已经进到kernel阶段。获取封装类型，统计合理的LD/NOD/OD能支持的频率列表和频率对应的电压范围。执行mount操作，准备dump dts。若执行失败，case结束返回失败。
+3. 2执行成功，解析base voltage，opp_table信息，保存到case 本地。若解析失败，case结束返回失败。
+
+4. 3执行成功，重启设备，等待设备进到uboot，设置 LD 环境，保存再重启。若此阶段出现卡住问题，case结束返回失败。
+5. 4执行成功，读取寄存器值，判断读取的电压寄存器是否和case保存的table匹配，如果不匹配，记录LD测试失败，进行下一次的NOD测试。
+6. 5执行成功，执行reset，进到kernel。如果进入kernel阶段卡死，记录LD测试失败，进行下一次的NOD测试。
+7. 6执行成功，正常进到kernel，获取支持的cpu频率，对比统计的列表看是否一致，如果不一致，记录LD测试失败，进行下一次的NOD测试。
+8. 7执行成功，依次设置到各个支持的频率档位，并读取电压寄存器值，先全部读取完毕再观察对应频率读取到的寄存器值是否和统计列表中的一致，如果不一致，记录LD测试失败，进行下一次的NOD测试。。
+9. 8执行成功，跳转到4测试NOD。（NOD也执行成功，跳转到4测试OD）
+10. 汇总LD/NOD/OD的测量结果，返回最后的测试结果，都ok返回成功，否则返回失败。
+
+case store vtypical table [{freq0, regVol_fast0, regVol_slow0}, {freq0, regVol_fast0, regVol_slow0}, ...]
+
+LD/NOD/OD对应的电压表{}
+
+1. mount
+   insmod /config/modules/5.10/sstar_emac.ko
+   ifconfig eth0 hw ether 00:76:41:00:00:01;
+   ifconfig eth0 10.34.17.186;
+   mount -t cifs //10.31.20.67/test_I6DW /mnt -o username="koda.xu",password="PAsswd111;",sec=ntlm,iocharset=utf8,nounix,noserverino,vers=1.0,file_mode=0700;
+   cd /mnt
+2. cp /sys/firmware/devicetree/base /mountDir
+3. unmount 
+4. ./dtc -I fs -O dts /mountDir/base -o base.dts
+5. parse dts
+   save base_voltage, [{freq0, curVol0, fastVol0, slowVol0}, {freq1, curVol1, fastVol1, slowVol1}, ...]
+   
