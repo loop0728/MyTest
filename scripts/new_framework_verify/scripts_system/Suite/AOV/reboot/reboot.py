@@ -36,7 +36,7 @@ class reboot_case():
         while self.client_running:
             cur_server_data = self.client_handle.client_get_server_data()
             if isinstance(cur_server_data, bytes):
-               cur_server_data = cur_server_data.decode('utf-8')
+               cur_server_data = cur_server_data.decode('utf-8', errors='replace')
             logger.print_info(f"responsemsg: {cur_server_data}")
             time.sleep(0.1)
 

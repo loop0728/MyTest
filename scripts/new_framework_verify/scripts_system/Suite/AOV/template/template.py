@@ -98,7 +98,7 @@ class template_case():
         with open(self.case_log_path, 'r') as file:
             for line in file:
                 if isinstance(line, bytes):
-                    line = line.decode('utf-8').strip()
+                    line = line.decode('utf-8', errors='replace').strip()
                 # deal stuff
 
         # judge results
@@ -120,7 +120,7 @@ def system_runcase(args, client_handle):
         logger.print_error(f"len:{len(args)} {args[0]} {args[1]} {args[2]} \n")
         return 255
     input_case_name = args[0]
-    case_run_cnt = args[1] 
+    case_run_cnt = args[1]
     case_log_path = args[2]
     if input_case_name[len(input_case_name)-1:].isdigit() and '_stress_' in input_case_name:
         parase_list = input_case_name.split('_stress_')

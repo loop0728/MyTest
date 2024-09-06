@@ -57,7 +57,7 @@ class SocketDevice(Device):
         """
         self.queue_clear(self.tmp_data_queue)
         if self.connection:
-            self.connection.sendall(data.encode('GBK') + b'\n')
+            self.connection.sendall(data.encode('utf-8') + b'\n')
             return True
         else:
             logger.print_info("Socket not connect, cant't send.")
@@ -125,7 +125,7 @@ class SocketDevice(Device):
         ensure_file_exists(self.log_file)                       # 检查log文件是否存在，不存在则创建
         while self.running:
             try:
-                item = self.data_queue.get(timeout=1).decode('GBK').strip()
+                item = self.data_queue.get(timeout=1).decode('utf-8', errors='replace').strip()
                 now = datetime.now()
                 formatted_time = now.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
                 with open(self.log_file, 'a+') as file:

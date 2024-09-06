@@ -1,7 +1,7 @@
 #!/bin/sh
 CHIP_NAME=iford
 APP=/customer
-LOG=xxx
+LOG=./out/uart.log
 
 # Check_Register   : Whether to determine by the register,1 yes ,0 no
 # DEBUG_LEVEL      : Print grade, 0: juset error; 1: error + warn; 2: error + warn + info
@@ -22,25 +22,25 @@ LOG=xxx
 # PLATFORM_mount_path: the mount path
 # PLATFORM_mount_mode: mount mode, nfs or cifs
 
-PLATFORM_mount_ip=xxx
-PLATFORM_board_ip=xxx
-PLATFORM_mount_mac=xxx
-PLATFORM_mount_gw=xxx
-PLATFORM_mount_netmask=xxx
+PLATFORM_mount_ip=172.19.30.183
+PLATFORM_board_ip=172.19.26.93
+PLATFORM_mount_mac=00:70:42:00:00:23
+PLATFORM_mount_gw=172.19.26.254
+PLATFORM_mount_netmask=255.255.255.0
 PLATFORM_mount_user=xxx
 PLATFORM_mount_user_password=xxx
 PLATFORM_mount_path=/nfs
 PLATFORM_mount_mode=cifs
-PLATFORM_server_ip=xxx
+PLATFORM_server_ip=172.19.26.53
 PLATFORM_image_path=xxx
 
 #################### DEVICE ####################
 # PLATFORM_UART: the device of uart, for Windows,it's COM, and for Linux,it's /dev/ttyUSB
 # PLATFORM_RELAY: the device of relay in Linux, such as /dev/ttyUSB1
 # PLATFORM_RELAY_PORT: the port number of relay, such as 1
-PLATFORM_UART=xxxx
-PLATFORM_RELAY=xxxx
-PLATFORM_RELAY_PORT=x
-PLATFORM_NET_CONNECT_PORT=xxxx
+PLATFORM_UART=/dev/i6dw_nand_uart_7
+PLATFORM_RELAY=/dev/relay_uart
+PLATFORM_RELAY_PORT=7
+PLATFORM_NET_CONNECT_PORT=8807
 
 PLATFORM_DEBUG_MODE=xxx

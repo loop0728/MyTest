@@ -3,18 +3,21 @@
 
 import socket
 import json
+import re
 
 from PythonScripts.variables import net_connect_port
 from PythonScripts.logger import logger
 
 class Client():
+
+    DEVICE_TYPE = ('uart', 'telnet', 'socket')
+
     def __init__(self, case_name='', device_type='uart', device_name='uart', rev_max_datalen=1024):
         self.case_name = case_name
         self.rev_max_datalen = rev_max_datalen
         self.device_type = device_type
         self.device_name = device_name
         self.delimiter = 'mstar'
-        self.data_length = 0
         self.host = 'localhost'
         self.port = int(net_connect_port)
         try:
@@ -25,11 +28,14 @@ class Client():
             logger.print_warning(f'maybe sever is offline:error[{e}]')
             raise
         self.is_open = True
-        self.prepare_msg()
+        self._prepare_msg()
         if self.device_type != 'uart':
-            self.regiser_device(self.device_type, self.device_name)
+            self._regiser_device(self.device_type, self.device_name)
 
-    def send_msg_to_server(self, msg):
+    def __del__(self):
+        self.close()
+
+    def _send_msg_to_server(self, msg):
         """
         发送消息, 保证发送消息时统一格式
 
@@ -39,38 +45,75 @@ class Client():
         Returns:
             NA
         """
+        result = False
         msg = json.dumps(msg)
         full_msg = f"{msg}{self.delimiter}"
-        self.client_socket.sendall(full_msg.encode('utf-8'))
+        try:
+            self.client_socket.sendall(full_msg.encode('utf-8'))
+            result = True
+        except socket.error as e:
+            print(f"An error occurred: {e}")
+        return result
 
-    def send_to_server_and_check_response(self, msg, wait_timeout = 5) -> bool:
+    def _parasing_data(self, msg):
+        """
+        解析socket接收到的信息
+
+        Args:
+            msg: socket接收到数据
+
+        Returns:
+            list: 每个成员是以分隔符区分的字典
+        """
+        res_msg_list = []
+        tmprequest = re.split(self.delimiter, msg)
+        # logger.print_info(f"thread_callfun Received no strip: {tmprequest}\n")
+        msg = msg.strip(self.delimiter)
+        res_msg_list = re.split(self.delimiter, msg)
+        return res_msg_list
+
+    def _send_to_server_and_check_response(self, msg, wait_timeout = 5) -> bool:
         """
         发送命令，并检测发送是否成功
 
         Args:
-            msg (str): socket接收到数据
+            msg: socket接收到数据
 
         Returns:
-            bool: True or False
+            result: Bool True or False
         """
         result = False
+        data = ''
         old_timeout = self.client_socket.gettimeout()
         self.client_socket.settimeout(wait_timeout)       # 设置5秒超时
         try:
-            self.send_msg_to_server(msg)
-            response = self.client_socket.recv(self.rev_max_datalen).decode('utf-8')
-            if 'recv_ok' in response:
-                result = True
-            else:
-                result = False
+            self._send_msg_to_server(msg)
+            # print(f"_send_msg_to_server done, {msg}")
+            response = self.client_socket.recv(self.rev_max_datalen)
+            # print(f"response:{response}")
+            if isinstance(response, bytes):
+                response = response.decode('utf-8', errors='replace')
+            response_msg_list = self._parasing_data(response)
+            for item in response_msg_list:
+                param = json.loads(item)
+                # print(f'param: {param}')
+                if param['status'] == 'recv_ok':
+                    result = True
+                else:
+                    result = False
+                if 'data' in param.keys():
+                    data = param['data']
+                else:
+                    print(f"data is not in param")
+            # print(f'data is {data}')
         except Exception as e:
-            # logger.print_warning(f"Exception e:{e}")
+            logger.print_warning(f"Exception e:{e}\n")
             self.client_socket.settimeout(old_timeout)
-            return False
+            return False, data
         self.client_socket.settimeout(old_timeout)
-        return result
+        return result, data
 
-    def send_to_server_and_get_length(self, msg, wait_timeout = 5):
+    def _send_to_server_and_get_length(self, msg, wait_timeout = 5):
         """
         发送命令，获取接收的长度
 
@@ -84,8 +127,8 @@ class Client():
         old_timeout = self.client_socket.gettimeout()
         self.client_socket.settimeout(wait_timeout)       # 设置5秒超时
         try:
-            self.send_msg_to_server(msg)
-            response = self.client_socket.recv(self.rev_max_datalen).decode('utf-8')
+            self._send_msg_to_server(msg)
+            response = self.client_socket.recv(self.rev_max_datalen).decode('utf-8', errors='replace')
             response = response.strip(self.delimiter)
             param = json.loads(response)
             status = param['status']
@@ -101,7 +144,7 @@ class Client():
         self.client_socket.settimeout(old_timeout)
         return result
 
-    def prepare_msg(self) -> bool:
+    def _prepare_msg(self) -> bool:
         """
         第一条消息, 更新case name, 进入线程池
 
@@ -112,10 +155,10 @@ class Client():
             bool: result
         """
         msg = {"case_name": self.case_name, "cmd": "prepare_msg", "case_name": self.case_name}
-        result = self.send_to_server_and_check_response(msg)
+        result,_ = self._send_to_server_and_check_response(msg)
         return result
 
-    def regiser_device(self, device_type, device_name) -> bool:
+    def _regiser_device(self, device_type, device_name) -> bool:
         """
         注册设备
 
@@ -128,7 +171,7 @@ class Client():
         """
         self.device_name = device_name
         msg = {"case_name": self.case_name, "cmd": "regiser_device", "device_type": device_type, "device_name": self.device_name}
-        result = self.send_to_server_and_check_response(msg)
+        result,_ = self._send_to_server_and_check_response(msg)
         return result
 
     def write(self, data) -> bool:
@@ -142,7 +185,7 @@ class Client():
             bool: result
         """
         msg = {"case_name": self.case_name, "cmd": "write", "data": data, "device_name": self.device_name}
-        result = self.send_to_server_and_check_response(msg)
+        result,_ = self._send_to_server_and_check_response(msg)
         return result
 
     def read(self, line = 1, wait_timeout = 5):
@@ -162,17 +205,13 @@ class Client():
         all_data = ''
         while line > 0:
             msg = {"case_name": self.case_name, "cmd": "read", "device_name": self.device_name, "timeout": wait_timeout}
-            self.data_length = self.send_to_server_and_get_length(msg)
-            if self.data_length == 0:
-                result = False
-                all_data += b''
-                break
+            self._send_msg_to_server(msg)
             try:
-                data = b''
-                while len(data) < self.data_length:
-                    to_read = min(self.data_length - len(data), self.rev_max_datalen)
-                    data += self.client_socket.recv(to_read)
-                data = data.decode('GBK')
+                data = ''
+                while True:
+                    data += self.client_socket.recv(self.rev_max_datalen).decode('utf-8')
+                    if '\n' in data:                  # 行结束标志
+                        break
                 self.client_socket.settimeout(old_timeout)
                 result = True
                 all_data += data
@@ -183,6 +222,7 @@ class Client():
                 result = False
                 all_data += ''
                 break
+        # logger.print_info(f"Client: {all_data}")
         return result,all_data
 
     def close(self) -> bool:
@@ -196,8 +236,19 @@ class Client():
             bool: True or False
         """
         msg = {"case_name": self.case_name,"cmd": "client_close", "device_name": self.device_name}
-        result = self.send_msg_to_server(msg)
+        result = self._send_msg_to_server(msg)
         if result is True:
             self.client_socket.close()
             self.is_open = False
+        return result
+
+    def get_borad_cur_state(self):
+        msg = {"case_name": self.case_name,"cmd": "get_borad_cur_state", "device_name": self.device_name}
+        result,status = self._send_to_server_and_check_response(msg)
+        # print(f'status: {status}')
+        return result,status
+
+    def clear_borad_cur_state(self):
+        msg = {"case_name":self.case_name, "cmd":"clear_borad_cur_state", "device_name": self.device_name}
+        result,_ = self._send_to_server_and_check_response(msg)
         return result

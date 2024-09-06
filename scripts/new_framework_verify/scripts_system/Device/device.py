@@ -7,6 +7,12 @@
 # @description :
 
 from abc import ABC, abstractmethod
+from enum import Enum
+
+class BootStage(Enum):
+    E_BOOTSTAGE_UBOOT   = 1
+    E_BOOTSTAGE_KERNEL  = 2
+    E_BOOTSTAGE_UNKNOWN = 3
 
 class Device(ABC):
     def __init__(self, name) -> None:
@@ -16,6 +22,9 @@ class Device(ABC):
         """
         self.name = name
         self.case_name = ''
+        self.uboot_prompt  = 'SigmaStar #'
+        self.kernel_prompt = '/ #'
+        self.bootstage = BootStage.E_BOOTSTAGE_UNKNOWN
 
     @abstractmethod
     def connect(self) -> bool:
@@ -101,3 +110,16 @@ class Device(ABC):
             str: case name
         """
         return self.case_name
+
+    def get_bootstage(self):
+        status = ''
+        if self.bootstage == BootStage.E_BOOTSTAGE_UBOOT:
+            status = 'at uboot'
+        elif self.bootstage == BootStage.E_BOOTSTAGE_KERNEL:
+            status = 'at kernel'
+        else:
+            status = 'Unknow'
+        return status
+
+    def clear_bootstage(self):
+        self.bootstage = BootStage.E_BOOTSTAGE_UNKNOWN

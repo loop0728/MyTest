@@ -13,7 +13,7 @@ import queue
 from datetime import datetime
 from PythonScripts.logger import logger
 from Common.system_common import ensure_file_exists
-from Device.device import Device
+from Device.device import Device, BootStage
 
 class SerialDevice(Device):
     def __init__(self, name, port, log_file = '', baudrate=115200, timeout=1) -> None:
@@ -94,9 +94,12 @@ class SerialDevice(Device):
         curr_line = 0
         self.queue_clear(self.tmp_data_queue)
         if self.connection and self.connection.is_open:
-            self.connection.write(data.encode('GBK') + b'\n')
+            self.connection.write(data.encode('utf-8') + b'\n')
+            data = data.strip()
+            curr_data = ''
             while curr_line < 10:                  # 等待回显的行数
-                curr_data = self.read().decode('GBK')
+                data_new = self.read().decode('utf-8', errors='replace').strip()
+                curr_data += data_new
                 if data in curr_data or '?' in curr_data:
                     result = True
                     break
@@ -170,7 +173,11 @@ class SerialDevice(Device):
         ensure_file_exists(self.log_file)                       # 检查log文件是否存在，不存在则创建
         while self.running:
             try:
-                item = self.data_queue.get(timeout=1).decode('GBK').strip()
+                item = self.data_queue.get(timeout=1).decode('utf-8', errors='replace').strip()
+                if self.uboot_prompt in item:
+                    self.bootstage = BootStage.E_BOOTSTAGE_UBOOT
+                if self.kernel_prompt in item:
+                    self.bootstage = BootStage.E_BOOTSTAGE_KERNEL
                 now = datetime.now()
                 formatted_time = now.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
                 with open(self.log_file, 'a+') as file:

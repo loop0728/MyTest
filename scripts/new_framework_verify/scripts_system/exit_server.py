@@ -39,7 +39,7 @@ def exit_server(wait_timeout = 5, delimiter = 'mstar'):
         msg = json.dumps(msg)
         full_msg = f"{msg}{delimiter}"
         client_socket.sendall(full_msg.encode('utf-8'))
-        response = client_socket.recv(1024).decode('utf-8')
+        response = client_socket.recv(1024).decode('utf-8', errors='replace')
         if 'recv_ok' in response:
             result = True
         else:

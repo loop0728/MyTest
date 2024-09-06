@@ -12,7 +12,7 @@ import threading
 from datetime import datetime
 from PythonScripts.logger import logger
 from Common.system_common import ensure_file_exists
-from Device.device_var import telnet_login
+
 from Device.device import Device
 
 class BoundedQueue(queue.Queue):
@@ -55,22 +55,24 @@ class TelnetDevice(Device):
             None
 
         Returns:
-            None
+            bool: result
         """
         try:
-            logger.print_info(f"telnet connect:{self.host}{self.port}")
+            # logger.print_info(f"telnet connect:{self.host}:{self.port}")
             self.connection = telnetlib.Telnet(self.host, self.port, self.timeout)
-            if telnet_login == True:
+            try:
                 # 输入登录用户名
-                self.connection.read_until(b'login:')
-                self.connection.write(self.username.encode('GBK') + b"\n")
+                self.connection.read_until(b'login:', self.timeout)
+                self.connection.write(self.username.encode('utf-8') + b"\n")
                 # 输入登录密码
-                self.connection.read_until(b'Password:')
-                self.connection.write(self.password.encode('GBK') + b"\n")
-            logger.print_info(f"Connected to {self.host}:{self.port}")
+                self.connection.read_until(b'Password:', self.timeout)
+                self.connection.write(self.password.encode('utf-8') + b"\n")
+            except Exception as e:
+                logger.print_info("Telnet no need login.")
+            logger.print_info(f"Telnet connected to {self.host}:{self.port}")
             return True
         except Exception as e:
-            logger.print_info(f"Failed to connect to {self.host}:{self.port}. Error: {e}")
+            logger.print_error(f"Telnet failed to connect to {self.host}:{self.port}. Error: {e}")
             return False
 
     def disconnect(self) -> bool:
@@ -81,7 +83,7 @@ class TelnetDevice(Device):
             None
 
         Returns:
-            None
+            bool: result
         """
         self.running = False
         self.queue_clear(self.data_queue)
@@ -105,9 +107,9 @@ class TelnetDevice(Device):
         curr_line = 0
         self.queue_clear(self.tmp_data_queue)
         if self.connection:
-            self.connection.write(data.encode('GBK') + b'\n')
+            self.connection.write(data.encode('utf-8') + b'\n')
             while curr_line < 10:                  # 等待回显的行数
-                curr_data = self.read().decode('GBK')
+                curr_data = self.read().decode('utf-8', errors='replace')
                 if data in curr_data:
                     result = True
                     break
@@ -184,7 +186,7 @@ class TelnetDevice(Device):
         ensure_file_exists(self.log_file)                       # 检查log文件是否存在，不存在则创建
         while self.running:
             try:
-                item = self.data_queue.get(timeout=1).decode('GBK').strip()
+                item = self.data_queue.get(timeout=1).decode('utf-8', errors='replace').strip()
                 now = datetime.now()
                 formatted_time = now.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
                 with open(self.log_file, 'a+') as file:

@@ -94,7 +94,7 @@ class Server():
         full_msg = f"{msg}{self.delimiter}"
         client.sendall(full_msg.encode('utf-8'))
 
-    def response_msg_to_client(self, client, status):
+    def response_msg_to_client(self, client, status, data=''):
         """
         回复消息, 保证回复消息时统一格式
 
@@ -106,9 +106,9 @@ class Server():
             None
         """
         if status is True:
-            response = {"status": "recv_ok"}
+            response = {"status": "recv_ok", "data": data}
         else:
-            response = {"status": "recv_fail"}
+            response = {"status": "recv_fail", "data": ""}
         response = json.dumps(response)
         full_msg = f"{response}{self.delimiter}"
         client.sendall(full_msg.encode('utf-8'))
@@ -125,9 +125,9 @@ class Server():
         """
         res_msg_list = []
         if isinstance(msg, bytes):
-            tmprequest = re.split(self.delimiter, msg.decode('utf-8'))
+            tmprequest = re.split(self.delimiter, msg.decode('utf-8', errors='replace'))
             # logger.print_info(f"thread_callfun Received no strip: {tmprequest}")
-            msg = msg.decode('utf-8').strip(self.delimiter)
+            msg = msg.decode('utf-8', errors='replace').strip(self.delimiter)
             res_msg_list = re.split(self.delimiter, msg)
         return res_msg_list
 
@@ -160,20 +160,17 @@ class Server():
         device_name = msg["device_name"]
         timeout = msg["timeout"]
         data = self.dm.devices[device_name].read(timeout)
-        data_length = len(data)
-        if data_length > 0:
-            recv_result = "recv_ok"
-        else:
-            recv_result = "recv_fail"
-        response = {"status": recv_result, "len": data_length}
-        response = json.dumps(response)
-        response = f"{response}{self.delimiter}"
-        client.sendall(response.encode('utf-8'))
-        offset = 0
-        while offset < data_length:
-            to_send = data[offset:offset + self.rev_max_datalen]
-            client.sendall(to_send)
-            offset += self.rev_max_datalen
+        client.sendall(data)
+
+    def get_borad_cur_state(self, client, msg):
+        device_name = msg["device_name"]
+        borad_cur_state = self.dm.devices[device_name].get_bootstage()
+        self.response_msg_to_client(client, True, borad_cur_state)
+
+    def clear_borad_cur_state(self, client, msg):
+        device_name = msg["device_name"]
+        result = self.dm.devices[device_name].clear_bootstage()
+        self.response_msg_to_client(client, True)
 
     def regiser_device(self, client, msg) -> bool:
         """

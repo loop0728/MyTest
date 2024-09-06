@@ -392,13 +392,19 @@ def mount_to_server(device_handle, sub_path='') -> bool:
     umount_cmd = "umount /mnt/"
     mount_cmd = f"mount -t nfs -o nolock {platform.mount_ip}:{platform.mount_path}/{sub_path} /mnt/"
     check_cmd = "echo $?"
+    returnvalue = 255
+    loopcnt = 0
     device_handle.write(umount_cmd)
     time.sleep(1)
-    device_handle.write(mount_cmd)
-    time.sleep(5)
-    device_handle.write(check_cmd)
-    result = device_handle.read()
-    return int(result)
+    while returnvalue == 255 and loopcnt <= 4:
+        device_handle.write(mount_cmd)
+        time.sleep(5)
+        device_handle.write(check_cmd)
+        result, data = device_handle.read()
+        if result is True and int(data) == 0:
+            return True
+        loopcnt += 1
+    return False
 
 def goto_uboot(uart):
     """
@@ -552,3 +558,39 @@ def burning_image() -> None:
     uart.write(estar_cmd)
 
     uart.close()
+
+def read_register(device, bank, offset):
+    result = 255
+    str_regVal = ""
+    read_line_cnt = 0
+    max_read_lines = 10
+    is_register_value_ready = 0
+    cmd_get_package_type = "/customer/riu_r {} {}".format(bank, offset)
+    device.write(cmd_get_package_type)
+
+    while True:
+        if read_line_cnt > max_read_lines:
+            logger.print_error("read lines exceed max_read_lines:%d" %(max_read_lines))
+            break
+
+        status, line = device.read()
+        if status  == True:
+            read_line_cnt += 1
+            if isinstance(line, bytes):
+                line = line.decode('utf-8', errors='replace').strip()
+            if "BANK" in line:
+                is_register_value_ready = 1
+                continue
+
+            if is_register_value_ready == 1 :
+                pattern = re.compile(r'0x([A-Fa-f0-9]{4})')
+                match = pattern.search(line)
+                if match:
+                    str_regVal = match.group(1)
+                    result = 0
+                    logger.print_info("kernel_resume_time is %s" %(str_regVal))
+                    break
+        else:
+            logger.print_error("read line:%d fail" %(read_line_cnt))
+            break
+    return result, str_regVal

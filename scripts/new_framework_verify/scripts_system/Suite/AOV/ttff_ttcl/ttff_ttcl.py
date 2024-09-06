@@ -111,7 +111,7 @@ class ttff_ttcl(CaseBase):
             result = 255
             return result
         if isinstance(ret_match_buffer, bytes):
-            ret_match_buffer = ret_match_buffer.decode('utf-8').strip()
+            ret_match_buffer = ret_match_buffer.decode('utf-8', errors='replace').strip()
         if "diff" in ret_match_buffer and "VIF" in ret_match_buffer:
             logger.print_info(f"ret_match_buffer:{ret_match_buffer}")
             pattern = re.compile(r'time:\s+(\d+),.*int*')
@@ -131,7 +131,7 @@ class ttff_ttcl(CaseBase):
             result = 255
             return result
         if isinstance(ret_match_buffer, bytes):
-            ret_match_buffer = ret_match_buffer.decode('utf-8').strip()
+            ret_match_buffer = ret_match_buffer.decode('utf-8', errors='replace').strip()
         if "diff" in ret_match_buffer and "ramdisk_execute_command" in ret_match_buffer:
             logger.print_info(f"ret_match_buffer:{ret_match_buffer}")
             pattern = re.compile(r'time:\s+(\d+),.*ramdisk_execute_command\+')
