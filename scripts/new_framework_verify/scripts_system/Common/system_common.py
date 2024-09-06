@@ -588,9 +588,14 @@ def read_register(device, bank, offset):
                 if match:
                     str_regVal = match.group(1)
                     result = 0
-                    logger.print_info("kernel_resume_time is %s" %(str_regVal))
+                    logger.print_info(f"bank:{bank} offset:{offset} register value is {str_regVal}")
                     break
         else:
             logger.print_error("read line:%d fail" %(read_line_cnt))
             break
     return result, str_regVal
+
+def get_bit_value(str_hex, position):
+        num = int(str_hex, 16)
+        bit = (num >> position) & 1
+        return bit

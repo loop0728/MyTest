@@ -1,0 +1,3321 @@
+/dts-v1/;
+
+/ {
+	#address-cells = <0x01>;
+	#size-cells = <0x01>;
+	model = "IFORD SSC029B-S01A";
+	compatible = "sstar,iford";
+
+	cpus {
+		#address-cells = <0x01>;
+		#size-cells = <0x00>;
+
+		cpu@0 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a32";
+			clock-frequency = <0x3b9aca00>;
+			clocks = <0x01>;
+			reg = <0x00>;
+			operating-points-v2 = <0x02>;
+		};
+
+		cpu@1 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a32";
+			clock-frequency = <0x3b9aca00>;
+			clocks = <0x01>;
+			reg = <0x01>;
+		};
+	};
+
+	opp_table0 {
+		compatible = "operating-points-v2";
+		opp-shared;
+		phandle = <0x02>;
+
+		opp00 {
+			opp-hz = <0x00 0x23c34600>;
+			opp-microvolt = <0xc3500 0xbbfd0 0xc3500>;
+			status = "ok";
+		};
+
+		opp01 {
+			opp-hz = <0x00 0x29b92700>;
+			opp-microvolt = <0xc8320 0xc0df0 0xc8320>;
+			status = "ok";
+		};
+
+		opp02 {
+			opp-hz = <0x00 0x2faf0800>;
+			opp-microvolt = <0xcf850 0xc5c10 0xcf850>;
+			status = "ok";
+		};
+
+		opp03 {
+			opp-hz = <0x00 0x35a4e900>;
+			opp-microvolt = <0xd6d80 0xcd140 0xd6d80>;
+			status = "ok";
+		};
+
+		opp04 {
+			opp-hz = <0x00 0x3b9aca00>;
+			opp-microvolt = <0xdbba0 0xd4670 0xdbba0>;
+			status = "ok";
+		};
+
+		opp05 {
+			opp-hz = <0x00 0x4190ab00>;
+			opp-microvolt = <0xe30d0 0xde2b0 0xe30d0>;
+			status = "ok";
+		};
+
+		opp06 {
+			opp-hz = <0x00 0x47868c00>;
+			opp-microvolt = <0xecd10 0xe57e0 0xecd10>;
+			status = "ok";
+		};
+	};
+
+	oscillator {
+		compatible = "fixed-clock";
+		#clock-cells = <0x00>;
+		clock-frequency = <0x16e3600>;
+		phandle = <0xb2>;
+	};
+
+	aliases {
+		console = "/soc/uart0@1F221000";
+		serial0 = "/soc/uart0@1F221000";
+		serial1 = "/soc/uart1@1F221200";
+		serial2 = "/soc/fuart@1F220400";
+		sdmmc0 = "/soc/sstar_sdmmc0";
+		sdmmc1 = "/soc/sstar_sdmmc1";
+	};
+
+	soc {
+		compatible = "simple-bus";
+		interrupt-parent = <0x03>;
+		#address-cells = <0x01>;
+		#size-cells = <0x01>;
+		ranges;
+
+		gic@16000000 {
+			compatible = "arm,gic-v3";
+			#interrupt-cells = <0x03>;
+			#address-cells = <0x01>;
+			#size-cells = <0x01>;
+			interrupt-controller;
+			interrupt-parent = <0x04>;
+			redistributor-stride = <0x00 0x20000>;
+			#redistributor-regions = <0x01>;
+			reg = <0x16000000 0x20000 0x16040000 0x80000>;
+			phandle = <0x04>;
+		};
+
+		sstar_main_intc {
+			compatible = "sstar,main-intc";
+			#interrupt-cells = <0x03>;
+			#address-cells = <0x01>;
+			#size-cells = <0x01>;
+			interrupt-parent = <0x04>;
+			interrupt-controller;
+			phandle = <0x03>;
+		};
+
+		sstar_pm_main_intc {
+			compatible = "sstar,pm-main-intc";
+			#interrupt-cells = <0x01>;
+			interrupt-parent = <0x03>;
+			interrupt-controller;
+			interrupts = <0x00 0x30 0x04 0x00 0x30 0x04>;
+			status = "ok";
+			phandle = <0xbb>;
+		};
+
+		sstar_pm_gpi_intc {
+			compatible = "sstar,pm-gpi-intc";
+			#interrupt-cells = <0x01>;
+			interrupt-parent = <0x03>;
+			interrupt-controller;
+			interrupts = <0x00 0x22 0x04>;
+			phandle = <0xb5>;
+		};
+
+		sstar_gpi_intc {
+			compatible = "sstar,gpi-intc";
+			#interrupt-cells = <0x01>;
+			interrupt-parent = <0x03>;
+			interrupt-controller;
+			interrupts = <0x00 0x58 0x04>;
+			phandle = <0xbc>;
+		};
+
+		arch_timer {
+			compatible = "arm,cortex-a32-timer\0arm,armv8-timer";
+			interrupt-parent = <0x04>;
+			interrupts = <0x01 0x0d 0x308 0x01 0x0e 0x308 0x01 0x0b 0x308 0x01 0x0a 0x308>;
+			clock-frequency = <0x5b8d80>;
+		};
+
+		pmu {
+			compatible = "arm,cortex-a53-pmu";
+			interrupt-parent = <0x04>;
+			interrupts = <0x00 0x0a 0x04 0x00 0x10 0x04 0x00 0x16 0x04 0x00 0x1c 0x04>;
+		};
+
+		clocks {
+			#address-cells = <0x01>;
+			#size-cells = <0x01>;
+			ranges;
+			phandle = <0xbd>;
+
+			CLK_VOID {
+				#clock-cells = <0x00>;
+				compatible = "fixed-clock";
+				clock-frequency = <0x01>;
+				phandle = <0x4c>;
+			};
+
+			CLK_upll_960m {
+				#clock-cells = <0x00>;
+				compatible = "sstar,complex-clock";
+				clocks = <0x05>;
+				str-ignore;
+				phandle = <0x06>;
+			};
+
+			CLK_upll_480m {
+				#clock-cells = <0x00>;
+				compatible = "sstar,complex-clock";
+				clocks = <0x06>;
+				phandle = <0x07>;
+			};
+
+			CLK_mpll_432m {
+				#clock-cells = <0x00>;
+				compatible = "fixed-clock";
+				clock-frequency = <0x19bfcc00>;
+				phandle = <0x0b>;
+			};
+
+			CLK_upll_384m {
+				#clock-cells = <0x00>;
+				compatible = "sstar,complex-clock";
+				clocks = <0x06>;
+				phandle = <0x08>;
+			};
+
+			CLK_mpll_345m {
+				#clock-cells = <0x00>;
+				compatible = "fixed-clock";
+				clock-frequency = <0x14904840>;
+				phandle = <0x36>;
+			};
+
+			CLK_upll_320m {
+				#clock-cells = <0x00>;
+				compatible = "sstar,complex-clock";
+				clocks = <0x06>;
+				phandle = <0x09>;
+			};
+
+			CLK_mpll_288m {
+				#clock-cells = <0x00>;
+				compatible = "fixed-clock";
+				clock-frequency = <0x112a8800>;
+				phandle = <0x0a>;
+			};
+
+			CLK_mpll_216m {
+				#clock-cells = <0x00>;
+				compatible = "fixed-clock";
+				clock-frequency = <0xcdfe600>;
+				phandle = <0x1b>;
+			};
+
+			CLK_mpll_172m {
+				#clock-cells = <0x00>;
+				compatible = "fixed-clock";
+				clock-frequency = <0xa408300>;
+				phandle = <0x24>;
+			};
+
+			CLK_mpll_123m {
+				#clock-cells = <0x00>;
+				compatible = "fixed-clock";
+				clock-frequency = <0x75aef40>;
+				phandle = <0x0c>;
+			};
+
+			CLK_mpll_86m {
+				#clock-cells = <0x00>;
+				compatible = "fixed-clock";
+				clock-frequency = <0x5265c00>;
+				phandle = <0x0d>;
+			};
+
+			CLK_upll_480m_div2 {
+				#clock-cells = <0x00>;
+				compatible = "fixed-factor-clock";
+				clocks = <0x07>;
+				clock-div = <0x02>;
+				clock-mult = <0x01>;
+				phandle = <0x35>;
+			};
+
+			CLK_upll_384m_div2 {
+				#clock-cells = <0x00>;
+				compatible = "fixed-factor-clock";
+				clocks = <0x08>;
+				clock-div = <0x02>;
+				clock-mult = <0x01>;
+				phandle = <0x2c>;
+			};
+
+			CLK_upll_320m_div2 {
+				#clock-cells = <0x00>;
+				compatible = "fixed-factor-clock";
+				clocks = <0x09>;
+				clock-div = <0x02>;
+				clock-mult = <0x01>;
+				phandle = <0x3d>;
+			};
+
+			CLK_mpll_288m_div2 {
+				#clock-cells = <0x00>;
+				compatible = "fixed-factor-clock";
+				clocks = <0x0a>;
+				clock-div = <0x02>;
+				clock-mult = <0x01>;
+				phandle = <0x25>;
+			};
+
+			CLK_mpll_288m_div4 {
+				#clock-cells = <0x00>;
+				compatible = "fixed-factor-clock";
+				clocks = <0x0a>;
+				clock-div = <0x04>;
+				clock-mult = <0x01>;
+				phandle = <0x2a>;
+			};
+
+			CLK_mpll_288m_div8 {
+				#clock-cells = <0x00>;
+				compatible = "fixed-factor-clock";
+				clocks = <0x0a>;
+				clock-div = <0x08>;
+				clock-mult = <0x01>;
+				phandle = <0x31>;
+			};
+
+			CLK_mpll_432m_div4 {
+				#clock-cells = <0x00>;
+				compatible = "fixed-factor-clock";
+				clocks = <0x0b>;
+				clock-div = <0x04>;
+				clock-mult = <0x01>;
+				phandle = <0x20>;
+			};
+
+			CLK_mpll_432m_div8 {
+				#clock-cells = <0x00>;
+				compatible = "fixed-factor-clock";
+				clocks = <0x0b>;
+				clock-div = <0x08>;
+				clock-mult = <0x01>;
+				phandle = <0x2b>;
+			};
+
+			CLK_mpll_432m_div16 {
+				#clock-cells = <0x00>;
+				compatible = "fixed-factor-clock";
+				clocks = <0x0b>;
+				clock-div = <0x10>;
+				clock-mult = <0x01>;
+				phandle = <0x2d>;
+			};
+
+			CLK_mpll_123m_div2 {
+				#clock-cells = <0x00>;
+				compatible = "fixed-factor-clock";
+				clocks = <0x0c>;
+				clock-div = <0x02>;
+				clock-mult = <0x01>;
+				phandle = <0x2e>;
+			};
+
+			CLK_mpll_86m_div2 {
+				#clock-cells = <0x00>;
+				compatible = "fixed-factor-clock";
+				clocks = <0x0d>;
+				clock-div = <0x02>;
+				clock-mult = <0x01>;
+				phandle = <0x30>;
+			};
+
+			CLK_mpll_86m_div4 {
+				#clock-cells = <0x00>;
+				compatible = "fixed-factor-clock";
+				clocks = <0x0d>;
+				clock-div = <0x04>;
+				clock-mult = <0x01>;
+				phandle = <0x32>;
+			};
+
+			CLK_mpll_86m_div16 {
+				#clock-cells = <0x00>;
+				compatible = "fixed-factor-clock";
+				clocks = <0x0d>;
+				clock-div = <0x10>;
+				clock-mult = <0x01>;
+				phandle = <0x33>;
+			};
+
+			CLK_upll_384m_div8 {
+				#clock-cells = <0x00>;
+				compatible = "fixed-factor-clock";
+				clocks = <0x08>;
+				clock-div = <0x08>;
+				clock-mult = <0x01>;
+				phandle = <0x2f>;
+			};
+
+			CLK_upll_320m_div8 {
+				#clock-cells = <0x00>;
+				compatible = "fixed-factor-clock";
+				clocks = <0x09>;
+				clock-div = <0x08>;
+				clock-mult = <0x01>;
+				phandle = <0x38>;
+			};
+
+			CLK_upll_320m_div10 {
+				#clock-cells = <0x00>;
+				compatible = "fixed-factor-clock";
+				clocks = <0x09>;
+				clock-div = <0x0a>;
+				clock-mult = <0x01>;
+				phandle = <0x39>;
+			};
+
+			CLK_upll_320m_div16 {
+				#clock-cells = <0x00>;
+				compatible = "fixed-factor-clock";
+				clocks = <0x09>;
+				clock-div = <0x10>;
+				clock-mult = <0x01>;
+				phandle = <0x3a>;
+			};
+
+			CLK_disppll_clk {
+				#clock-cells = <0x00>;
+				compatible = "sstar,complex-clock";
+				clocks = <0x0b>;
+				phandle = <0x0e>;
+			};
+
+			CLK_disppll_clk_div2 {
+				#clock-cells = <0x00>;
+				compatible = "fixed-factor-clock";
+				clocks = <0x0e>;
+				clock-div = <0x02>;
+				clock-mult = <0x01>;
+				phandle = <0x3e>;
+			};
+
+			CLK_xtali_12m {
+				#clock-cells = <0x00>;
+				compatible = "fixed-clock";
+				clock-frequency = <0xb71b00>;
+				phandle = <0x0f>;
+			};
+
+			CLK_xtali_12m_div2 {
+				#clock-cells = <0x00>;
+				compatible = "fixed-factor-clock";
+				clocks = <0x0f>;
+				clock-div = <0x02>;
+				clock-mult = <0x01>;
+				phandle = <0x22>;
+			};
+
+			CLK_xtali_12m_div4 {
+				#clock-cells = <0x00>;
+				compatible = "fixed-factor-clock";
+				clocks = <0x0f>;
+				clock-div = <0x04>;
+				clock-mult = <0x01>;
+				phandle = <0x23>;
+			};
+
+			CLK_xtali_12m_div8 {
+				#clock-cells = <0x00>;
+				compatible = "fixed-factor-clock";
+				clocks = <0x0f>;
+				clock-div = <0x08>;
+				clock-mult = <0x01>;
+				phandle = <0x1c>;
+			};
+
+			CLK_xtali_12m_div16 {
+				#clock-cells = <0x00>;
+				compatible = "fixed-factor-clock";
+				clocks = <0x0f>;
+				clock-div = <0x10>;
+				clock-mult = <0x01>;
+				phandle = <0x1d>;
+			};
+
+			CLK_xtali_12m_div40 {
+				#clock-cells = <0x00>;
+				compatible = "fixed-factor-clock";
+				clocks = <0x0f>;
+				clock-div = <0x28>;
+				clock-mult = <0x01>;
+				phandle = <0x3b>;
+			};
+
+			CLK_xtali_12m_div64 {
+				#clock-cells = <0x00>;
+				compatible = "fixed-factor-clock";
+				clocks = <0x0f>;
+				clock-div = <0x40>;
+				clock-mult = <0x01>;
+				phandle = <0x1e>;
+			};
+
+			CLK_xtali_12m_div128 {
+				#clock-cells = <0x00>;
+				compatible = "fixed-factor-clock";
+				clocks = <0x0f>;
+				clock-div = <0x80>;
+				clock-mult = <0x01>;
+				phandle = <0x1f>;
+			};
+
+			CLK_xtali_24m {
+				#clock-cells = <0x00>;
+				compatible = "fixed-clock";
+				clock-frequency = <0x16e3600>;
+				phandle = <0x05>;
+			};
+
+			CLK_CLK_12M_CORE_v_live {
+				#clock-cells = <0x00>;
+				compatible = "fixed-clock";
+				clock-frequency = <0xb71b00>;
+				phandle = <0x40>;
+			};
+
+			CLK_RTC_CLK_32K {
+				#clock-cells = <0x00>;
+				compatible = "fixed-clock";
+				clock-frequency = <0x7d00>;
+				phandle = <0x4b>;
+			};
+
+			CLK_pm_riu_w_clk_in {
+				#clock-cells = <0x00>;
+				compatible = "fixed-clock";
+				clock-frequency = <0x7d00>;
+				phandle = <0x89>;
+			};
+
+			CLK_ipupll_clk {
+				#clock-cells = <0x00>;
+				compatible = "sstar,complex-clock";
+				clocks = <0x0b>;
+				phandle = <0x6b>;
+			};
+
+			CLK_miupll_clk {
+				#clock-cells = <0x00>;
+				compatible = "sstar,complex-clock";
+				clocks = <0x05>;
+				phandle = <0x14>;
+			};
+
+			CLK_cpu_pll {
+				#clock-cells = <0x00>;
+				compatible = "sstar,complex-clock";
+				clocks = <0x0b>;
+				str-ignore;
+				phandle = <0x01>;
+			};
+
+			CLK_armpll_37p125m {
+				#clock-cells = <0x00>;
+				compatible = "sstar,complex-clock";
+				clocks = <0x01>;
+				phandle = <0x34>;
+			};
+
+			CLK_riu_w_clk_in {
+				#clock-cells = <0x00>;
+				compatible = "fixed-factor-clock";
+				clocks = <0x10>;
+				clock-div = <0x01>;
+				clock-mult = <0x01>;
+				phandle = <0x92>;
+			};
+
+			CLK_riu_w_clk_top {
+				#clock-cells = <0x00>;
+				compatible = "fixed-factor-clock";
+				clocks = <0x10>;
+				clock-div = <0x01>;
+				clock-mult = <0x01>;
+				phandle = <0x96>;
+			};
+
+			CLK_riu_w_clk_sc_gp {
+				#clock-cells = <0x00>;
+				compatible = "fixed-factor-clock";
+				clocks = <0x10>;
+				clock-div = <0x01>;
+				clock-mult = <0x01>;
+				phandle = <0x95>;
+			};
+
+			CLK_riu_w_clk_vhe_gp {
+				#clock-cells = <0x00>;
+				compatible = "fixed-factor-clock";
+				clocks = <0x10>;
+				clock-div = <0x01>;
+				clock-mult = <0x01>;
+				phandle = <0x97>;
+			};
+
+			CLK_riu_w_clk_hemcu_gp {
+				#clock-cells = <0x00>;
+				compatible = "fixed-factor-clock";
+				clocks = <0x10>;
+				clock-div = <0x01>;
+				clock-mult = <0x01>;
+				phandle = <0x91>;
+			};
+
+			CLK_riu_w_clk_mipi_if_gp {
+				#clock-cells = <0x00>;
+				compatible = "fixed-factor-clock";
+				clocks = <0x10>;
+				clock-div = <0x01>;
+				clock-mult = <0x01>;
+				phandle = <0x94>;
+			};
+
+			CLK_riu_w_clk_mcu_if_gp {
+				#clock-cells = <0x00>;
+				compatible = "fixed-factor-clock";
+				clocks = <0x10>;
+				clock-div = <0x01>;
+				clock-mult = <0x01>;
+				phandle = <0x93>;
+			};
+
+			CLK_spi_synth_pll {
+				#clock-cells = <0x00>;
+				compatible = "sstar,complex-clock";
+				clocks = <0x0b>;
+				phandle = <0x29>;
+			};
+
+			CLK_fuart_synth_out {
+				#clock-cells = <0x00>;
+				compatible = "sstar,complex-clock";
+				clocks = <0x11>;
+				phandle = <0x26>;
+			};
+
+			CLK_fuart0_synth_out {
+				#clock-cells = <0x00>;
+				compatible = "sstar,complex-clock";
+				clocks = <0x12>;
+				phandle = <0x27>;
+			};
+
+			CLK_fuart1_synth_out {
+				#clock-cells = <0x00>;
+				compatible = "sstar,complex-clock";
+				clocks = <0x13>;
+				phandle = <0x28>;
+			};
+
+			CLK_miu_p {
+				#clock-cells = <0x00>;
+				compatible = "fixed-factor-clock";
+				clocks = <0x14>;
+				clock-div = <0x01>;
+				clock-mult = <0x01>;
+				phandle = <0x4a>;
+			};
+
+			CLK_mspi0_p {
+				#clock-cells = <0x00>;
+				compatible = "fixed-factor-clock";
+				clocks = <0x15>;
+				clock-div = <0x01>;
+				clock-mult = <0x01>;
+				phandle = <0x7d>;
+			};
+
+			CLK_miu_vhe_gp_p {
+				#clock-cells = <0x00>;
+				compatible = "fixed-factor-clock";
+				clocks = <0x14>;
+				clock-div = <0x01>;
+				clock-mult = <0x01>;
+				phandle = <0x7c>;
+			};
+
+			CLK_miu_sc_gp_p {
+				#clock-cells = <0x00>;
+				compatible = "fixed-factor-clock";
+				clocks = <0x14>;
+				clock-div = <0x01>;
+				clock-mult = <0x01>;
+				phandle = <0x7b>;
+			};
+
+			CLK_miu_isp_gp_p {
+				#clock-cells = <0x00>;
+				compatible = "fixed-factor-clock";
+				clocks = <0x14>;
+				clock-div = <0x01>;
+				clock-mult = <0x01>;
+				phandle = <0x79>;
+			};
+
+			CLK_miu2x_p {
+				#clock-cells = <0x00>;
+				compatible = "fixed-factor-clock";
+				clocks = <0x14>;
+				clock-div = <0x01>;
+				clock-mult = <0x01>;
+				phandle = <0x78>;
+			};
+
+			CLK_mcu_p {
+				#clock-cells = <0x00>;
+				compatible = "fixed-factor-clock";
+				clocks = <0x10>;
+				clock-div = <0x01>;
+				clock-mult = <0x01>;
+				phandle = <0x21>;
+			};
+
+			CLK_mcu_pm_p {
+				#clock-cells = <0x00>;
+				compatible = "fixed-factor-clock";
+				clocks = <0x16>;
+				clock-div = <0x01>;
+				clock-mult = <0x01>;
+				phandle = <0x73>;
+			};
+
+			CLK_isp_p {
+				#clock-cells = <0x00>;
+				compatible = "fixed-factor-clock";
+				clocks = <0x17>;
+				clock-div = <0x01>;
+				clock-mult = <0x01>;
+				phandle = <0x6d>;
+			};
+
+			CLK_fclk1_p {
+				#clock-cells = <0x00>;
+				compatible = "fixed-factor-clock";
+				clocks = <0x18>;
+				clock-div = <0x01>;
+				clock-mult = <0x01>;
+				phandle = <0x63>;
+			};
+
+			CLK_fclk2_p {
+				#clock-cells = <0x00>;
+				compatible = "fixed-factor-clock";
+				clocks = <0x18>;
+				clock-div = <0x01>;
+				clock-mult = <0x01>;
+				phandle = <0x64>;
+			};
+
+			CLK_otp_p {
+				#clock-cells = <0x00>;
+				compatible = "fixed-clock";
+				clock-frequency = <0xb71b00>;
+				phandle = <0x37>;
+			};
+
+			CLK_bist_pm_p {
+				#clock-cells = <0x00>;
+				compatible = "fixed-clock";
+				clock-frequency = <0xb71b000>;
+				phandle = <0x41>;
+			};
+
+			CLK_sr_mclk {
+				#clock-cells = <0x00>;
+				compatible = "fixed-clock";
+				clock-frequency = <0x47868c0>;
+				phandle = <0xa1>;
+			};
+
+			CLK_emac_testrx125_in_lan {
+				#clock-cells = <0x00>;
+				compatible = "fixed-clock";
+				clock-frequency = <0x7735940>;
+				phandle = <0x3f>;
+			};
+
+			CLK_source_mux_250m {
+				#clock-cells = <0x00>;
+				compatible = "fixed-clock";
+				clock-frequency = <0xbebc200>;
+				phandle = <0x19>;
+			};
+
+			CLK_source_mux_250m_div2 {
+				#clock-cells = <0x00>;
+				compatible = "fixed-factor-clock";
+				clocks = <0x19>;
+				clock-div = <0x02>;
+				clock-mult = <0x01>;
+				phandle = <0x43>;
+			};
+
+			CLK_source_mux_250m_div4 {
+				#clock-cells = <0x00>;
+				compatible = "fixed-factor-clock";
+				clocks = <0x19>;
+				clock-div = <0x04>;
+				clock-mult = <0x01>;
+				phandle = <0x44>;
+			};
+
+			CLK_source_mux_250m_div5 {
+				#clock-cells = <0x00>;
+				compatible = "fixed-factor-clock";
+				clocks = <0x19>;
+				clock-div = <0x05>;
+				clock-mult = <0x01>;
+				phandle = <0x45>;
+			};
+
+			CLK_source_mux_250m_div6 {
+				#clock-cells = <0x00>;
+				compatible = "fixed-factor-clock";
+				clocks = <0x19>;
+				clock-div = <0x06>;
+				clock-mult = <0x01>;
+				phandle = <0x46>;
+			};
+
+			CLK_source_mux_250m_div8 {
+				#clock-cells = <0x00>;
+				compatible = "fixed-factor-clock";
+				clocks = <0x19>;
+				clock-div = <0x08>;
+				clock-mult = <0x01>;
+				phandle = <0x48>;
+			};
+
+			CLK_12m_mux {
+				#clock-cells = <0x00>;
+				compatible = "fixed-clock";
+				clock-frequency = <0xb71b00>;
+				phandle = <0x1a>;
+			};
+
+			CLK_12m_mux_div2 {
+				#clock-cells = <0x00>;
+				compatible = "fixed-factor-clock";
+				clocks = <0x1a>;
+				clock-div = <0x02>;
+				clock-mult = <0x01>;
+				phandle = <0x49>;
+			};
+
+			CLK_12m_mux_div40 {
+				#clock-cells = <0x00>;
+				compatible = "fixed-factor-clock";
+				clocks = <0x1a>;
+				clock-div = <0x28>;
+				clock-mult = <0x01>;
+				phandle = <0x47>;
+			};
+
+			CLK_24m_mux {
+				#clock-cells = <0x00>;
+				compatible = "fixed-clock";
+				clock-frequency = <0x16e3600>;
+				phandle = <0x42>;
+			};
+
+			CLK_rtcpll_clk {
+				#clock-cells = <0x00>;
+				compatible = "fixed-clock";
+				clock-frequency = <0xee6b280>;
+				phandle = <0x9a>;
+			};
+
+			CLK_ddr_syn {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x0b 0x1b 0x0f>;
+				reg = <0x1f207064 0x04>;
+				mux-shift = <0x02>;
+				mux-width = <0x02>;
+				gate-shift = <0x00>;
+				auto-enable = <0x01>;
+				phandle = <0x5e>;
+			};
+
+			CLK_miu_rec {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x1c 0x1d 0x1e 0x1f>;
+				reg = <0x1f207060 0x04>;
+				mux-shift = <0x02>;
+				mux-width = <0x02>;
+				gate-shift = <0x00>;
+				auto-enable = <0x01>;
+				phandle = <0x7a>;
+			};
+
+			CLK_mcu {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x1b 0x0a 0x09 0x20 0x0f>;
+				reg = <0x1f207004 0x04>;
+				mux-shift = <0x02>;
+				mux-width = <0x02>;
+				gate-shift = <0x00>;
+				glitch-shift = <0x04>;
+				str-ignore;
+				auto-enable = <0x01>;
+				phandle = <0x10>;
+			};
+
+			CLK_riubrdg {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x21>;
+				reg = <0x1f207004 0x04>;
+				mux-shift = <0x0a>;
+				mux-width = <0x02>;
+				gate-shift = <0x08>;
+				auto-enable = <0x01>;
+				phandle = <0x98>;
+			};
+
+			CLK_pwm {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x0f 0x22 0x23 0x1c 0x1d 0x0d>;
+				reg = <0x1f2070e0 0x04>;
+				mux-shift = <0x0a>;
+				mux-width = <0x03>;
+				gate-shift = <0x08>;
+				ignore = <0x01>;
+				phandle = <0x8e>;
+			};
+
+			CLK_fuart_synth_in {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x0b 0x1b>;
+				reg = <0x1f2070d0 0x04>;
+				mux-shift = <0x06>;
+				mux-width = <0x02>;
+				gate-shift = <0x04>;
+				auto-enable = <0x00>;
+				phandle = <0x11>;
+			};
+
+			CLK_fuart0_synth_in {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x0b 0x1b>;
+				reg = <0x1f2070b4 0x04>;
+				mux-shift = <0x06>;
+				mux-width = <0x02>;
+				gate-shift = <0x04>;
+				auto-enable = <0x00>;
+				phandle = <0x12>;
+			};
+
+			CLK_fuart1_synth_in {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x0b 0x1b>;
+				reg = <0x1f2070e8 0x04>;
+				mux-shift = <0x06>;
+				mux-width = <0x02>;
+				gate-shift = <0x04>;
+				auto-enable = <0x00>;
+				phandle = <0x13>;
+			};
+
+			CLK_fuart {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x24 0x25 0x05 0x26>;
+				reg = <0x1f2070d0 0x04>;
+				mux-shift = <0x02>;
+				mux-width = <0x02>;
+				gate-shift = <0x00>;
+				auto-enable = <0x00>;
+				phandle = <0x65>;
+			};
+
+			CLK_fuart0 {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x24 0x25 0x05 0x27>;
+				reg = <0x1f2070c4 0x04>;
+				mux-shift = <0x02>;
+				mux-width = <0x02>;
+				gate-shift = <0x00>;
+				auto-enable = <0x01>;
+				phandle = <0x66>;
+			};
+
+			CLK_fuart1 {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x24 0x25 0x05 0x28>;
+				reg = <0x1f2070c4 0x04>;
+				mux-shift = <0x06>;
+				mux-width = <0x02>;
+				gate-shift = <0x04>;
+				auto-enable = <0x00>;
+				phandle = <0x67>;
+			};
+
+			CLK_mspi0 {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x20 0x25 0x0f 0x29>;
+				reg = <0x1f2070cc 0x04>;
+				mux-shift = <0x02>;
+				mux-width = <0x02>;
+				gate-shift = <0x00>;
+				auto-enable = <0x00>;
+				phandle = <0x15>;
+			};
+
+			CLK_miic0 {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x2a 0x2b 0x0f>;
+				reg = <0x1f2070dc 0x04>;
+				mux-shift = <0x02>;
+				mux-width = <0x02>;
+				gate-shift = <0x00>;
+				auto-enable = <0x00>;
+				phandle = <0x75>;
+			};
+
+			CLK_miic1 {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x2a 0x2b 0x0f>;
+				reg = <0x1f2070dc 0x04>;
+				mux-shift = <0x0a>;
+				mux-width = <0x02>;
+				gate-shift = <0x08>;
+				auto-enable = <0x00>;
+				phandle = <0x76>;
+			};
+
+			CLK_miic2 {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x2a 0x2b 0x0f>;
+				reg = <0x1f2070dc 0x04>;
+				mux-shift = <0x0e>;
+				mux-width = <0x02>;
+				gate-shift = <0x0c>;
+				auto-enable = <0x00>;
+				phandle = <0x77>;
+			};
+
+			CLK_bist {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x1b 0x0c 0x25 0x0f>;
+				reg = <0x1f207008 0x04>;
+				mux-shift = <0x0e>;
+				mux-width = <0x02>;
+				gate-shift = <0x0c>;
+				auto-enable = <0x00>;
+				phandle = <0x50>;
+			};
+
+			CLK_bist_pm {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x2c 0x0c 0x25 0x2b>;
+				reg = <0x1f001d08 0x04>;
+				mux-shift = <0x02>;
+				mux-width = <0x02>;
+				gate-shift = <0x00>;
+				auto-enable = <0x00>;
+				phandle = <0x55>;
+			};
+
+			CLK_bist_mcu {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x1b 0x0c 0x25 0x0f>;
+				reg = <0x1f207024 0x04>;
+				mux-shift = <0x02>;
+				mux-width = <0x02>;
+				gate-shift = <0x00>;
+				auto-enable = <0x00>;
+				phandle = <0x53>;
+			};
+
+			CLK_pwr_ctl {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x1d 0x1c 0x0f>;
+				reg = <0x1f207010 0x04>;
+				mux-shift = <0x02>;
+				mux-width = <0x02>;
+				gate-shift = <0x00>;
+				auto-enable = <0x01>;
+				phandle = <0x8f>;
+			};
+
+			CLK_xtali {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x0f>;
+				reg = <0x1f207000 0x04>;
+				mux-shift = <0x02>;
+				mux-width = <0x02>;
+				gate-shift = <0x00>;
+				auto-enable = <0x01>;
+				phandle = <0xa9>;
+			};
+
+			CLK_live_c {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x0f>;
+				reg = <0x1f207000 0x04>;
+				mux-shift = <0x0a>;
+				mux-width = <0x02>;
+				gate-shift = <0x08>;
+				auto-enable = <0x01>;
+				phandle = <0x72>;
+			};
+
+			CLK_live {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x0f>;
+				reg = <0x1f207000 0x04>;
+				mux-shift = <0x0a>;
+				mux-width = <0x02>;
+				gate-shift = <0x08>;
+				auto-enable = <0x01>;
+				phandle = <0x71>;
+			};
+
+			CLK_sr00_mclk {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x2d 0x2a 0x2e 0x2b 0x2f 0x30 0x31 0x05 0x32 0x0f 0x33 0x34>;
+				reg = <0x1f207188 0x04 0x1f2071d8 0x04>;
+				mux-shift = <0x0a>;
+				mux-width = <0x04>;
+				gate-shift = <0x08>;
+				dfs-shift = <0x08>;
+				dfs-width = <0x05>;
+				auto-enable = <0x00>;
+				phandle = <0x9d>;
+			};
+
+			CLK_sr01_mclk {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x2d 0x2a 0x2e 0x2b 0x2f 0x30 0x31 0x05 0x32 0x0f 0x33 0x34>;
+				reg = <0x1f207194 0x04 0x1f2071dc 0x04>;
+				mux-shift = <0x02>;
+				mux-width = <0x04>;
+				gate-shift = <0x00>;
+				dfs-shift = <0x08>;
+				dfs-width = <0x05>;
+				auto-enable = <0x00>;
+				phandle = <0x9e>;
+			};
+
+			CLK_sr02_mclk {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x2d 0x2a 0x2e 0x2b 0x2f 0x30 0x31 0x05 0x32 0x0f 0x33 0x34>;
+				reg = <0x1f207194 0x04 0x1f2071e0 0x04>;
+				mux-shift = <0x0a>;
+				mux-width = <0x04>;
+				gate-shift = <0x08>;
+				dfs-shift = <0x08>;
+				dfs-width = <0x05>;
+				auto-enable = <0x00>;
+				phandle = <0x9f>;
+			};
+
+			CLK_sr03_mclk {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x2d 0x2a 0x2e 0x2b 0x2f 0x30 0x31 0x05 0x32 0x0f 0x33 0x34>;
+				reg = <0x1f207198 0x04 0x1f2071e4 0x04>;
+				mux-shift = <0x0a>;
+				mux-width = <0x04>;
+				gate-shift = <0x08>;
+				dfs-shift = <0x08>;
+				dfs-width = <0x05>;
+				auto-enable = <0x00>;
+				phandle = <0xa0>;
+			};
+
+			CLK_bist_ipu_gp {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x1b 0x0c 0x25 0x0f>;
+				reg = <0x1f207014 0x04>;
+				mux-shift = <0x02>;
+				mux-width = <0x02>;
+				gate-shift = <0x00>;
+				auto-enable = <0x00>;
+				phandle = <0x51>;
+			};
+
+			CLK_ipu {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x0f 0x09 0x0b 0x07>;
+				reg = <0x1f207140 0x04>;
+				mux-shift = <0x02>;
+				mux-width = <0x02>;
+				gate-shift = <0x00>;
+				auto-enable = <0x00>;
+				phandle = <0x69>;
+			};
+
+			CLK_ipuff {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x0b 0x09 0x0a 0x1b>;
+				reg = <0x1f207140 0x04>;
+				mux-shift = <0x0a>;
+				mux-width = <0x02>;
+				gate-shift = <0x08>;
+				auto-enable = <0x00>;
+				phandle = <0x6a>;
+			};
+
+			CLK_hemcu {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x0b 0x1b>;
+				reg = <0x1f207084 0x04>;
+				mux-shift = <0x02>;
+				mux-width = <0x02>;
+				gate-shift = <0x00>;
+				auto-enable = <0x00>;
+				phandle = <0x68>;
+			};
+
+			CLK_csi0_mac_lptx_top_i {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x0b 0x0a 0x09 0x24>;
+				reg = <0x1f207160 0x04 0x1f2071e8 0x04>;
+				mux-shift = <0x02>;
+				mux-width = <0x02>;
+				gate-shift = <0x00>;
+				dfs-shift = <0x08>;
+				dfs-width = <0x05>;
+				auto-enable = <0x00>;
+				phandle = <0x58>;
+			};
+
+			CLK_csi0_mac_top_i {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x0b 0x0a 0x09 0x24>;
+				reg = <0x1f207160 0x04 0x1f2071f0 0x04>;
+				mux-shift = <0x0a>;
+				mux-width = <0x02>;
+				gate-shift = <0x08>;
+				dfs-shift = <0x00>;
+				dfs-width = <0x05>;
+				auto-enable = <0x00>;
+				phandle = <0x59>;
+			};
+
+			CLK_csi0_ns_top_i {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x0b 0x0a 0x09 0x24>;
+				reg = <0x1f207164 0x04 0x1f2071ec 0x04>;
+				mux-shift = <0x02>;
+				mux-width = <0x02>;
+				gate-shift = <0x00>;
+				dfs-shift = <0x08>;
+				dfs-width = <0x05>;
+				auto-enable = <0x00>;
+				phandle = <0x5a>;
+			};
+
+			CLK_csi1_mac_lptx_top_i {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x0b 0x0a 0x09 0x24>;
+				reg = <0x1f207164 0x04 0x1f2071f0 0x04>;
+				mux-shift = <0x0a>;
+				mux-width = <0x02>;
+				gate-shift = <0x08>;
+				dfs-shift = <0x08>;
+				dfs-width = <0x05>;
+				auto-enable = <0x00>;
+				phandle = <0x5b>;
+			};
+
+			CLK_csi1_mac_top_i {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x0b 0x0a 0x09 0x24>;
+				reg = <0x1f207168 0x04 0x1f2071f4 0x04>;
+				mux-shift = <0x02>;
+				mux-width = <0x02>;
+				gate-shift = <0x00>;
+				dfs-shift = <0x08>;
+				dfs-width = <0x05>;
+				auto-enable = <0x00>;
+				phandle = <0x5c>;
+			};
+
+			CLK_csi1_ns_top_i {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x0b 0x0a 0x09 0x24>;
+				reg = <0x1f207168 0x04 0x1f2071f4 0x04>;
+				mux-shift = <0x0a>;
+				mux-width = <0x02>;
+				gate-shift = <0x08>;
+				dfs-shift = <0x00>;
+				dfs-width = <0x05>;
+				auto-enable = <0x00>;
+				phandle = <0x5d>;
+			};
+
+			CLK_bist_vhe_gp {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x1b 0x0c 0x25 0x0f>;
+				reg = <0x1f20700c 0x04>;
+				mux-shift = <0x0a>;
+				mux-width = <0x02>;
+				gate-shift = <0x08>;
+				auto-enable = <0x00>;
+				phandle = <0x57>;
+			};
+
+			CLK_vhe {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x1b 0x35 0x36 0x08 0x0b 0x07 0x0a 0x2c>;
+				reg = <0x1f2071a0 0x04 0x1f207ee4 0x04>;
+				mux-shift = <0x02>;
+				mux-width = <0x03>;
+				od-shift = <0x04>;
+				nonod-shift = <0x02>;
+				gate-shift = <0x07>;
+				dfs-shift = <0x00>;
+				dfs-width = <0x05>;
+				auto-enable = <0x01>;
+				phandle = <0xa6>;
+			};
+
+			CLK_mfe {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x0a 0x09 0x0b 0x07 0x1b 0x08 0x36 0x25>;
+				reg = <0x1f2071a4 0x04 0x1f207ee8 0x04>;
+				mux-shift = <0x02>;
+				mux-width = <0x03>;
+				od-shift = <0x03>;
+				nonod-shift = <0x02>;
+				gate-shift = <0x00>;
+				dfs-shift = <0x00>;
+				dfs-width = <0x05>;
+				auto-enable = <0x00>;
+				phandle = <0x74>;
+			};
+
+			CLK_ven_axi {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x1b 0x35 0x36 0x08 0x0b 0x07 0x0a 0x2c>;
+				reg = <0x1f2071a4 0x04 0x1f207ee4 0x04>;
+				mux-shift = <0x0a>;
+				mux-width = <0x03>;
+				od-shift = <0x04>;
+				nonod-shift = <0x02>;
+				gate-shift = <0x08>;
+				dfs-shift = <0x08>;
+				dfs-width = <0x05>;
+				auto-enable = <0x00>;
+				phandle = <0xa3>;
+			};
+
+			CLK_ven_scdn {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x1b 0x35 0x36 0x08 0x0b 0x07 0x0a 0x2c>;
+				reg = <0x1f207fe4 0x04 0x1f207fe0 0x04>;
+				mux-shift = <0x02>;
+				mux-width = <0x03>;
+				od-shift = <0x04>;
+				nonod-shift = <0x02>;
+				gate-shift = <0x00>;
+				dfs-shift = <0x00>;
+				dfs-width = <0x05>;
+				auto-enable = <0x00>;
+				phandle = <0xa5>;
+			};
+
+			CLK_ven_sc_if {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x20 0x0c 0x1b 0x0d>;
+				reg = <0x1f207e48 0x04 0x1f207ee8 0x04>;
+				mux-shift = <0x0a>;
+				mux-width = <0x02>;
+				gate-shift = <0x08>;
+				dfs-shift = <0x08>;
+				dfs-width = <0x05>;
+				auto-enable = <0x00>;
+				phandle = <0xa4>;
+			};
+
+			CLK_xtali_sc_gp {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x0f>;
+				reg = <0x1f207000 0x04>;
+				mux-shift = <0x06>;
+				mux-width = <0x02>;
+				gate-shift = <0x04>;
+				auto-enable = <0x01>;
+				phandle = <0xaa>;
+			};
+
+			CLK_bist_sc_gp {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x1b 0x0c 0x25 0x0f>;
+				reg = <0x1f20700c 0x04>;
+				mux-shift = <0x02>;
+				mux-width = <0x02>;
+				gate-shift = <0x00>;
+				auto-enable = <0x00>;
+				phandle = <0x56>;
+			};
+
+			CLK_jpe {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x1b 0x35 0x0a 0x2c>;
+				reg = <0x1f2071a8 0x04 0x1f2071ec 0x04>;
+				mux-shift = <0x02>;
+				mux-width = <0x02>;
+				gate-shift = <0x00>;
+				dfs-shift = <0x00>;
+				dfs-width = <0x05>;
+				auto-enable = <0x00>;
+				phandle = <0x6f>;
+			};
+
+			CLK_aesdma {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x14 0x1b 0x24 0x37 0x0f>;
+				reg = <0x1f207184 0x04 0x1f2071e8 0x04>;
+				mux-shift = <0x02>;
+				mux-width = <0x02>;
+				gate-shift = <0x00>;
+				glitch-shift = <0x04>;
+				dfs-shift = <0x00>;
+				dfs-width = <0x05>;
+				auto-enable = <0x00>;
+				phandle = <0x4d>;
+			};
+
+			CLK_sd {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x2f 0x30 0x38 0x31 0x39 0x3a 0x0f 0x3b 0x29 0x0b 0x08 0x09 0x0a 0x1b 0x20 0x0d 0x0f>;
+				reg = <0x1f20710c 0x04>;
+				mux-shift = <0x02>;
+				mux-width = <0x04>;
+				gate-shift = <0x00>;
+				glitch-shift = <0x06>;
+				auto-enable = <0x00>;
+				phandle = <0x9c>;
+			};
+
+			CLK_fsp_qspi {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x3c 0x29>;
+				reg = <0x1f202aa8 0x04>;
+				mux-shift = <0x02>;
+				mux-width = <0x02>;
+				gate-shift = <0x00>;
+				glitch-shift = <0x04>;
+				auto-enable = <0x00>;
+				phandle = <0xb3>;
+			};
+
+			CLK_bist_isp_gp {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x1b 0x0c 0x25 0x0f>;
+				reg = <0x1f207008 0x04>;
+				mux-shift = <0x06>;
+				mux-width = <0x02>;
+				gate-shift = <0x04>;
+				auto-enable = <0x00>;
+				phandle = <0x52>;
+			};
+
+			CLK_isp {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x0a 0x35 0x2c 0x09>;
+				reg = <0x1f207184 0x04 0x1f2071d4 0x04>;
+				mux-shift = <0x0a>;
+				mux-width = <0x02>;
+				od-shift = <0x03>;
+				nonod-shift = <0x00>;
+				gate-shift = <0x08>;
+				dfs-shift = <0x00>;
+				dfs-width = <0x05>;
+				auto-enable = <0x00>;
+				phandle = <0x17>;
+			};
+
+			CLK_dsc_enc1 {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x2c 0x3d 0x25 0x1b>;
+				reg = <0x1f207118 0x04 0x1f207fd4 0x04>;
+				mux-shift = <0x0a>;
+				mux-width = <0x02>;
+				od-shift = <0x03>;
+				nonod-shift = <0x00>;
+				gate-shift = <0x08>;
+				dfs-shift = <0x08>;
+				dfs-width = <0x05>;
+				auto-enable = <0x00>;
+				phandle = <0x61>;
+			};
+
+			CLK_dsc_dec1 {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x2c 0x3d 0x25 0x1b>;
+				reg = <0x1f207130 0x04 0x1f207fd8 0x04>;
+				mux-shift = <0x0a>;
+				mux-width = <0x02>;
+				od-shift = <0x03>;
+				nonod-shift = <0x00>;
+				gate-shift = <0x08>;
+				dfs-shift = <0x08>;
+				dfs-width = <0x05>;
+				auto-enable = <0x00>;
+				phandle = <0x60>;
+			};
+
+			CLK_fclk1 {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x0a 0x2c 0x25 0x09 0x35 0x1b>;
+				reg = <0x1f207190 0x04 0x1f2071d8 0x04>;
+				mux-shift = <0x02>;
+				mux-width = <0x03>;
+				od-shift = <0x03>;
+				nonod-shift = <0x00>;
+				gate-shift = <0x00>;
+				dfs-shift = <0x00>;
+				dfs-width = <0x05>;
+				auto-enable = <0x00>;
+				phandle = <0x18>;
+			};
+
+			CLK_odclk {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x0d 0x30 0x32>;
+				reg = <0x1f207198 0x04>;
+				mux-shift = <0x02>;
+				mux-width = <0x02>;
+				gate-shift = <0x00>;
+				auto-enable = <0x00>;
+				phandle = <0x7e>;
+			};
+
+			CLK_disp_pixel_0 {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x2a 0x2b 0x0e 0x3e>;
+				reg = <0x1f207124 0x04 0x1f2071dc 0x04>;
+				mux-shift = <0x02>;
+				mux-width = <0x02>;
+				gate-shift = <0x00>;
+				dfs-shift = <0x00>;
+				dfs-width = <0x05>;
+				auto-enable = <0x00>;
+				phandle = <0x5f>;
+			};
+
+			CLK_ive {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x0a 0x1b 0x08 0x0b>;
+				reg = <0x1f2071a8 0x04 0x1f2071e4 0x04>;
+				mux-shift = <0x0a>;
+				mux-width = <0x02>;
+				od-shift = <0x03>;
+				nonod-shift = <0x02>;
+				gate-shift = <0x08>;
+				dfs-shift = <0x00>;
+				dfs-width = <0x05>;
+				auto-enable = <0x00>;
+				phandle = <0x6e>;
+			};
+
+			CLK_ldcfeye {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x08 0x1b 0x24 0x0c 0x0b>;
+				reg = <0x1f20714c 0x04 0x1f2071e0 0x04>;
+				mux-shift = <0x02>;
+				mux-width = <0x03>;
+				od-shift = <0x04>;
+				nonod-shift = <0x00>;
+				gate-shift = <0x00>;
+				dfs-shift = <0x00>;
+				dfs-width = <0x05>;
+				auto-enable = <0x00>;
+				phandle = <0x70>;
+			};
+
+			CLK_emac_ahb {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x25 0x0c 0x0d 0x3f>;
+				reg = <0x1f207108 0x04>;
+				mux-shift = <0x02>;
+				mux-width = <0x02>;
+				gate-shift = <0x00>;
+				auto-enable = <0x01>;
+				phandle = <0x62>;
+			};
+
+			CLK_au_sys_384 {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x08 0x07 0x0b>;
+				reg = <0x1f207fa0 0x04>;
+				mux-shift = <0x02>;
+				mux-width = <0x02>;
+				gate-shift = <0x00>;
+				auto-enable = <0x00>;
+				phandle = <0x4e>;
+			};
+
+			CLK_au_sys_432 {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x0b 0x07 0x08>;
+				reg = <0x1f207fa4 0x04>;
+				mux-shift = <0x02>;
+				mux-width = <0x02>;
+				gate-shift = <0x00>;
+				auto-enable = <0x00>;
+				phandle = <0x4f>;
+			};
+
+			CLK_bist_miu0 {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x1b 0x0c 0x25 0x0f>;
+				reg = <0x1f207e2c 0x04>;
+				mux-shift = <0x02>;
+				mux-width = <0x02>;
+				gate-shift = <0x00>;
+				auto-enable = <0x00>;
+				phandle = <0x54>;
+			};
+
+			CLK_pad_test {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x25 0x0c 0x2a>;
+				reg = <0x1f207e3c 0x04>;
+				mux-shift = <0x02>;
+				mux-width = <0x02>;
+				gate-shift = <0x00>;
+				auto-enable = <0x00>;
+				phandle = <0x80>;
+			};
+
+			CLK_otp {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x0f>;
+				reg = <0x1f207fdc 0x04>;
+				mux-shift = <0x02>;
+				mux-width = <0x02>;
+				gate-shift = <0x00>;
+				auto-enable = <0x01>;
+				phandle = <0x7f>;
+			};
+
+			CLK_real_live {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x40>;
+				reg = <0x1f207028 0x04>;
+				mux-shift = <0x02>;
+				mux-width = <0x02>;
+				gate-shift = <0x00>;
+				auto-enable = <0x01>;
+				phandle = <0x90>;
+			};
+
+			CLK_spi_nonpm {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x05 0x0d 0x20 0x2b>;
+				reg = <0x1f2070c8 0x04>;
+				mux-shift = <0x02>;
+				mux-width = <0x02>;
+				gate-shift = <0x00>;
+				ignore = <0x01>;
+				phandle = <0x3c>;
+			};
+
+			CLK_pm_high_ext {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x35 0x1b 0x2c 0x41>;
+				reg = <0x1f207040 0x04>;
+				mux-shift = <0x02>;
+				mux-width = <0x02>;
+				gate-shift = <0x00>;
+				ignore = <0x01>;
+				phandle = <0x84>;
+			};
+
+			CLK_pm_pwm {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x1a>;
+				reg = <0x1f001c70 0x04>;
+				mux-shift = <0x0c>;
+				mux-width = <0x02>;
+				gate-shift = <0x0a>;
+				ignore = <0x01>;
+				phandle = <0x87>;
+			};
+
+			CLK_pm_uart0 {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x42>;
+				reg = <0x1f001c94 0x04>;
+				mux-shift = <0x02>;
+				mux-width = <0x02>;
+				gate-shift = <0x00>;
+				ignore = <0x01>;
+				phandle = <0x8d>;
+			};
+
+			CLK_pm_fuart0 {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x42>;
+				reg = <0x1f001d08 0x04>;
+				mux-shift = <0x0a>;
+				mux-width = <0x02>;
+				gate-shift = <0x08>;
+				ignore = <0x01>;
+				phandle = <0x82>;
+			};
+
+			CLK_pm_fuart1 {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x42>;
+				reg = <0x1f001d08 0x04>;
+				mux-shift = <0x0e>;
+				mux-width = <0x02>;
+				gate-shift = <0x0c>;
+				ignore = <0x01>;
+				phandle = <0x83>;
+			};
+
+			CLK_pm_pspi0 {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x43 0x42 0x1a 0x44>;
+				reg = <0x1f001c84 0x04>;
+				mux-shift = <0x0c>;
+				mux-width = <0x02>;
+				gate-shift = <0x0a>;
+				ignore = <0x01>;
+				phandle = <0x86>;
+			};
+
+			CLK_pm_miic0 {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x42>;
+				reg = <0x1f001c98 0x04>;
+				mux-shift = <0x02>;
+				mux-width = <0x02>;
+				gate-shift = <0x00>;
+				auto-enable = <0x00>;
+				phandle = <0x85>;
+			};
+
+			CLK_pm_pwr_ctl {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x42>;
+				reg = <0x1f001d0c 0x04>;
+				mux-shift = <0x02>;
+				mux-width = <0x02>;
+				gate-shift = <0x00>;
+				ignore = <0x01>;
+				phandle = <0x88>;
+			};
+
+			CLK_mcu_pm {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x19 0x42 0x45 0x43 0x0f>;
+				reg = <0x1f001c80 0x04>;
+				mux-shift = <0x02>;
+				mux-width = <0x02>;
+				gate-shift = <0x00>;
+				glitch-shift = <0x04>;
+				auto-enable = <0x01>;
+				str-ignore;
+				phandle = <0x16>;
+			};
+
+			CLK_pm_sleep {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x1a>;
+				reg = <0x1f001c88 0x04>;
+				mux-shift = <0x0c>;
+				mux-width = <0x02>;
+				gate-shift = <0x0a>;
+				ignore = <0x01>;
+				phandle = <0x8b>;
+			};
+
+			CLK_sar {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x1a>;
+				reg = <0x1f001c88 0x04>;
+				mux-shift = <0x07>;
+				mux-width = <0x02>;
+				gate-shift = <0x05>;
+				ignore = <0x01>;
+				phandle = <0x9b>;
+			};
+
+			CLK_rtc {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x1a>;
+				reg = <0x1f001c88 0x04>;
+				mux-shift = <0x02>;
+				mux-width = <0x02>;
+				gate-shift = <0x00>;
+				ignore = <0x01>;
+				phandle = <0x99>;
+			};
+
+			CLK_ir {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x1a>;
+				reg = <0x1f001c84 0x04>;
+				mux-shift = <0x07>;
+				mux-width = <0x02>;
+				gate-shift = <0x05>;
+				ignore = <0x01>;
+				phandle = <0x6c>;
+			};
+
+			CLK_wdt {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x42>;
+				reg = <0x1f001c8c 0x04>;
+				mux-shift = <0x06>;
+				mux-width = <0x02>;
+				gate-shift = <0x04>;
+				glitch-shift = <0x08>;
+				ignore = <0x01>;
+				phandle = <0xa8>;
+			};
+
+			CLK_pm_sdio {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x44 0x46 0x47 0x19 0x0f>;
+				reg = <0x1f001c90 0x04>;
+				mux-shift = <0x0d>;
+				mux-width = <0x02>;
+				gate-shift = <0x0b>;
+				glitch-shift = <0x0f>;
+				ignore = <0x01>;
+				phandle = <0x8a>;
+			};
+
+			CLK_pir_pm {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x42>;
+				reg = <0x1f001c98 0x04>;
+				mux-shift = <0x07>;
+				mux-width = <0x02>;
+				gate-shift = <0x05>;
+				ignore = <0x01>;
+				phandle = <0x81>;
+			};
+
+			CLK_pm_sr_mclk {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x48 0x42 0x1a 0x49>;
+				reg = <0x1f001d14 0x04>;
+				mux-shift = <0x0a>;
+				mux-width = <0x02>;
+				gate-shift = <0x08>;
+				ignore = <0x01>;
+				phandle = <0x8c>;
+			};
+
+			CLK_ssi_dphy {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x19 0x43 0x44 0x42>;
+				reg = <0x1f001d18 0x04>;
+				mux-shift = <0x06>;
+				mux-width = <0x02>;
+				gate-shift = <0x04>;
+				ignore = <0x01>;
+				phandle = <0xa2>;
+			};
+
+			CLK_vif_pm {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x45 0x48 0x42 0x49>;
+				reg = <0x1f001d14 0x04>;
+				mux-shift = <0x02>;
+				mux-width = <0x02>;
+				gate-shift = <0x00>;
+				ignore = <0x01>;
+				phandle = <0xa7>;
+			};
+
+			CLK_pm_timer4 {
+				#clock-cells = <0x00>;
+				compatible = "sstar,complex-clock";
+				clocks = <0x1a>;
+				clock-frequency = <0xb71b00>;
+				phandle = <0xab>;
+			};
+
+			CLK_pm_timer5 {
+				#clock-cells = <0x00>;
+				compatible = "sstar,complex-clock";
+				clocks = <0x1a>;
+				clock-frequency = <0xb71b00>;
+				phandle = <0xac>;
+			};
+
+			CLK_pm_timer6 {
+				#clock-cells = <0x00>;
+				compatible = "sstar,complex-clock";
+				clocks = <0x1a>;
+				clock-frequency = <0xb71b00>;
+				phandle = <0xad>;
+			};
+
+			CLK_pm_timer7 {
+				#clock-cells = <0x00>;
+				compatible = "sstar,complex-clock";
+				clocks = <0x1a>;
+				clock-frequency = <0xb71b00>;
+				phandle = <0xae>;
+			};
+
+			CLK_upll_48m {
+				#clock-cells = <0x00>;
+				compatible = "sstar,complex-clock";
+				clocks = <0x06>;
+				phandle = <0xaf>;
+			};
+
+			CLK_wdma {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x4a>;
+				reg = <0x1f207fec 0x04>;
+				gate-shift = <0x00>;
+				gate-enable = <0x01>;
+				auto-enable = <0x00>;
+				phandle = <0xb0>;
+			};
+
+			CLK_miu_boot {
+				#clock-cells = <0x00>;
+				compatible = "sstar,composite-clock";
+				clocks = <0x0f 0x0a>;
+				reg = <0x1f207080 0x04>;
+				mux-shift = <0x02>;
+				mux-width = <0x01>;
+				gate-shift = <0x00>;
+				auto-enable = <0x00>;
+				phandle = <0xb1>;
+			};
+
+			usclk {
+				compatible = "usclk";
+				clocks = <0x1a 0x49 0x47 0x42 0x40 0x4b 0x4c 0x4d 0x34 0x4e 0x4f 0x50 0x51 0x52 0x53 0x54 0x55 0x41 0x56 0x57 0x01 0x58 0x59 0x5a 0x5b 0x5c 0x5d 0x5e 0x5f 0x0e 0x3e 0x60 0x61 0x62 0x3f 0x18 0x63 0x64 0x65 0x66 0x12 0x27 0x67 0x13 0x28 0x11 0x26 0x68 0x69 0x6a 0x6b 0x6c 0x17 0x6d 0x6e 0x6f 0x70 0x71 0x72 0x10 0x21 0x16 0x73 0x74 0x75 0x76 0x77 0x78 0x79 0x4a 0x7a 0x7b 0x7c 0x14 0x0c 0x2e 0x24 0x1b 0x0a 0x25 0x2a 0x31 0x36 0x0b 0x2d 0x20 0x2b 0x0d 0x33 0x30 0x32 0x15 0x7d 0x7e 0x7f 0x37 0x80 0x81 0x82 0x83 0x84 0x85 0x86 0x87 0x88 0x89 0x8a 0x8b 0x8c 0x8d 0x8e 0x8f 0x90 0x91 0x92 0x93 0x94 0x95 0x96 0x97 0x98 0x99 0x9a 0x9b 0x9c 0x19 0x43 0x44 0x45 0x46 0x48 0x3c 0x29 0x9d 0x9e 0x9f 0xa0 0xa1 0xa2 0x09 0x39 0x3a 0x3d 0x38 0x08 0x2c 0x2f 0x07 0x35 0xa3 0xa4 0xa5 0xa6 0xa7 0xa8 0xa9 0x0f 0x1f 0x1d 0x22 0x23 0x3b 0x1e 0x1c 0x05 0xaa 0xab 0xac 0xad 0xae 0xaf 0xb0 0xb1>;
+				clock-count = <0xab>;
+				phandle = <0xbe>;
+			};
+		};
+
+		cpufreq {
+			compatible = "sstar,infinity-cpufreq";
+			clocks = <0x9b>;
+			status = "ok";
+		};
+
+		miu {
+			compatible = "sstar,miu";
+			interrupts = <0x00 0x24 0x04>;
+			status = "ok";
+		};
+
+		light_misc_control {
+			compatible = "sstar,light_misc_control";
+			lightsensor-i2c = <0x00>;
+			ir-pad = <0x2f>;
+			ircut-pad = <0x35 0x34>;
+			status = "ok";
+		};
+
+		mmu {
+			compatible = "sstar,mmu";
+			interrupts = <0x00 0x2e 0x04>;
+			status = "ok";
+		};
+
+		uart0@1F221000 {
+			compatible = "sstar,uart";
+			reg = <0x1f221000 0x100 0x1f220e00 0x100>;
+			interrupts = <0x00 0x42 0x04 0x00 0x43 0x04 0x00 0x43 0x04>;
+			dma-enable;
+			rx_fifo_level = <0x00>;
+			tx_fifo_level = <0x00>;
+			digmux = <0x00>;
+			clocks = <0x66>;
+			status = "ok";
+			phandle = <0xbf>;
+		};
+
+		uart1@1F221200 {
+			compatible = "sstar,uart";
+			reg = <0x1f221200 0x100 0x1f221c00 0x100>;
+			interrupts = <0x00 0x45 0x04 0x00 0x5c 0x04 0x00 0x5c 0x04>;
+			dma-enable;
+			rx_fifo_level = <0x00>;
+			tx_fifo_level = <0x00>;
+			digmux = <0x03>;
+			clocks = <0x67>;
+			status = "ok";
+			phandle = <0xc0>;
+		};
+
+		fuart@1F220400 {
+			compatible = "sstar,uart";
+			reg = <0x1f220400 0x100 0x1f220600 0x100>;
+			interrupts = <0x00 0x4f 0x04 0x00 0x50 0x04 0x00 0x50 0x04>;
+			dma-enable;
+			sctp_enable = <0x00>;
+			rx_fifo_level = <0x00>;
+			tx_fifo_level = <0x00>;
+			digmux = <0x01>;
+			clocks = <0x65>;
+			status = "ok";
+			phandle = <0xc1>;
+		};
+
+		dla {
+			compatible = "sstar,dla";
+			interrupts = <0x00 0x55 0x04>;
+			clocks = <0x6b 0x69 0x6a>;
+			status = "ok";
+		};
+
+		bdma0 {
+			compatible = "sstar,bdma0";
+			interrupts = <0x00 0x48 0x04>;
+			reg = <0x1f200400 0x80>;
+			clocks = <0xb2>;
+			status = "ok";
+		};
+
+		bdma1 {
+			compatible = "sstar,bdma1";
+			interrupts = <0x00 0x48 0x04>;
+			reg = <0x1f200480 0x80>;
+			clocks = <0xb2>;
+			status = "ok";
+		};
+
+		bdma2 {
+			compatible = "sstar,bdma2";
+			interrupts = <0x00 0x48 0x04>;
+			reg = <0x1f200500 0x80>;
+			clocks = <0xb2>;
+			status = "ok";
+		};
+
+		bdma8 {
+			compatible = "sstar,bdma8";
+			interrupts = <0x00 0x4b 0x04>;
+			reg = <0x1f008a00 0x80>;
+			clocks = <0xb2>;
+			status = "ok";
+		};
+
+		fsp-qspi0 {
+			compatible = "sstar,fsp-qspi";
+			reg = <0x1f201a00 0x200 0x1f201c00 0x200>;
+			clocks = <0xb3 0x29>;
+			cs-num = <0x02>;
+			cs-mode = <0x00>;
+			engine = <0x00>;
+			dma = <0x01>;
+			status = "ok";
+		};
+
+		nandflash0 {
+			compatible = "sstar-nandflash";
+			engine = <0x00>;
+			cs-select = <0x00>;
+			fcie-interface = <0x00>;
+			status = "ok";
+		};
+
+		norflash0 {
+			compatible = "sstar-norflash";
+			engine = <0x00>;
+			cs-select = <0x00>;
+			status = "ok";
+		};
+
+		spi0@0 {
+			compatible = "sstar,mspi";
+			mspi-group = <0x00>;
+			clocks = <0x15>;
+			reg = <0x1f222000 0x200>;
+			interrupts = <0x00 0x46 0x04>;
+			dma-enable;
+			cs-num = <0x01>;
+			status = "ok";
+		};
+
+		i2c@1f222800 {
+			compatible = "sstar,i2c";
+			reg = <0x1f222800 0x200>;
+			#address-cells = <0x01>;
+			#size-cells = <0x00>;
+			interrupts = <0x00 0x44 0x04>;
+			clocks = <0x75>;
+			dma-enable;
+			group = <0x00>;
+			speed = <0x30d40>;
+			t-su-sta = <0x00>;
+			t-hd-sta = <0x00>;
+			t-su-sto = <0x00>;
+			t-hd-sto = <0x00>;
+			output-mode = <0x02>;
+			status = "ok";
+			phandle = <0xc2>;
+		};
+
+		emac0 {
+			compatible = "sstar-emac";
+			interrupts = <0x00 0x33 0x04 0x00 0xb5 0x04 0x00 0x4c 0x04>;
+			clocks = <0x62>;
+			reg = <0x1f2a2000 0x800 0x1f304200 0x600 0x1f2a3000 0x600>;
+			pad = <0x1f203c38 0x01 0x01>;
+			bus-mode = <0x01>;
+			phy-handle = <0xb4>;
+			status = "ok";
+			phandle = <0xc3>;
+
+			mdio-bus@emac0 {
+
+				ethernet-phy@0 {
+					phy-mode = "mii";
+					phandle = <0xb4>;
+				};
+			};
+		};
+
+		sstar_sdmmc0 {
+			compatible = "sstar,sdmmc";
+			bus-width = <0x04>;
+			max-frequency = <0x2faf080>;
+			non-removable;
+			cap-mmc-highspeed;
+			no-sdio;
+			no-sd;
+			reg = <0x1f008400 0x200>;
+			pll-reg = <0x1f283200 0x200>;
+			cifd-reg = <0x1f008600 0x200>;
+			pwr-save-reg = <0x1f008800 0x200>;
+			ip-order = [01];
+			pad-order = [00];
+			trans-mode = [01];
+			fake-cdz = [00];
+			rev-cdz = [00];
+			pwr-on-delay = <0x01>;
+			pwr-off-delay = <0x1e>;
+			cifd-mcg-off = [00];
+			support-cmd23 = [01];
+			clk-driving = <0x01>;
+			cmd-driving = <0x01>;
+			data-driving = <0x01>;
+			en-clk-phase = [00];
+			rx-clk-phase = <0x00>;
+			tx-clk-phase = <0x00>;
+			en-eight-phase = [00];
+			rx-eight-phase = [00];
+			tx-eight-phase = [00];
+			interrupts = <0x00 0x32 0x04 0x00 0x23 0x04>;
+			interrupt-names = "mie0_irq\0mie1_irq";
+			clocks = <0x9c 0x8a 0x16>;
+			clock-names = "clk_sdmmc0\0clk_sdmmc1\0pm_mcu_sdmmc1";
+			status = "ok";
+			phandle = <0xc4>;
+		};
+
+		sstar_sdmmc1 {
+			compatible = "sstar,sdmmc";
+			bus-width = <0x04>;
+			max-frequency = <0x2dc6c00>;
+			cap-mmc-highspeed;
+			cap-sd-highspeed;
+			cap-sdio-irq;
+			no-mmc;
+			reg = <0x1f282600 0x200>;
+			pll-reg = <0x1f283400 0x200>;
+			cifd-reg = <0x1f282800 0x200>;
+			pwr-save-reg = <0x1f282a00 0x200>;
+			ip-order = [00];
+			pad-order = [00];
+			trans-mode = [01];
+			cifd-mcg-off = [00];
+			support-runtime-pm = [00];
+			support-cmd23 = [01];
+			fake-cdz = <0x00>;
+			rev-cdz = [00];
+			cdz-pad = <0x14>;
+			pwr-pad = <0x2c>;
+			pwr-on-delay = <0x01>;
+			pwr-off-delay = <0x1e>;
+			sdio-use-1bit = [00];
+			clk-driving = <0x01>;
+			cmd-driving = <0x01>;
+			data-driving = <0x01>;
+			en-clk-phase = [00];
+			rx-clk-phase = <0x00>;
+			tx-clk-phase = <0x00>;
+			en-eight-phase = [00];
+			rx-eight-phase = [00];
+			tx-eight-phase = [00];
+			interrupts = <0x00 0x32 0x04 0x00 0xb7 0x04>;
+			interrupt-names = "mie0_irq\0cdz_slot0_irq";
+			clocks = <0x9c 0x8a 0x16>;
+			clock-names = "clk_sdmmc0\0clk_sdmmc1\0pm_mcu_sdmmc1";
+			status = "ok";
+			phandle = <0xc5>;
+		};
+
+		hst0to1 {
+			compatible = "sstar,hst0to1";
+			interrupts = <0x00 0xa3 0x04>;
+			status = "ok";
+		};
+
+		riu {
+			#address-cells = <0x01>;
+			#size-cells = <0x01>;
+			compatible = "sstar,riu";
+			ranges;
+			status = "ok";
+
+			timeout {
+				reg = <0x1f000200 0x200 0x1f200200 0x200 0x1f2ce000 0x200>;
+				interrupts = <0x00 0xa4 0x04 0x00 0xb6 0x04 0x00 0xb4 0x04>;
+				print-on;
+				status = "ok";
+			};
+		};
+
+		timer0@0x1F006040 {
+			compatible = "sstar,timer";
+			clocks = <0x73>;
+			reg = <0x1f006040 0x40>;
+			interrupts = <0x00 0xa0 0x04>;
+			status = "ok";
+			phandle = <0xc6>;
+		};
+
+		timer1@0x1F006080 {
+			compatible = "sstar,timer";
+			clocks = <0x73>;
+			reg = <0x1f006080 0x40>;
+			interrupts = <0x00 0xa0 0x04>;
+			status = "ok";
+			phandle = <0xc7>;
+		};
+
+		timer2@0x1F0060C0 {
+			compatible = "sstar,timer";
+			clocks = <0x73>;
+			reg = <0x1f0060c0 0x40>;
+			interrupts = <0x00 0xa0 0x04>;
+			status = "ok";
+			phandle = <0xc8>;
+		};
+
+		timer3@0x1F006100 {
+			compatible = "sstar,timer";
+			clocks = <0x73>;
+			reg = <0x1f006100 0x40>;
+			interrupts = <0x00 0xa0 0x04>;
+			status = "ok";
+			phandle = <0xc9>;
+		};
+
+		timer4@0x1F006140 {
+			compatible = "sstar,timer";
+			clocks = <0xab>;
+			clock-on-demand;
+			reg = <0x1f006140 0x40>;
+			interrupts = <0x00 0xa0 0x04>;
+			status = "ok";
+			phandle = <0xca>;
+		};
+
+		timer5@0x1F006180 {
+			compatible = "sstar,timer";
+			clocks = <0xac>;
+			clock-on-demand;
+			reg = <0x1f006180 0x40>;
+			interrupts = <0x00 0xa0 0x04>;
+			status = "ok";
+			phandle = <0xcb>;
+		};
+
+		timer6@0x1F0061C0 {
+			compatible = "sstar,timer";
+			clocks = <0xad>;
+			clock-on-demand;
+			reg = <0x1f0061c0 0x40>;
+			interrupts = <0x00 0xa0 0x04>;
+			status = "ok";
+			phandle = <0xcc>;
+		};
+
+		timer7@0x1F006440 {
+			compatible = "sstar,timer";
+			clocks = <0xae>;
+			clock-on-demand;
+			reg = <0x1f006440 0x40>;
+			interrupts = <0x00 0xa0 0x04>;
+			status = "ok";
+			phandle = <0xcd>;
+		};
+
+		timer8@0x1F2CDE40 {
+			compatible = "sstar,timer";
+			clocks = <0x10>;
+			reg = <0x1f2cde40 0x40>;
+			interrupts = <0x00 0xbb 0x01>;
+			status = "ok";
+			phandle = <0xce>;
+		};
+
+		timer9@0x1F2CDE80 {
+			compatible = "sstar,timer";
+			clocks = <0x10>;
+			reg = <0x1f2cde80 0x40>;
+			interrupts = <0x00 0xbc 0x01>;
+			status = "ok";
+			phandle = <0xcf>;
+		};
+
+		timer10@0x1F2CDEC0 {
+			compatible = "sstar,timer";
+			clocks = <0x10>;
+			reg = <0x1f2cdec0 0x40>;
+			interrupts = <0x00 0xbd 0x01>;
+			status = "ok";
+			phandle = <0xd0>;
+		};
+
+		timer11@0x1F2CDF00 {
+			compatible = "sstar,timer";
+			clocks = <0x10>;
+			reg = <0x1f2cdf00 0x40>;
+			interrupts = <0x00 0xbe 0x01>;
+			status = "ok";
+			phandle = <0xd1>;
+		};
+
+		watchdog0 {
+			compatible = "sstar,wdt";
+			clocks = <0xa8>;
+			reg = <0x1f006000 0x40>;
+			interrupts = <0x00 0xa1 0x04>;
+			status = "ok";
+		};
+
+		aesdma {
+			compatible = "sstar,aesdma";
+			interrupts = <0x00 0x37 0x04>;
+			clocks = <0x4d>;
+			status = "ok";
+		};
+
+		rng {
+			compatible = "sstar,rng";
+			clocks = <0xb1>;
+			status = "ok";
+		};
+
+		gpio {
+			compatible = "sstar,gpio";
+			status = "ok";
+			phandle = <0xd2>;
+		};
+
+		rtcpwc {
+			compatible = "sstar,rtcpwc";
+			reg = <0x1f006800 0x200>;
+			interrupts = <0x00 0x28 0x04>;
+			io4-enable = <0x03>;
+			io5-enable = <0x07>;
+			status = "ok";
+			phandle = <0xd3>;
+
+			io1 {
+				num = <0x01>;
+				keycode = <0x8f>;
+				interrupt-parent = <0xb5>;
+				interrupts = <0x3b>;
+			};
+		};
+
+		pwm@0x1F203200 {
+			compatible = "sstar,pwm";
+			reg = <0x1f203200 0x37>;
+			#pwm-cells = <0x03>;
+			channel = <0x00>;
+			group = <0x00>;
+			clocks = <0x8e>;
+			clk-select = <0x00>;
+			interrupts = <0x00 0x5b 0x04>;
+			status = "ok";
+			phandle = <0xd4>;
+		};
+
+		pwm@0x1F203280 {
+			compatible = "sstar,pwm";
+			reg = <0x1f203280 0x37>;
+			#pwm-cells = <0x03>;
+			channel = <0x01>;
+			group = <0x00>;
+			clocks = <0x8e>;
+			clk-select = <0x00>;
+			interrupts = <0x00 0x5b 0x04>;
+			status = "ok";
+			phandle = <0xd5>;
+		};
+
+		pwm@0x1F203300 {
+			compatible = "sstar,pwm";
+			reg = <0x1f203300 0x37>;
+			#pwm-cells = <0x03>;
+			channel = <0x02>;
+			group = <0x00>;
+			clocks = <0x8e>;
+			clk-select = <0x00>;
+			interrupts = <0x00 0x5b 0x04>;
+			status = "ok";
+			phandle = <0xd6>;
+		};
+
+		utmi@0x1f284200 {
+			compatible = "syscon";
+			reg = <0x1f284200 0x200>;
+			reg-io-width = <0x02>;
+			phandle = <0xb6>;
+		};
+
+		bc@0x1f284400 {
+			compatible = "syscon";
+			reg = <0x1f284400 0x200>;
+			reg-io-width = <0x02>;
+			phandle = <0xb9>;
+		};
+
+		usbc@0x1f284600 {
+			compatible = "syscon";
+			reg = <0x1f284600 0x200>;
+			reg-io-width = <0x02>;
+			phandle = <0xb8>;
+		};
+
+		uhc@0x1f284800 {
+			compatible = "syscon";
+			reg = <0x1f284800 0x200>;
+			reg-io-width = <0x02>;
+			phandle = <0xb7>;
+		};
+
+		u2phy1 {
+			compatible = "sstar, u2phy1";
+			syscon-utmi = <0xb6>;
+			syscon-uhc = <0xb7>;
+			syscon-usbc = <0xb8>;
+			syscon-bc = <0xb9>;
+			#phy-cells = <0x00>;
+			status = "okay";
+			phandle = <0xba>;
+		};
+
+		sstar-ehci-1 {
+			compatible = "sstar-ehci-1";
+			reg-names = "ehc_base";
+			reg = <0x1f284800 0x200>;
+			syscon-utmi = <0xb6>;
+			syscon-usbc = <0xb8>;
+			syscon-bc = <0xb9>;
+			clocks = <0x06>;
+			interrupts = <0x00 0x3f 0x04>;
+			phys = <0xba>;
+			phy-names = "usb";
+			support_high_2g_access_patch;
+			status = "ok";
+		};
+
+		msb250x-udc-p0 {
+			compatible = "sstar,msb250x-udc";
+			reg = <0x1f284200 0x200 0x1f284600 0x200 0x1f284a00 0x400 0x1f203c00 0x200>;
+			reg-names = "utmi\0usb0\0otg\0chiptop";
+			interrupts = <0x00 0x40 0x04>;
+			interrupt-names = "msb250x_udc_p0";
+			maximum-speed = "high-speed";
+			ep_name = "ep0\0ep1\0ep2\0ep3\0ep4\0ep5\0ep6";
+			ep_maxpkt_limit = <0x40 0x400 0x400 0x40 0x200 0x200 0x40>;
+			ep_fifo_size = <0x40 0x2000 0x400 0x40 0x200 0x200 0x40>;
+			dma_channel_num = <0x07>;
+			clocks = <0x06>;
+			status = "okay";
+		};
+
+		venc {
+			compatible = "sstar,venc";
+			reg = <0x1f34d000 0x800 0x1f2c5400 0x100 0x1f203c00 0x100 0x1f207800 0x100 0x1f2c5400 0x100>;
+			reg-names = "vpu-bit\0venc-brige\0hw-uart0\0hw-uart1\0venc-gp";
+			interrupts = <0x00 0x3a 0x04>;
+			interrupt-parent = <0x03>;
+			interrupt-names = "mhe-irq";
+			clocks = <0xa6 0x74 0xa3 0xa5 0xa4>;
+			clock-names = "CKG_venc";
+			status = "ok";
+		};
+
+		isp {
+			compatible = "isp";
+			io_phy_addr = <0x1f000000>;
+			banks = <0x1302>;
+			interrupts = <0x00 0x39 0x04>;
+			clocks = <0x17 0x18 0x61 0x60>;
+			status = "ok";
+			clock-frequency-index = <0x00>;
+			phandle = <0xd7>;
+		};
+
+		ispalgo {
+			compatible = "sstar,ispalgo";
+			status = "ok";
+			phandle = <0xd8>;
+		};
+
+		ispmid {
+			compatible = "sstar,ispmid";
+			status = "ok";
+			phandle = <0xd9>;
+		};
+
+		sound {
+			compatible = "sstar,audio";
+			interrupts = <0x00 0x4a 0x04>;
+			amp-pad = <0x0a 0x01 0x0a 0x01>;
+			clocks = <0xaf 0x4e 0x4f>;
+			digmic-padmux = <0x05>;
+			i2s-trx-shared-padmux = <0x00>;
+			i2s-tx-padmux = <0x06>;
+			i2s-rx-padmux = <0x07>;
+			i2s-mck-padmux = <0x07>;
+			keep-i2s-clk = <0x00>;
+			i2s-pcm = <0x00>;
+			i2s-rx-mode = <0x00>;
+			i2s-rx0-tdm-ws-pgm = <0x00>;
+			i2s-rx0-tdm-ws-width = <0x00>;
+			i2s-rx0-tdm-ws-inv = <0x00>;
+			i2s-rx0-tdm-bck-inv = <0x00>;
+			i2s-rx0-tdm-ch-swap = <0x00 0x00 0x00 0x00>;
+			i2s-tx0-tdm-ws-pgm = <0x00>;
+			i2s-tx0-tdm-ws-width = <0x00>;
+			i2s-tx0-tdm-ws-inv = <0x00>;
+			i2s-tx0-tdm-bck-inv = <0x00>;
+			i2s-tx0-tdm-ch-swap = <0x00 0x00 0x00 0x00>;
+			i2s-tx0-tdm-active-slot = <0xffff>;
+			dmic-bck-mode = <0x03 0x06 0x09 0x0b>;
+			dmic-bck-ext-mode = <0x00>;
+			hpf-adc1-level = <0x01 0x03>;
+			hpf-dmic-level = <0x01 0x03>;
+			keep_adc_power_on = <0x00>;
+			keep_dac_power_on = <0x00>;
+			i2s-rx-short-ff-mode = <0x00>;
+			i2s-tx-short-ff-mode = <0x00>;
+			adc-out-sel = <0x00 0x01>;
+			adc-ch-inmux = <0x00>;
+			status = "ok";
+		};
+
+		bdma3 {
+			compatible = "sstar,bdma3";
+			interrupts = <0x00 0x48 0x04>;
+			reg = <0x1f200580 0x80>;
+			clocks = <0xb2>;
+			status = "ok";
+		};
+
+		bdma4 {
+			compatible = "sstar,bdma4";
+			interrupts = <0x00 0x49 0x04>;
+			reg = <0x1f201600 0x80>;
+			clocks = <0xb2>;
+			status = "ok";
+		};
+
+		bdma5 {
+			compatible = "sstar,bdma5";
+			interrupts = <0x00 0x49 0x04>;
+			reg = <0x1f201680 0x80>;
+			clocks = <0xb2>;
+			status = "ok";
+		};
+
+		bdma6 {
+			compatible = "sstar,bdma6";
+			interrupts = <0x00 0x49 0x04>;
+			reg = <0x1f201700 0x80>;
+			clocks = <0xb2>;
+			status = "ok";
+		};
+
+		bdma7 {
+			compatible = "sstar,bdma7";
+			interrupts = <0x00 0x49 0x04>;
+			reg = <0x1f201780 0x80>;
+			clocks = <0xb2>;
+			status = "ok";
+		};
+
+		bdma9 {
+			compatible = "sstar,bdma9";
+			interrupts = <0x00 0x4b 0x04>;
+			reg = <0x1f008a80 0x80>;
+			clocks = <0xb2>;
+			status = "ok";
+		};
+
+		bdma10 {
+			compatible = "sstar,bdma10";
+			interrupts = <0x00 0x4b 0x04>;
+			reg = <0x1f008b00 0x80>;
+			clocks = <0xb2>;
+			status = "ok";
+		};
+
+		bdma11 {
+			compatible = "sstar,bdma11";
+			interrupts = <0x00 0x4b 0x04>;
+			reg = <0x1f008b80 0x80>;
+			clocks = <0xb2>;
+			status = "ok";
+		};
+
+		cmdq0 {
+			compatible = "sstar,cmdq0";
+			clocks = <0x10>;
+			interrupts = <0x00 0x31 0x04>;
+			status = "ok";
+		};
+
+		cmdq1 {
+			compatible = "sstar,cmdq1";
+			clocks = <0x10>;
+			interrupts = <0x00 0x31 0x04>;
+			status = "ok";
+		};
+
+		cmdq2 {
+			compatible = "sstar,cmdq2";
+			clocks = <0x10>;
+			interrupts = <0x00 0x31 0x04>;
+			status = "ok";
+		};
+
+		cmdq3 {
+			compatible = "sstar,cmdq3";
+			clocks = <0x10>;
+			interrupts = <0x00 0x31 0x04>;
+			status = "ok";
+		};
+
+		cmdq4 {
+			compatible = "sstar,cmdq4";
+			clocks = <0x10>;
+			interrupts = <0x00 0x4d 0x04>;
+			status = "ok";
+		};
+
+		cmdq5 {
+			compatible = "sstar,cmdq5";
+			clocks = <0x10>;
+			interrupts = <0x00 0x4d 0x04>;
+			status = "ok";
+		};
+
+		cmdq6 {
+			compatible = "sstar,cmdq6";
+			clocks = <0x10>;
+			interrupts = <0x00 0x4d 0x04>;
+			status = "ok";
+		};
+
+		cmdq7 {
+			compatible = "sstar,cmdq7";
+			clocks = <0x10>;
+			interrupts = <0x00 0x4d 0x04>;
+			status = "ok";
+		};
+
+		pnl {
+			compatible = "sstar,pnl";
+			status = "ok";
+			phandle = <0xda>;
+		};
+
+		disp {
+			compatible = "sstar,disp";
+			status = "ok";
+			clocks = <0x18 0x5f 0x0e>;
+			interrupts = <0x00 0x20 0x04>;
+			phandle = <0xdb>;
+		};
+
+		hdmitx {
+			compatible = "sstar,hdmitx";
+			status = "ok";
+			phandle = <0xdc>;
+		};
+
+		csi {
+			compatible = "sstar,csi";
+			io_phy_addr = <0x1f000000>;
+			banks = <0x153c 0x153d 0x153e 0x1538 0x153a 0x153b>;
+			atop_banks = <0x153f>;
+			clkgen_banks = <0x1038>;
+			interrupts = <0x00 0x41 0x04>;
+			clocks = <0x58 0x59 0x5a 0x5b 0x5c 0x5d>;
+			status = "ok";
+			csi_sr0_lane_num = <0x04>;
+			csi_sr2_lane_num = <0x02>;
+			csi_sr0_lane_select = <0x02 0x01 0x03 0x00 0x04>;
+			csi_sr2_lane_select = <0x02 0x01 0x00>;
+			csi_sr0_lane_pn_swap = <0x00 0x00 0x00 0x00 0x00>;
+			csi_sr2_lane_pn_swap = <0x00 0x00 0x00>;
+			phandle = <0xdd>;
+		};
+
+		vif {
+			compatible = "sstar,vif";
+			status = "ok";
+			reg = <0x1f261000 0x600 0x1f260400 0x200 0x1f260600 0x200 0x1f207c00 0x200 0x1f207800 0x200 0x1f227400 0x200 0x1f207000 0x200 0x1f207e00 0x200 0x1f000000 0x400000 0x1f203c00 0x200>;
+			clocks = <0x17>;
+			interrupts = <0x00 0x59 0x04 0x00 0x38 0x04>;
+			phandle = <0xde>;
+		};
+
+		sensorif {
+			compatible = "sstar,sensorif";
+			clocks = <0x9d 0x9e>;
+			snr0_mipi_i2c = <0x01>;
+			snr2_mipi_i2c = <0x01>;
+			snr_sr0_mipi_mode = <0x01>;
+			snr_sr0_mipi_rst_mode = <0x01>;
+			snr_sr0_mipi_pdn_mode = <0x00>;
+			snr_sr0_mipi_mclk_mode = <0x01>;
+			snr_sr2_mipi_mode = <0x03>;
+			snr_sr2_mipi_rst_mode = <0x01>;
+			snr_sr2_mipi_pdn_mode = <0x00>;
+			snr_sr2_mipi_mclk_mode = <0x01>;
+			vif_sr0_mclk_37p125 = <0x01>;
+			vif_sr2_mclk_37p125 = <0x01>;
+			phandle = <0xdf>;
+		};
+
+		jpe@0x1F246400 {
+			compatible = "sstar,cedric-jpe";
+			reg = <0x1f246400 0x100 0x1f246600 0x100>;
+			interrupts = <0x00 0x3d 0x04>;
+			clocks = <0x6f>;
+			clock-names = "CKG_jpe";
+			interrupt-names = "jpe-irq0";
+			clk-select = <0x00>;
+			status = "ok";
+			phandle = <0xe0>;
+		};
+
+		ldc0 {
+			compatible = "sstar,ldc";
+			reg = <0x1f365000 0x100 0x1f365200 0x100>;
+			interrupts = <0x00 0x5e 0x04>;
+			clocks = <0x70>;
+			status = "ok";
+			phandle = <0xe1>;
+		};
+
+		scl {
+			compatible = "sstar,scl";
+			status = "ok";
+			phandle = <0xe2>;
+		};
+
+		pwm@0x1F203380 {
+			compatible = "sstar,pwm";
+			reg = <0x1f203380 0x37>;
+			#pwm-cells = <0x03>;
+			channel = <0x03>;
+			group = <0x00>;
+			clocks = <0x8e>;
+			clk-select = <0x00>;
+			interrupts = <0x00 0x5b 0x04>;
+			status = "ok";
+			phandle = <0xe3>;
+		};
+
+		pwm@0x1F203400 {
+			compatible = "sstar,pwm";
+			reg = <0x1f203400 0x37>;
+			#pwm-cells = <0x03>;
+			channel = <0x04>;
+			group = <0x01>;
+			clocks = <0x8e>;
+			clk-select = <0x00>;
+			interrupts = <0x00 0x5b 0x04>;
+			status = "ok";
+			phandle = <0xe4>;
+		};
+
+		pwm@0x1F203440 {
+			compatible = "sstar,pwm";
+			reg = <0x1f203440 0x37>;
+			#pwm-cells = <0x03>;
+			channel = <0x05>;
+			group = <0x01>;
+			clocks = <0x8e>;
+			clk-select = <0x00>;
+			interrupts = <0x00 0x5b 0x04>;
+			status = "ok";
+			phandle = <0xe5>;
+		};
+
+		pwm@0x1F203480 {
+			compatible = "sstar,pwm";
+			reg = <0x1f203480 0x37>;
+			#pwm-cells = <0x03>;
+			channel = <0x06>;
+			group = <0x01>;
+			clocks = <0x8e>;
+			clk-select = <0x00>;
+			interrupts = <0x00 0x5b 0x04>;
+			status = "ok";
+			phandle = <0xe6>;
+		};
+
+		pwm@0x1F2034C0 {
+			compatible = "sstar,pwm";
+			reg = <0x1f2034c0 0x37>;
+			#pwm-cells = <0x03>;
+			channel = <0x07>;
+			group = <0x01>;
+			clocks = <0x8e>;
+			clk-select = <0x00>;
+			interrupts = <0x00 0x5b 0x04>;
+			status = "ok";
+			phandle = <0xe7>;
+		};
+
+		pwm@0x1F003400 {
+			compatible = "sstar,pwm";
+			reg = <0x1f003400 0x37>;
+			#pwm-cells = <0x03>;
+			channel = <0x08>;
+			clocks = <0x87>;
+			clk-select = <0x00>;
+			status = "ok";
+			phandle = <0xe8>;
+		};
+
+		pwm@0x1F003440 {
+			compatible = "sstar,pwm";
+			reg = <0x1f003440 0x37>;
+			#pwm-cells = <0x03>;
+			channel = <0x09>;
+			clocks = <0x87>;
+			clk-select = <0x00>;
+			status = "ok";
+			phandle = <0xe9>;
+		};
+
+		pwm@0x1F003480 {
+			compatible = "sstar,pwm";
+			reg = <0x1f003480 0x37>;
+			#pwm-cells = <0x03>;
+			channel = <0x0a>;
+			clocks = <0x87>;
+			clk-select = <0x00>;
+			status = "ok";
+			phandle = <0xea>;
+		};
+
+		pwm@0x1F0034C0 {
+			compatible = "sstar,pwm";
+			reg = <0x1f0034c0 0x37>;
+			#pwm-cells = <0x03>;
+			channel = <0x0b>;
+			clocks = <0x87>;
+			clk-select = <0x00>;
+			status = "ok";
+			phandle = <0xeb>;
+		};
+
+		vpe {
+			compatible = "sigmastar,vpe";
+			status = "ok";
+			clocks = <0x18 0xa4>;
+			interrupts = <0x00 0x34 0x04 0x00 0x5a 0x04 0x00 0x5d 0x04>;
+			phandle = <0xec>;
+		};
+
+		rgn {
+			compatible = "sstar,rgn";
+			status = "ok";
+			interrupts = <0x00 0x4e 0x04>;
+			phandle = <0xed>;
+		};
+
+		ive@0x1F2A3C00 {
+			compatible = "sstar,infinity-ive";
+			reg = <0x1f2a3c00 0x100 0x1f2a3e00 0x100 0x1f2a4000 0x100>;
+			interrupts = <0x00 0x57 0x04>;
+			clocks = <0x6e>;
+			status = "ok";
+			phandle = <0xee>;
+		};
+
+		i2c@1f222a00 {
+			compatible = "sstar,i2c";
+			reg = <0x1f222a00 0x200>;
+			#address-cells = <0x01>;
+			#size-cells = <0x00>;
+			interrupts = <0x00 0x44 0x04>;
+			clocks = <0x76>;
+			dma-enable;
+			group = <0x01>;
+			speed = <0x30d40>;
+			t-su-sta = <0x00>;
+			t-hd-sta = <0x00>;
+			t-su-sto = <0x00>;
+			t-hd-sto = <0x00>;
+			output-mode = <0x02>;
+			status = "ok";
+			phandle = <0xef>;
+		};
+
+		i2c@1f222c00 {
+			compatible = "sstar,i2c";
+			reg = <0x1f222c00 0x200>;
+			#address-cells = <0x01>;
+			#size-cells = <0x00>;
+			interrupts = <0x00 0x3c 0x04>;
+			clocks = <0x77>;
+			dma-enable;
+			group = <0x02>;
+			speed = <0x30d40>;
+			t-su-sta = <0x00>;
+			t-hd-sta = <0x00>;
+			t-su-sto = <0x00>;
+			t-hd-sto = <0x00>;
+			output-mode = <0x02>;
+			status = "ok";
+			phandle = <0xf0>;
+		};
+
+		i2c@1f007c00 {
+			compatible = "sstar,i2c";
+			reg = <0x1f007c00 0x200>;
+			#address-cells = <0x01>;
+			#size-cells = <0x00>;
+			interrupts = <0x00 0x2b 0x04>;
+			clocks = <0x85>;
+			dma-enable;
+			group = <0x03>;
+			speed = <0x30d40>;
+			t-su-sta = <0x00>;
+			t-hd-sta = <0x00>;
+			t-su-sto = <0x00>;
+			t-hd-sto = <0x00>;
+			output-mode = <0x02>;
+			status = "ok";
+			phandle = <0xf1>;
+		};
+
+		padmux {
+			compatible = "sstar,padmux";
+			schematic = <0x03 0x0e 0x50101 0x00 0x0e 0x50102 0x47 0x00 0xe0001 0x15 0x2c 0x20006 0x16 0x2c 0x20005 0x17 0x2c 0x20003 0x18 0x2c 0x20004 0x19 0x2c 0x20008 0x1a 0x2c 0x20007 0x2c 0x00 0x20001 0x14 0x2e 0x20002 0x71 0xffff 0x00>;
+			status = "ok";
+		};
+
+		cpu_power {
+			compatible = "sstar,voltage-idac-ctrl";
+			vid_gpio = <0x3d>;
+			base_voltage = <0x384>;
+			init_voltage = <0x384>;
+			status = "ok";
+		};
+
+		core_power {
+			compatible = "sstar,voltage-idac-ctrl";
+			vid_gpio = <0x3e>;
+			base_voltage = <0x384>;
+			init_voltage = <0x384>;
+			status = "ok";
+		};
+	};
+
+	chosen {
+		bootargs = "console=ttyS0,115200n8r root=/dev/mtdblock3 ro init=/linuxrc LX_MEM=0x10000000 mma_heap=mma_heap_name0,miu=0,sz=0x8000000 mma_memblock_remove=1 cma=2M mtdparts=nor0:0x5F000(BOOT),0x1000(ENV),0x300000(KERNEL),0x220000(rootfs),0xB0000(MISC),0x4D0000(miservice),0x500000(customer) nohz=off";
+	};
+
+	reserved-memory {
+		#address-cells = <0x01>;
+		#size-cells = <0x01>;
+		ranges;
+
+		cma0 {
+			compatible = "shared-dma-pool";
+			reusable;
+			size = <0x1000000>;
+			alignment = <0x1000>;
+			linux,cma-default;
+		};
+	};
+
+	__symbols__ {
+		cpu0_opp_table = "/opp_table0";
+		xtal = "/oscillator";
+		gic = "/soc/gic@16000000";
+		sstar_main_intc = "/soc/sstar_main_intc";
+		sstar_pm_main_intc = "/soc/sstar_pm_main_intc";
+		sstar_pm_gpi_intc = "/soc/sstar_pm_gpi_intc";
+		sstar_gpi_intc = "/soc/sstar_gpi_intc";
+		clks = "/soc/clocks";
+		CLK_VOID = "/soc/clocks/CLK_VOID";
+		CLK_upll_960m = "/soc/clocks/CLK_upll_960m";
+		CLK_upll_480m = "/soc/clocks/CLK_upll_480m";
+		CLK_mpll_432m = "/soc/clocks/CLK_mpll_432m";
+		CLK_upll_384m = "/soc/clocks/CLK_upll_384m";
+		CLK_mpll_345m = "/soc/clocks/CLK_mpll_345m";
+		CLK_upll_320m = "/soc/clocks/CLK_upll_320m";
+		CLK_mpll_288m = "/soc/clocks/CLK_mpll_288m";
+		CLK_mpll_216m = "/soc/clocks/CLK_mpll_216m";
+		CLK_mpll_172m = "/soc/clocks/CLK_mpll_172m";
+		CLK_mpll_123m = "/soc/clocks/CLK_mpll_123m";
+		CLK_mpll_86m = "/soc/clocks/CLK_mpll_86m";
+		CLK_upll_480m_div2 = "/soc/clocks/CLK_upll_480m_div2";
+		CLK_upll_384m_div2 = "/soc/clocks/CLK_upll_384m_div2";
+		CLK_upll_320m_div2 = "/soc/clocks/CLK_upll_320m_div2";
+		CLK_mpll_288m_div2 = "/soc/clocks/CLK_mpll_288m_div2";
+		CLK_mpll_288m_div4 = "/soc/clocks/CLK_mpll_288m_div4";
+		CLK_mpll_288m_div8 = "/soc/clocks/CLK_mpll_288m_div8";
+		CLK_mpll_432m_div4 = "/soc/clocks/CLK_mpll_432m_div4";
+		CLK_mpll_432m_div8 = "/soc/clocks/CLK_mpll_432m_div8";
+		CLK_mpll_432m_div16 = "/soc/clocks/CLK_mpll_432m_div16";
+		CLK_mpll_123m_div2 = "/soc/clocks/CLK_mpll_123m_div2";
+		CLK_mpll_86m_div2 = "/soc/clocks/CLK_mpll_86m_div2";
+		CLK_mpll_86m_div4 = "/soc/clocks/CLK_mpll_86m_div4";
+		CLK_mpll_86m_div16 = "/soc/clocks/CLK_mpll_86m_div16";
+		CLK_upll_384m_div8 = "/soc/clocks/CLK_upll_384m_div8";
+		CLK_upll_320m_div8 = "/soc/clocks/CLK_upll_320m_div8";
+		CLK_upll_320m_div10 = "/soc/clocks/CLK_upll_320m_div10";
+		CLK_upll_320m_div16 = "/soc/clocks/CLK_upll_320m_div16";
+		CLK_disppll_clk = "/soc/clocks/CLK_disppll_clk";
+		CLK_disppll_clk_div2 = "/soc/clocks/CLK_disppll_clk_div2";
+		CLK_xtali_12m = "/soc/clocks/CLK_xtali_12m";
+		CLK_xtali_12m_div2 = "/soc/clocks/CLK_xtali_12m_div2";
+		CLK_xtali_12m_div4 = "/soc/clocks/CLK_xtali_12m_div4";
+		CLK_xtali_12m_div8 = "/soc/clocks/CLK_xtali_12m_div8";
+		CLK_xtali_12m_div16 = "/soc/clocks/CLK_xtali_12m_div16";
+		CLK_xtali_12m_div40 = "/soc/clocks/CLK_xtali_12m_div40";
+		CLK_xtali_12m_div64 = "/soc/clocks/CLK_xtali_12m_div64";
+		CLK_xtali_12m_div128 = "/soc/clocks/CLK_xtali_12m_div128";
+		CLK_xtali_24m = "/soc/clocks/CLK_xtali_24m";
+		CLK_CLK_12M_CORE_v_live = "/soc/clocks/CLK_CLK_12M_CORE_v_live";
+		CLK_RTC_CLK_32K = "/soc/clocks/CLK_RTC_CLK_32K";
+		CLK_pm_riu_w_clk_in = "/soc/clocks/CLK_pm_riu_w_clk_in";
+		CLK_ipupll_clk = "/soc/clocks/CLK_ipupll_clk";
+		CLK_miupll_clk = "/soc/clocks/CLK_miupll_clk";
+		CLK_cpu_pll = "/soc/clocks/CLK_cpu_pll";
+		CLK_armpll_37p125m = "/soc/clocks/CLK_armpll_37p125m";
+		CLK_riu_w_clk_in = "/soc/clocks/CLK_riu_w_clk_in";
+		CLK_riu_w_clk_top = "/soc/clocks/CLK_riu_w_clk_top";
+		CLK_riu_w_clk_sc_gp = "/soc/clocks/CLK_riu_w_clk_sc_gp";
+		CLK_riu_w_clk_vhe_gp = "/soc/clocks/CLK_riu_w_clk_vhe_gp";
+		CLK_riu_w_clk_hemcu_gp = "/soc/clocks/CLK_riu_w_clk_hemcu_gp";
+		CLK_riu_w_clk_mipi_if_gp = "/soc/clocks/CLK_riu_w_clk_mipi_if_gp";
+		CLK_riu_w_clk_mcu_if_gp = "/soc/clocks/CLK_riu_w_clk_mcu_if_gp";
+		CLK_spi_synth_pll = "/soc/clocks/CLK_spi_synth_pll";
+		CLK_fuart_synth_out = "/soc/clocks/CLK_fuart_synth_out";
+		CLK_fuart0_synth_out = "/soc/clocks/CLK_fuart0_synth_out";
+		CLK_fuart1_synth_out = "/soc/clocks/CLK_fuart1_synth_out";
+		CLK_miu_p = "/soc/clocks/CLK_miu_p";
+		CLK_mspi0_p = "/soc/clocks/CLK_mspi0_p";
+		CLK_miu_vhe_gp_p = "/soc/clocks/CLK_miu_vhe_gp_p";
+		CLK_miu_sc_gp_p = "/soc/clocks/CLK_miu_sc_gp_p";
+		CLK_miu_isp_gp_p = "/soc/clocks/CLK_miu_isp_gp_p";
+		CLK_miu2x_p = "/soc/clocks/CLK_miu2x_p";
+		CLK_mcu_p = "/soc/clocks/CLK_mcu_p";
+		CLK_mcu_pm_p = "/soc/clocks/CLK_mcu_pm_p";
+		CLK_isp_p = "/soc/clocks/CLK_isp_p";
+		CLK_fclk1_p = "/soc/clocks/CLK_fclk1_p";
+		CLK_fclk2_p = "/soc/clocks/CLK_fclk2_p";
+		CLK_otp_p = "/soc/clocks/CLK_otp_p";
+		CLK_bist_pm_p = "/soc/clocks/CLK_bist_pm_p";
+		CLK_sr_mclk = "/soc/clocks/CLK_sr_mclk";
+		CLK_emac_testrx125_in_lan = "/soc/clocks/CLK_emac_testrx125_in_lan";
+		CLK_source_mux_250m = "/soc/clocks/CLK_source_mux_250m";
+		CLK_source_mux_250m_div2 = "/soc/clocks/CLK_source_mux_250m_div2";
+		CLK_source_mux_250m_div4 = "/soc/clocks/CLK_source_mux_250m_div4";
+		CLK_source_mux_250m_div5 = "/soc/clocks/CLK_source_mux_250m_div5";
+		CLK_source_mux_250m_div6 = "/soc/clocks/CLK_source_mux_250m_div6";
+		CLK_source_mux_250m_div8 = "/soc/clocks/CLK_source_mux_250m_div8";
+		CLK_12m_mux = "/soc/clocks/CLK_12m_mux";
+		CLK_12m_mux_div2 = "/soc/clocks/CLK_12m_mux_div2";
+		CLK_12m_mux_div40 = "/soc/clocks/CLK_12m_mux_div40";
+		CLK_24m_mux = "/soc/clocks/CLK_24m_mux";
+		CLK_rtcpll_clk = "/soc/clocks/CLK_rtcpll_clk";
+		CLK_ddr_syn = "/soc/clocks/CLK_ddr_syn";
+		CLK_miu_rec = "/soc/clocks/CLK_miu_rec";
+		CLK_mcu = "/soc/clocks/CLK_mcu";
+		CLK_riubrdg = "/soc/clocks/CLK_riubrdg";
+		CLK_pwm = "/soc/clocks/CLK_pwm";
+		CLK_fuart_synth_in = "/soc/clocks/CLK_fuart_synth_in";
+		CLK_fuart0_synth_in = "/soc/clocks/CLK_fuart0_synth_in";
+		CLK_fuart1_synth_in = "/soc/clocks/CLK_fuart1_synth_in";
+		CLK_fuart = "/soc/clocks/CLK_fuart";
+		CLK_fuart0 = "/soc/clocks/CLK_fuart0";
+		CLK_fuart1 = "/soc/clocks/CLK_fuart1";
+		CLK_mspi0 = "/soc/clocks/CLK_mspi0";
+		CLK_miic0 = "/soc/clocks/CLK_miic0";
+		CLK_miic1 = "/soc/clocks/CLK_miic1";
+		CLK_miic2 = "/soc/clocks/CLK_miic2";
+		CLK_bist = "/soc/clocks/CLK_bist";
+		CLK_bist_pm = "/soc/clocks/CLK_bist_pm";
+		CLK_bist_mcu = "/soc/clocks/CLK_bist_mcu";
+		CLK_pwr_ctl = "/soc/clocks/CLK_pwr_ctl";
+		CLK_xtali = "/soc/clocks/CLK_xtali";
+		CLK_live_c = "/soc/clocks/CLK_live_c";
+		CLK_live = "/soc/clocks/CLK_live";
+		CLK_sr00_mclk = "/soc/clocks/CLK_sr00_mclk";
+		CLK_sr01_mclk = "/soc/clocks/CLK_sr01_mclk";
+		CLK_sr02_mclk = "/soc/clocks/CLK_sr02_mclk";
+		CLK_sr03_mclk = "/soc/clocks/CLK_sr03_mclk";
+		CLK_bist_ipu_gp = "/soc/clocks/CLK_bist_ipu_gp";
+		CLK_ipu = "/soc/clocks/CLK_ipu";
+		CLK_ipuff = "/soc/clocks/CLK_ipuff";
+		CLK_hemcu = "/soc/clocks/CLK_hemcu";
+		CLK_csi0_mac_lptx_top_i = "/soc/clocks/CLK_csi0_mac_lptx_top_i";
+		CLK_csi0_mac_top_i = "/soc/clocks/CLK_csi0_mac_top_i";
+		CLK_csi0_ns_top_i = "/soc/clocks/CLK_csi0_ns_top_i";
+		CLK_csi1_mac_lptx_top_i = "/soc/clocks/CLK_csi1_mac_lptx_top_i";
+		CLK_csi1_mac_top_i = "/soc/clocks/CLK_csi1_mac_top_i";
+		CLK_csi1_ns_top_i = "/soc/clocks/CLK_csi1_ns_top_i";
+		CLK_bist_vhe_gp = "/soc/clocks/CLK_bist_vhe_gp";
+		CLK_vhe = "/soc/clocks/CLK_vhe";
+		CLK_mfe = "/soc/clocks/CLK_mfe";
+		CLK_ven_axi = "/soc/clocks/CLK_ven_axi";
+		CLK_ven_scdn = "/soc/clocks/CLK_ven_scdn";
+		CLK_ven_sc_if = "/soc/clocks/CLK_ven_sc_if";
+		CLK_xtali_sc_gp = "/soc/clocks/CLK_xtali_sc_gp";
+		CLK_bist_sc_gp = "/soc/clocks/CLK_bist_sc_gp";
+		CLK_jpe = "/soc/clocks/CLK_jpe";
+		CLK_aesdma = "/soc/clocks/CLK_aesdma";
+		CLK_sd = "/soc/clocks/CLK_sd";
+		CLK_fsp_qspi = "/soc/clocks/CLK_fsp_qspi";
+		CLK_bist_isp_gp = "/soc/clocks/CLK_bist_isp_gp";
+		CLK_isp = "/soc/clocks/CLK_isp";
+		CLK_dsc_enc1 = "/soc/clocks/CLK_dsc_enc1";
+		CLK_dsc_dec1 = "/soc/clocks/CLK_dsc_dec1";
+		CLK_fclk1 = "/soc/clocks/CLK_fclk1";
+		CLK_odclk = "/soc/clocks/CLK_odclk";
+		CLK_disp_pixel_0 = "/soc/clocks/CLK_disp_pixel_0";
+		CLK_ive = "/soc/clocks/CLK_ive";
+		CLK_ldcfeye = "/soc/clocks/CLK_ldcfeye";
+		CLK_emac_ahb = "/soc/clocks/CLK_emac_ahb";
+		CLK_au_sys_384 = "/soc/clocks/CLK_au_sys_384";
+		CLK_au_sys_432 = "/soc/clocks/CLK_au_sys_432";
+		CLK_bist_miu0 = "/soc/clocks/CLK_bist_miu0";
+		CLK_pad_test = "/soc/clocks/CLK_pad_test";
+		CLK_otp = "/soc/clocks/CLK_otp";
+		CLK_real_live = "/soc/clocks/CLK_real_live";
+		CLK_spi_nonpm = "/soc/clocks/CLK_spi_nonpm";
+		CLK_pm_high_ext = "/soc/clocks/CLK_pm_high_ext";
+		CLK_pm_pwm = "/soc/clocks/CLK_pm_pwm";
+		CLK_pm_uart0 = "/soc/clocks/CLK_pm_uart0";
+		CLK_pm_fuart0 = "/soc/clocks/CLK_pm_fuart0";
+		CLK_pm_fuart1 = "/soc/clocks/CLK_pm_fuart1";
+		CLK_pm_pspi0 = "/soc/clocks/CLK_pm_pspi0";
+		CLK_pm_miic0 = "/soc/clocks/CLK_pm_miic0";
+		CLK_pm_pwr_ctl = "/soc/clocks/CLK_pm_pwr_ctl";
+		CLK_mcu_pm = "/soc/clocks/CLK_mcu_pm";
+		CLK_pm_sleep = "/soc/clocks/CLK_pm_sleep";
+		CLK_sar = "/soc/clocks/CLK_sar";
+		CLK_rtc = "/soc/clocks/CLK_rtc";
+		CLK_ir = "/soc/clocks/CLK_ir";
+		CLK_wdt = "/soc/clocks/CLK_wdt";
+		CLK_pm_sdio = "/soc/clocks/CLK_pm_sdio";
+		CLK_pir_pm = "/soc/clocks/CLK_pir_pm";
+		CLK_pm_sr_mclk = "/soc/clocks/CLK_pm_sr_mclk";
+		CLK_ssi_dphy = "/soc/clocks/CLK_ssi_dphy";
+		CLK_vif_pm = "/soc/clocks/CLK_vif_pm";
+		CLK_pm_timer4 = "/soc/clocks/CLK_pm_timer4";
+		CLK_pm_timer5 = "/soc/clocks/CLK_pm_timer5";
+		CLK_pm_timer6 = "/soc/clocks/CLK_pm_timer6";
+		CLK_pm_timer7 = "/soc/clocks/CLK_pm_timer7";
+		CLK_upll_48m = "/soc/clocks/CLK_upll_48m";
+		CLK_wdma = "/soc/clocks/CLK_wdma";
+		CLK_miu_boot = "/soc/clocks/CLK_miu_boot";
+		usclk = "/soc/clocks/usclk";
+		uart0 = "/soc/uart0@1F221000";
+		uart1 = "/soc/uart1@1F221200";
+		fuart = "/soc/fuart@1F220400";
+		i2c0 = "/soc/i2c@1f222800";
+		emac0 = "/soc/emac0";
+		phy0 = "/soc/emac0/mdio-bus@emac0/ethernet-phy@0";
+		sstar_sdmmc0 = "/soc/sstar_sdmmc0";
+		sstar_sdmmc1 = "/soc/sstar_sdmmc1";
+		timer0 = "/soc/timer0@0x1F006040";
+		timer1 = "/soc/timer1@0x1F006080";
+		timer2 = "/soc/timer2@0x1F0060C0";
+		timer3 = "/soc/timer3@0x1F006100";
+		timer4 = "/soc/timer4@0x1F006140";
+		timer5 = "/soc/timer5@0x1F006180";
+		timer6 = "/soc/timer6@0x1F0061C0";
+		timer7 = "/soc/timer7@0x1F006440";
+		timer8 = "/soc/timer8@0x1F2CDE40";
+		timer9 = "/soc/timer9@0x1F2CDE80";
+		timer10 = "/soc/timer10@0x1F2CDEC0";
+		timer11 = "/soc/timer11@0x1F2CDF00";
+		gpio = "/soc/gpio";
+		rtcpwc = "/soc/rtcpwc";
+		pwm0 = "/soc/pwm@0x1F203200";
+		pwm1 = "/soc/pwm@0x1F203280";
+		pwm2 = "/soc/pwm@0x1F203300";
+		usb2phy1_utmi = "/soc/utmi@0x1f284200";
+		usb2phy1_bc = "/soc/bc@0x1f284400";
+		usb2phy1_usbc = "/soc/usbc@0x1f284600";
+		usb2phy1_uhc = "/soc/uhc@0x1f284800";
+		sstar_u2phy1 = "/soc/u2phy1";
+		isp = "/soc/isp";
+		ispalgo = "/soc/ispalgo";
+		ispmid = "/soc/ispmid";
+		pnl = "/soc/pnl";
+		disp = "/soc/disp";
+		hdmitx = "/soc/hdmitx";
+		csi = "/soc/csi";
+		vif = "/soc/vif";
+		sensorif = "/soc/sensorif";
+		jpe0 = "/soc/jpe@0x1F246400";
+		ldc0 = "/soc/ldc0";
+		scl = "/soc/scl";
+		pwm3 = "/soc/pwm@0x1F203380";
+		pwm4 = "/soc/pwm@0x1F203400";
+		pwm5 = "/soc/pwm@0x1F203440";
+		pwm6 = "/soc/pwm@0x1F203480";
+		pwm7 = "/soc/pwm@0x1F2034C0";
+		pwm8 = "/soc/pwm@0x1F003400";
+		pwm9 = "/soc/pwm@0x1F003440";
+		pwm10 = "/soc/pwm@0x1F003480";
+		pwm11 = "/soc/pwm@0x1F0034C0";
+		vpe = "/soc/vpe";
+		rgn = "/soc/rgn";
+		ive0 = "/soc/ive@0x1F2A3C00";
+		i2c1 = "/soc/i2c@1f222a00";
+		i2c2 = "/soc/i2c@1f222c00";
+		i2c3 = "/soc/i2c@1f007c00";
+	};
+};
