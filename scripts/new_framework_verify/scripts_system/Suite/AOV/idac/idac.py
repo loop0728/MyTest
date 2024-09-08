@@ -32,6 +32,11 @@ class idac(CaseBase):
         self.cpufreq_vcore_list        = []     # for kernel core_power check
         self.cpufreq_vcpu_list         = []     # for kernel cpu_power check
 
+        self.dump_dts_name             = "fdt.dts"
+        self.kernel_base_vcore         = 0      # parse from dts
+        self.kernel_base_vcpu          = 0
+        self.kernel_opp_table          = []
+
         self.kernel_prompt             = '/ #'
         self.subpath                   = "idac/resources"
         self.dtc_tool                  = "dtc"
@@ -242,10 +247,9 @@ class idac(CaseBase):
 
     def _convert_devicetree_to_dts(self):
         result = 255
-        dts_filename = f"fdt.dts"
         tool = f'./{self.dtc_tool}'
-        command = [tool, '-I', 'fs', '-O', 'dts', 'base', '-o', dts_filename]
-        #command = [tool, '-I', 'dtb', '-O', 'dts', 'fdt', '-o', dts_filename]
+        command = [tool, '-I', 'fs', '-O', 'dts', 'base', '-o', self.dump_dts_name]
+        #command = [tool, '-I', 'dtb', '-O', 'dts', 'fdt', '-o', self.dump_dts_name]
         ret = subprocess.run(command, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         logger.print_info(f"Command output: {ret.stdout}")
         logger.print_info(f"stderr: {ret.stderr}")
@@ -257,12 +261,92 @@ class idac(CaseBase):
             result = 255
         return result
 
-    def get_base_volt_from_dts(self):
+    def _get_base_volt_from_dts(self, dts_file):
         result = 255
-        
+        core_base_volt_ready = 0
+        cpu_base_volt_ready = 0
+        is_core_power_exist = 0
+        is_cpu_power_exist = 0
 
-    def get_opp_table_from_dts(self):
-        result = 255
+        with open(dts_file, 'r') as file:
+            for line in file:
+                if isinstance(line, bytes):
+                    line = line.decode('utf-8', errors='replace').strip()
+                if "core_power" in line:
+                    core_base_volt_ready = 1
+                    is_core_power_exist = 1
+                    continue
+
+                if "cpu_power" in line:
+                    cpu_base_volt_ready = 1
+                    is_cpu_power_exist = 1
+
+                if core_base_volt_ready == 1 and "base_voltage" in line:
+                    bast_voltage_attr = line.strip().split('=')
+                    base_vcore = bast_voltage_attr[1].strip().strip('<>;')
+                    self.kernel_base_vcore = int(base_vcore, 16)
+                    logger.print_info(f"get core_power:base voltage {self.kernel_base_vcore}")
+                    core_base_volt_ready = 0
+                    if self.package_type == package_type.PACKAGE_TYPE_QFN128:
+                        result = 0
+                        break
+                    elif is_core_power_exist == 1 and is_cpu_power_exist == 1:
+                        result = 0
+                        break
+
+                if cpu_base_volt_ready == 1 and "base_voltage" in line:
+                    bast_voltage_attr = line.strip().split('=')
+                    base_vcpu = bast_voltage_attr[1].strip().strip('<>;')
+                    self.kernel_base_vcpu = int(base_vcpu, 16)
+                    logger.print_info(f"get cpu_power:base voltage {self.kernel_base_vcpu}")
+                    cpu_base_volt_ready = 0
+                    if is_core_power_exist == 1 and is_cpu_power_exist == 1:
+                        result = 0
+                        break
+
+        if result != 0:
+            logger.print_error("get base voltage fail")
+
+        return result
+        # bga: get core_power/base_voltage; cpu_power/base_voltage
+        # qfn: get core_power/base_voltage
+        
+    def _get_opp_table_from_dts(self, dts_file):
+        freq = 0
+        parse_cpufreq_ready = 0
+        parse_volt_ready = 0
+        freq_volt_list = []
+
+        with open(dts_file, 'r') as file:
+            for line in file:
+                if isinstance(line, bytes):
+                    line = line.decode('utf-8', errors='replace').strip()
+                pattern = re.compile(r'opp[\d]{2}')
+                match = pattern.search(line)
+                if match:
+                    parse_cpufreq_ready = 1
+                    #parse_volt_ready = 1
+                    continue
+
+                if parse_cpufreq_ready == 1 and "opp-hz" in line:
+                    opp_hz = line.strip().split('=')
+                    freq = int(opp_hz[1].strip().strip('<>;').split()[1], 16)
+                    parse_cpufreq_ready = 0
+                    parse_volt_ready = 1
+
+                if parse_volt_ready == 1 and "opp-microvolt" in line:
+                    opp_microvolt = line.strip().split('=')
+                    volts = opp_microvolt[1].strip().strip('<>;').split()
+                    cur_volt = int(volts[0], 16)
+                    fast_volt = int(volts[1], 16)
+                    slow_volt = int(volts[2], 16)
+                    freq_volt_map = [freq, cur_volt, slow_volt, fast_volt]
+                    freq_volt_list.append(freq_volt_map)
+                    freq_volt_list.sort(key=lambda x: x[0])
+                    parse_volt_ready = 0
+                    break
+
+        return freq_volt_list
 
     # dump idac info from devicetree
     def get_kernel_idac_info(self):
@@ -274,10 +358,14 @@ class idac(CaseBase):
         result = self._convert_devicetree_to_dts()
         if result != 0:
             return result
-        
 
-
+        dts_path = f"{platform.mount_path}/{self.subpath}/{self.dump_dts_name}"
+        result = self._get_base_volt_from_dts(dts_path)
+        if result != 0:
+            return result
         
+        self.kernel_opp_table = self._get_opp_table_from_dts(dts_path)
+        return result
 
 
         
@@ -309,10 +397,18 @@ class idac(CaseBase):
             return result
         
         # 3. dump devicetree, 转换成dts，解析base voltage，opp_table信息，保存到case 本地。若解析失败，case结束返回失败。
+        result = self.get_kernel_idac_info()
+        if result != 0:
+            return result
 
+        # 4. 重启设备，等待设备进到uboot，设置 LD 环境，保存再重启。若此阶段出现卡住问题，case结束返回失败。
+        # 5. 读取寄存器值，判断读取的电压寄存器是否和case保存的table匹配，如果不匹配，记录LD测试失败，进行下一次的NOD测试。
+        # 6. 执行reset，进到kernel。如果进入kernel阶段卡死，记录LD测试失败，进行下一次的NOD测试。
+        # 7. 正常进到kernel，获取支持的cpu频率，对比统计的列表看是否一致，如果不一致，记录LD测试失败，进行下一次的NOD测试。
+        # 8. 依次设置到各个支持的频率档位，并读取电压寄存器值，先全部读取完毕再观察对应频率读取到的寄存器值是否和统计列表中的一致，如果不一致，记录LD测试失败，进行下一次的NOD测试。
+        # 9. 跳转到4测试NOD。（NOD也执行成功，跳转到4测试OD）
 
-
-
+        # 10. 汇总LD/NOD/OD的测量结果，返回最后的测试结果，都ok返回成功，否则返回失败。
 
 
 
