@@ -86,8 +86,8 @@ class str(CaseBase):
         if self.borad_cur_state == 'Unknow':
             return result
         if self.borad_cur_state == 'at uboot':
-            self.uart.clear_borad_cur_state()
             self.uart.write(self.cmd_uboot_reset)
+            self.uart.clear_borad_cur_state()
         if self.borad_cur_state == 'at kernel':
             self.uart.write(self.cmd_kernel_reboot)
             time.sleep(2)

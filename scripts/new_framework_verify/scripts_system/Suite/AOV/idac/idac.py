@@ -15,22 +15,183 @@ from idac_var import iford_idac_volt_core_table, iford_idac_volt_cpu_table, ifor
 from Common.aov_common import AOVCase
 """ case import end """
 
+class reboot_opts():
+    def __init__(self, device):
+        self.borad_cur_state = ''
+        self.device = device
+    
+    def get_cur_boot_state(self):
+        result = 255
+        self.device.write('')
+        self.borad_cur_state = self.device.get_borad_cur_state()[1]
+        if self.borad_cur_state == 'Unknow':
+            for i in range(1,20):
+                self.device.write('')
+                self.borad_cur_state = self.device.get_borad_cur_state()[1]
+                if self.borad_cur_state != 'Unknow':
+                    result = 0
+                    break
+                time.sleep(1)
+
+        if self.borad_cur_state == 'Unknow':
+            logger.print_error("dev is not at kernel or at uboot")
+        return result
+
+    def kernel_to_uboot(self):
+        result = 255
+        try_time = 0
+        if self.borad_cur_state != 'at kernel':
+            logger.print_error("dev is not at kernel now")
+            return result
+        
+        self.device.write('reboot')
+        time.sleep(2)
+        self.device.clear_borad_cur_state()
+
+        # wait uboot keyword
+        while True:
+            status,line = self.device.read()
+            if status == True:
+                if isinstance(line, bytes):
+                    line = line.decode('utf-8', errors='replace').strip()
+                if "Auto-Negotiation" in line:
+                    break
+            else:
+                logger.print_error("read line fail")
+                return result
+
+        # enter to uboot
+        while True:
+            if try_time >= 30:
+                logger.print_error("enter to uboot timeout")
+                result = 255
+                break
+            self.device.write('')
+            self.borad_cur_state = self.device.get_borad_cur_state()[1]
+            if self.borad_cur_state == 'at uboot':
+                logger.print_error("enter to uboot success")
+                result = 0
+                break
+            elif self.borad_cur_state == 'at kernel':
+                logger.print_error("enter to uboot fail")
+                result = 255
+                break
+            try_time += 1
+            time.sleep(0.1)
+        return result
+
+    def uboot_to_kernel(self):
+        result = 255
+        try_time = 0
+        if self.borad_cur_state != 'at uboot':
+            logger.print_error("dev is not at uboot now")
+            return result
+
+        self.device.write('reset')
+        self.device.clear_borad_cur_state()
+
+        while True:
+            if try_time >= 30:
+                logger.print_error("enter to kernel timeout")
+                result = 255
+                break
+            self.device.write('')
+            self.borad_cur_state = self.device.get_borad_cur_state()[1]
+            if self.borad_cur_state == 'at kernel':
+                logger.print_error("enter to kernel success")
+                result = 0
+                break
+            try_time += 1
+            time.sleep(1)
+        return result
+
+    def kernel_to_kernel(self):
+        result = 255
+        try_time = 0
+        if self.borad_cur_state != 'at kernel':
+            logger.print_error("dev is not at kernel now")
+            return result
+        
+        self.device.write('reboot')
+        time.sleep(2)
+        self.device.clear_borad_cur_state()
+
+        while True:
+            if try_time >= 30:
+                logger.print_error("enter to kernel timeout")
+                result = 255
+                break
+            self.device.write('')
+            self.borad_cur_state = self.device.get_borad_cur_state()[1]
+            if self.borad_cur_state == 'at kernel':
+                logger.print_error("enter to kernel success")
+                result = 0
+                break
+            try_time += 1
+            time.sleep(1)
+        return result
+
+    def uboot_to_uboot(self):
+        result = 255
+        try_time = 0
+        if self.borad_cur_state != 'at uboot':
+            logger.print_error("dev is not at uboot now")
+            return result
+
+        self.device.write('reset')
+        self.device.clear_borad_cur_state()
+
+        # wait uboot keyword
+        while True:
+            status,line = self.device.read()
+            if status == True:
+                if isinstance(line, bytes):
+                    line = line.decode('utf-8', errors='replace').strip()
+                if "Auto-Negotiation" in line:
+                    break
+            else:
+                logger.print_error("read line fail")
+                return result
+
+        # enter to uboot
+        while True:
+            if try_time >= 30:
+                logger.print_error("enter to uboot timeout")
+                result = 255
+                break
+            self.device.write('')
+            self.borad_cur_state = self.device.get_borad_cur_state()[1]
+            if self.borad_cur_state == 'at uboot':
+                logger.print_error("enter to uboot success")
+                result = 0
+                break
+            elif self.borad_cur_state == 'at kernel':
+                logger.print_error("enter to uboot fail")
+                result = 255
+                break
+            try_time += 1
+            time.sleep(0.1)
+        return result
+
 class idac(CaseBase):
     def __init__(self, case_name, case_run_cnt=1, module_path_name='./'):
         super().__init__(case_name, case_run_cnt, module_path_name)
         self.uart = Client(self.case_name, "uart", "uart")
+        self.reboot_opt = reboot_opts(self.uart)
 
         """ case internal params start """
         self.borad_cur_state = ''
         self.reboot_timeout            = 30
         self.max_read_lines            = 10240
+        self.dvfs_on                   = FALSE
         self.package_type              = package_type.PACKAGE_TYPE_MAX
-        self.base_voltage              = 900    # get from hw & IPL macro define(IDAC_BASE_VOLT)
-        self.overdrive_vcore_list      = []     # for ipl core_power check 
-        self.overdrive_vcpu_list       = []     # for ipl cpu_power check
-        self.overdrive_cpufreq_list    = []     # for kernel cpufreq check
-        self.cpufreq_vcore_list        = []     # for kernel core_power check
-        self.cpufreq_vcpu_list         = []     # for kernel cpu_power check
+        self.base_vcore_check              = 900    # get from hw & IPL macro define(IDAC_BASE_VOLT)
+        self.base_vcpu_check              = 900
+        self.overdrive_vcore_check_list      = []     # for ipl core_power check 
+        self.overdrive_vcpu_check_list       = []     # for ipl cpu_power check
+        self.overdrive_cpufreq_check_list    = []     # for kernel cpufreq check
+        self.cpufreq_vcore_check_list        = []     # for kernel core_power check
+        self.cpufreq_vcpu_check_list         = []     # for kernel cpu_power check
 
         self.dump_dts_name             = "fdt.dts"
         self.kernel_base_vcore         = 0      # parse from dts
@@ -41,6 +202,8 @@ class idac(CaseBase):
         self.subpath                   = "idac/resources"
         self.dtc_tool                  = "dtc"
         self.cmd_uboot_reset           = "reset"
+        self.cmd_cpufreq_avaliable     = f"cat /sys/devices/system/cpu/cpufreq/policy0/scaling_available_frequencies"
+        self.cmd_cur_cpufreq           = f"cat /sys/devices/system/cpu/cpufreq/cpufreq_testout"
 
 
         """ case internal params end """
@@ -126,10 +289,10 @@ class idac(CaseBase):
         return offset
 
     # get core_power offset
-    def get_vcore_offset(self):
+    def get_vcore_offset(self, is_kernel=True):
         offset = 0
         result = 255
-        result,str_regVal = sys_common.read_register(self.uart, "14", "71")
+        result,str_regVal = sys_common.read_register(self.uart, "14", "71", is_kernel)
         if result == 0:
             offset = self._calc_volt_offset(str_regVal)
         else:
@@ -137,10 +300,10 @@ class idac(CaseBase):
         return offset
 
     # get cpu_power offseet
-    def get_vcpu_offset(self):
+    def get_vcpu_offset(self, is_kernel=True):
         offset = 0
         result = 255
-        result,str_regVal = sys_common.read_register(self.uart, "15", "11")
+        result,str_regVal = sys_common.read_register(self.uart, "15", "11", is_kernel)
         if result == 0:
             offset = self._calc_volt_offset(str_regVal)
         else:
@@ -163,10 +326,10 @@ class idac(CaseBase):
         for overdrive in overdrive_type[:(len(overdrive_type) - 1)]:
             minVolt, maxVolt = self._get_ipl_overdrive_voltage_map(package, overdrive, iford_idac_volt_core_table)
             volt_map = [minVolt, maxVolt]
-            self.overdrive_vcore_list.append(volt_map)
+            self.overdrive_vcore_check_list.append(volt_map)
             minVolt, maxVolt = self._get_ipl_overdrive_voltage_map(package, overdrive, iford_idac_volt_cpu_table)
             volt_map = [minVolt, maxVolt]
-            self.overdrive_vcpu_list.append(volt_map)
+            self.overdrive_vcpu_check_list.append(volt_map)
 
     # get the supported cpufreq list under the specified overdrive
     def _get_kernel_overdrive_cpufreq_map(self, package, overdrive):
@@ -176,15 +339,18 @@ class idac(CaseBase):
         return cpufreq_map
 
     # get cpufreq support list
-    def get_kernel_cpufreq_list(self, package):
+    def get_kernel_cpufreq_check_list(self, package):
         for overdrive in overdrive_type[:(len(overdrive_type) - 1)]:
             cpufreq_map = self._get_kernel_overdrive_cpufreq_map(package, iford_idac_volt_cpu_table)
-            self.overdrive_cpufreq_list.append(cpufreq_map)
+            self.overdrive_cpufreq_check_list.append(cpufreq_map)
 
     # get the min/max volt under the specified cpufreq
-    def get_kernel_cpufreq_voltage_map(self, package):
-        self.cpufreq_vcore_list = iford_idac_volt_core_table[package]
-        self.cpufreq_vcpu_list = iford_idac_volt_cpu_table[package]
+    def get_kernel_cpufreq_voltage_check_list(self, package):
+        if package = package_type.PACKAGE_TYPE_QFN128:
+
+
+        self.cpufreq_vcore_check_list = iford_idac_volt_core_table[package]
+        self.cpufreq_vcpu_check_list = iford_idac_volt_cpu_table[package]
 
     def _check_emac_ko_insmod_status(self):
         result = 255
@@ -367,13 +533,81 @@ class idac(CaseBase):
         self.kernel_opp_table = self._get_opp_table_from_dts(dts_path)
         return result
 
+    def check_base_voltage(self):
+        result = 255
+        if self.package_type == package_type.PACKAGE_TYPE_QFN128:
+            if self.kernel_base_vcore == self.base_vcore_check:
+                result = 0
+        else:
+            if self.kernel_base_vcore == self.base_vcore_check and self.base_vcpu_check == self.base_vcpu_check:
+                result = 0
+        if result != 0:
+            logger.print_error("kernel base voltage is not match with hw base vcore!")
+        return result
 
-        
+    def check_opp_table(self):
+        result = 255
+        opp_check_table = iford_idac_volt_cpu_table[self.package_type][0]
+        kernel_opp_table = [sublist[:1] + sublist[2:] for sublist in self.kernel_opp_table]
+        is_subset = all(item in kernel_opp_table for item in opp_check_table)
+
+        if is_subset == True:
+            result = 0
+        return result
+
+    def check_avaliable_cpufreq(self):
+        result = 255
+        cpufreq_list = []
+        self.uart.write(self.cmd_cpufreq_avaliable)
+        status,line = self.uart.read()
+        if status == True:
+            if isinstance(line, bytes):
+                line = line.decode('utf-8', errors='replace').strip()
+            cpufreq_map = line.strip().split()
+            for cpufreq_khz in cpufreq_map:
+                cpufreq_hz = int(cpufreq_khz) * 1000
+                cpufreq_list.append(cpufreq_hz)
+
+            if cpufreq_list == self.overdrive_cpufreq_check_list:
+                logger.print_info(f"check avaliable cpufreq pass")
+                result = 0
+        else:
+            logger.print_error(f"check avaliable cpufreq fail")
+            result = 255
+        return result
+
+    def check_uboot_voltage(self, overdrive):
+        result = 255
+        uboot_vcore = self.base_vcore_check + self.get_vcore_offset(False)
+        uboot_vcpu = self.base_vcpu_check + self.get_vcpu_offset(False)
+
+        if uboot_vcore >= self.overdrive_vcore_check_list[overdrive][0] and \
+            uboot_vcpu <= self.overdrive_vcore_check_list[overdrive][1] and \
+            uboot_vcpu >= self.overdrive_vpu_check_list[overdrive][0] and \
+            uboot_vcpu <= self.overdrive_vpu_check_list[overdrive][1]:
+            result = 0
+        return result
+
+    def check_kernel_voltage(self, overdrive, cpufreq):
+        result = 255
+        kernel_vcore = self.base_vcore_check + self.get_vcore_offset(False)
+        kernel_vcpu = self.base_vcpu_check + self.get_vcpu_offset(False)
+
+        for item in self.cpufreq_vcore_check_list[]
+
+        vcore_check_min = self.over
+
+    def set_cpufreq(self, cpufreq_khz):
+        cmd_scaling_min_freq = f"echo {cpufreq_khz} > /sys/devices/system/cpu/cpufreq/policy0/scaling_min_freq"
+        cmd_scaling_max_freq = f"echo {cpufreq_khz} > /sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq"
+        self.uart.write(cmd_scaling_min_freq)
+        self.uart.write(cmd_scaling_max_freq)
 
     # run idac test flow
     @logger.print_line_info
     def idac_test(self):
         result = 255
+        ret_overdrive = [255, 255, 255]
 
         # 1. 判断当前设备状态，确保进入kernel
         result = self.check_kernel_env()
@@ -389,8 +623,8 @@ class idac(CaseBase):
             return result
         
         self.get_ipl_volt_check_list(self.package_type)
-        self.get_kernel_cpufreq_list(self.package_type)
-        self.get_kernel_cpufreq_voltage_map(self.package_type)
+        self.get_kernel_cpufreq_check_list(self.package_type)
+        self.get_kernel_cpufreq_voltage_check_list(self.package_type, self.dvfs_on)
 
         result = self.mount_server_path(self.subpath)
         if result != 0:
@@ -401,8 +635,45 @@ class idac(CaseBase):
         if result != 0:
             return result
 
+        # cmp base voltage        
+        result = self.check_base_voltage()
+        if result != 0:
+            return result
+
+        # cmp cpufreq list and volts
+        result = self.check_opp_table()
+        if result != 0:
+            return result
+
         # 4. 重启设备，等待设备进到uboot，设置 LD 环境，保存再重启。若此阶段出现卡住问题，case结束返回失败。
-        # 5. 读取寄存器值，判断读取的电压寄存器是否和case保存的table匹配，如果不匹配，记录LD测试失败，进行下一次的NOD测试。
+        for overdrive in overdrive_type[:(len(overdrive_type) - 1)]:
+            result = self.reboot_opt.kernel_to_uboot()
+            if result != 0:
+                return result
+            cmd_set_overdrive = f"setenv overdrive {overdrive.value};saveenv"
+            self.uart.write(cmd_set_overdrive)
+            result = self.reboot_opt.uboot_to_uboot()
+            if result != 0:
+                return result
+
+            # 5. 读取寄存器值，判断读取的电压寄存器是否和case保存的table匹配，如果不匹配，记录LD测试失败，进行下一次的NOD测试。
+            ret_overdrive[overdrive] = self.check_uboot_voltage(overdrive)
+            if ret_overdrive[overdrive] != 0:
+                continue
+
+            result = self.reboot_opt.uboot_to_kernel()
+            if result != 0:
+                return result
+            
+            ret_overdrive[overdrive] = self.check_avaliable_cpufreq()
+            if ret_overdrive[overdrive] != 0:
+                continue
+
+            for cpufreq in self.overdrive_cpufreq_check_list:
+                cpufreq_khz = cpufreq / 1000
+                self.set_cpufreq(cpufreq_khz)
+
+        
         # 6. 执行reset，进到kernel。如果进入kernel阶段卡死，记录LD测试失败，进行下一次的NOD测试。
         # 7. 正常进到kernel，获取支持的cpu频率，对比统计的列表看是否一致，如果不一致，记录LD测试失败，进行下一次的NOD测试。
         # 8. 依次设置到各个支持的频率档位，并读取电压寄存器值，先全部读取完毕再观察对应频率读取到的寄存器值是否和统计列表中的一致，如果不一致，记录LD测试失败，进行下一次的NOD测试。
