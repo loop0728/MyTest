@@ -10,8 +10,8 @@ import subprocess
 
 """ case import start """
 from enum import Enum
-from idac_var import overdrive_type, package_type, corner_ic_type, idac_power_type
-from idac_var import iford_idac_volt_core_table, iford_idac_volt_cpu_table, iford_ipl_overdrive_cpufreq_map
+from idac_var import overdrive_type, package_type, corner_ic_type, idac_power_type, dvfs_state
+from idac_var import iford_idac_volt_core_table, iford_idac_volt_cpu_table, iford_ipl_overdrive_cpufreq_map, iford_idac_qfn_dvfs_vcore_table
 from Common.aov_common import AOVCase
 """ case import end """
 
@@ -183,7 +183,7 @@ class idac(CaseBase):
         self.borad_cur_state = ''
         self.reboot_timeout            = 30
         self.max_read_lines            = 10240
-        self.dvfs_on                   = FALSE
+        self.dvfs_on                   = False
         self.package_type              = package_type.PACKAGE_TYPE_MAX
         self.base_vcore_check              = 900    # get from hw & IPL macro define(IDAC_BASE_VOLT)
         self.base_vcpu_check              = 900
@@ -346,11 +346,16 @@ class idac(CaseBase):
 
     # get the min/max volt under the specified cpufreq
     def get_kernel_cpufreq_voltage_check_list(self, package):
-        if package = package_type.PACKAGE_TYPE_QFN128:
-
-
-        self.cpufreq_vcore_check_list = iford_idac_volt_core_table[package]
-        self.cpufreq_vcpu_check_list = iford_idac_volt_cpu_table[package]
+        if package == package_type.PACKAGE_TYPE_QFN128:
+            if self.dvfs_on == False:
+                self.cpufreq_vcore_check_list = iford_idac_qfn_dvfs_vcore_table[dvfs_state.DVFS_STATE_OFF]
+                self.cpufreq_vcpu_check_list = iford_idac_qfn_dvfs_vcore_table[dvfs_state.DVFS_STATE_OFF]
+            else:
+                self.cpufreq_vcore_check_list = iford_idac_qfn_dvfs_vcore_table[dvfs_state.DVFS_STATE_ON]
+                self.cpufreq_vcpu_check_list = iford_idac_qfn_dvfs_vcore_table[dvfs_state.DVFS_STATE_ON]
+        else:
+            self.cpufreq_vcore_check_list = iford_idac_volt_core_table[package]
+            self.cpufreq_vcpu_check_list = iford_idac_volt_cpu_table[package]
 
     def _check_emac_ko_insmod_status(self):
         result = 255
@@ -592,16 +597,36 @@ class idac(CaseBase):
         result = 255
         kernel_vcore = self.base_vcore_check + self.get_vcore_offset(False)
         kernel_vcpu = self.base_vcpu_check + self.get_vcpu_offset(False)
+        vcore_check_item = []
+        vcpu_check_item = []
 
-        for item in self.cpufreq_vcore_check_list[]
+        for item in self.cpufreq_vcore_check_list[overdrive]:
+            if item[0] == cpufreq:
+                vcore_check_item = item
+                break
+        for item in self.cpufreq_vcpu_check_list[overdrive]:
+            if item[0] == cpufreq:
+                vcpu_check_item = item
+                break
+        if kernel_vcore >= vcore_check_item[1] and kernel_vcore <= vcore_check_item[2] and \
+            kernel_vcpu >= vcpu_check_item[1] and kernel_vcpu <= vcpu_check_item[2]:
+            result = 0
+        return result
 
-        vcore_check_min = self.over
+    def set_userspace_governor(self):
+        cmd_userspace_governor = f"echo userspace > /sys/devices/system/cpu/cpufreq/policy0/scaling_available_governors"
+        self.uart.write(cmd_userspace_governor)
 
     def set_cpufreq(self, cpufreq_khz):
         cmd_scaling_min_freq = f"echo {cpufreq_khz} > /sys/devices/system/cpu/cpufreq/policy0/scaling_min_freq"
         cmd_scaling_max_freq = f"echo {cpufreq_khz} > /sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq"
         self.uart.write(cmd_scaling_min_freq)
         self.uart.write(cmd_scaling_max_freq)
+
+    def enable_qfn_dvfs(self):
+        cmd_enable_qfn_dvfs = f""
+        self.uart.write(cmd_enable_qfn_dvfs)
+
 
     # run idac test flow
     @logger.print_line_info
@@ -624,7 +649,7 @@ class idac(CaseBase):
         
         self.get_ipl_volt_check_list(self.package_type)
         self.get_kernel_cpufreq_check_list(self.package_type)
-        self.get_kernel_cpufreq_voltage_check_list(self.package_type, self.dvfs_on)
+        self.get_kernel_cpufreq_voltage_check_list(self.package_type)
 
         result = self.mount_server_path(self.subpath)
         if result != 0:
@@ -659,51 +684,54 @@ class idac(CaseBase):
             # 5. 读取寄存器值，判断读取的电压寄存器是否和case保存的table匹配，如果不匹配，记录LD测试失败，进行下一次的NOD测试。
             ret_overdrive[overdrive] = self.check_uboot_voltage(overdrive)
             if ret_overdrive[overdrive] != 0:
+                logger.print_error("{overdrive.name}  check uboot voltage fail")
                 continue
 
+            # 6. 执行reset，进到kernel
             result = self.reboot_opt.uboot_to_kernel()
             if result != 0:
                 return result
             
+            # 7. 获取支持的cpu频率，对比统计的列表看是否一致，如果不一致，记录LD测试失败，进行下一次的NOD测试
             ret_overdrive[overdrive] = self.check_avaliable_cpufreq()
             if ret_overdrive[overdrive] != 0:
+                logger.print_error("{overdrive.name}  check avaliable cpufreq fail")
                 continue
 
+            # 8. 依次设置到各个支持的频率档位，并读取电压寄存器值，先全部读取完毕再观察对应频率读取到的寄存器值是否和统计列表中的一致，如果不一致，记录LD测试失败，进行下一次的NOD测试
+            self.set_userspace_governor()
             for cpufreq in self.overdrive_cpufreq_check_list:
                 cpufreq_khz = cpufreq / 1000
                 self.set_cpufreq(cpufreq_khz)
+                ret_overdrive[overdrive] = self.check_kernel_voltage(overdrive, cpufreq)
+                if ret_overdrive[overdrive] != 0:
+                    logger.print_error("{overdrive.name}  check voltage fail at cpufreq:{cpufreq}, dvfs:{self.dvfs_on}")
+                    break
 
-        
-        # 6. 执行reset，进到kernel。如果进入kernel阶段卡死，记录LD测试失败，进行下一次的NOD测试。
-        # 7. 正常进到kernel，获取支持的cpu频率，对比统计的列表看是否一致，如果不一致，记录LD测试失败，进行下一次的NOD测试。
-        # 8. 依次设置到各个支持的频率档位，并读取电压寄存器值，先全部读取完毕再观察对应频率读取到的寄存器值是否和统计列表中的一致，如果不一致，记录LD测试失败，进行下一次的NOD测试。
-        # 9. 跳转到4测试NOD。（NOD也执行成功，跳转到4测试OD）
+            if self.package == package_type.PACKAGE_TYPE_QFN128:
+                self.enable_qfn_dvfs()
+                self.dvfs_on = True
+                self.get_kernel_cpufreq_voltage_check_list(self.package_type)
+                for cpufreq in self.overdrive_cpufreq_check_list:
+                    cpufreq_khz = cpufreq / 1000
+                    self.set_cpufreq(cpufreq_khz)
+                    ret_overdrive[overdrive] = self.check_kernel_voltage(overdrive, cpufreq)
+                    if ret_overdrive[overdrive] != 0:
+                        logger.print_error("{overdrive.name}  check voltage fail at cpufreq:{cpufreq}, dvfs:{self.dvfs_on}")
+                        break
 
-        # 10. 汇总LD/NOD/OD的测量结果，返回最后的测试结果，都ok返回成功，否则返回失败。
-
-
-
-        
-        
-
-        if result == 0:
-            self.enable_printk_time()                           # open kernel timestamp
-            self.run_aov_demo_test()                            # run aov app in test mode
-            self.redirect_kmsg()                                # redirect kmsg to memory file
-            self.cat_kmsg()                                     # cat kmsg
-            self.cat_booting_time()                             # cat booting time
-            result = self.judge_test_result()                   # judge test result
-            self.disable_printk_time()                          # close kernel timestamp
-        else:
-            logger.print_error("reboot timeout!")
+        # 10. 汇总LD/NOD/OD的测量结果，返回最后的测试结果，都ok返回成功，否则返回失败
+        for overdrive in overdrive_type[:(len(overdrive_type) - 1)]:
+            if ret_overdrive[overdrive] != 0:
+                result = 255
+                break
 
         if result == 0:
-            logger.print_warning("str test pass!")
+            logger.print_warning("idac test pass!")
         else:
-            logger.print_error("str test fail!")
+            logger.print_error("idac test fail!")
 
         return result
-
     """ case internal functions end """
 
     @logger.print_line_info
