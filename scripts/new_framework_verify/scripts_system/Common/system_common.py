@@ -559,14 +559,18 @@ def burning_image() -> None:
 
     uart.close()
 
-def read_register(device, bank, offset):
+def read_register(device, bank, offset, is_kernel=True):
     result = 255
     str_regVal = ""
     read_line_cnt = 0
     max_read_lines = 10
     is_register_value_ready = 0
-    cmd_get_package_type = "/customer/riu_r {} {}".format(bank, offset)
-    device.write(cmd_get_package_type)
+    cmd_read_register = ""
+    if is_kernel == True:
+        cmd_read_register = "/customer/riu_r {} {}".format(bank, offset)
+    else:
+        cmd_read_register = "riu_r {} {}".format(bank, offset)
+    device.write(cmd_read_register)
 
     while True:
         if read_line_cnt > max_read_lines:
