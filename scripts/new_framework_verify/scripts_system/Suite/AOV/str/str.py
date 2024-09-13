@@ -9,7 +9,6 @@ import inspect
 from Common.case_base import CaseBase
 from client import Client
 import Common.system_common as sys_common
-import timeit
 
 """ case import start """
 from str_var import str_target, str_kmsg, suspend_entry, suspend_exit, app_resume, booting_time
@@ -34,7 +33,7 @@ class str(CaseBase):
         self.board_state_in_kernel_str = '/ #'
         self.set_check_keyword_dict    = {}
         self.other_case_json_path      = './AOV/str/str_keyword.json'    # 额外的关键字过滤
-        self.reboot_timeout            = 180
+        self.reboot_timeout            = 30
         self.max_read_lines            = 10240
         self.log_read_pos              = 0
 

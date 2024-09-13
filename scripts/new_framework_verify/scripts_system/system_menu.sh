@@ -243,13 +243,14 @@ fi
 case_list()
 {
     if [ -z "${module_list}" ]; then
-        module_list="reboot str str_crc ttff_ttcl os_switch idac stress_case"
+        module_list="reboot str str_crc ttff_ttcl os_switch idac cold_reboot stress_case"
     fi
     echo "[module_list] ${module_list}"
     for param in ${module_list}
     do
         source ./Suite/AOV/${param}/setup.sh
     done
+    source ./Suite/Interrupts/setup.sh
     source ./UT/setup.sh
 }
 

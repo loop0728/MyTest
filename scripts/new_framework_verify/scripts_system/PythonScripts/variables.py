@@ -142,6 +142,7 @@ mount_user_password = server_get_platform_extract_value("PLATFORM_mount_user_pas
 mount_path = server_get_platform_extract_value("PLATFORM_mount_path")
 server_ip = server_get_platform_extract_value("PLATFORM_server_ip")
 image_path = server_get_platform_extract_value("PLATFORM_image_path")
+local_mount_path = server_get_platform_extract_value("PLATFORM_local_mount_path")
 
 log_path=server_get_platform_extract_value("LOG")
 appdir = server_get_platform_extract_value('APP')

@@ -12,7 +12,6 @@ import threading
 from datetime import datetime
 from PythonScripts.logger import logger
 from Common.system_common import ensure_file_exists
-
 from Device.device import Device
 
 class BoundedQueue(queue.Queue):

@@ -29,10 +29,11 @@ PLATFORM_mount_gw=172.19.26.254
 PLATFORM_mount_netmask=255.255.255.0
 PLATFORM_mount_user=xxx
 PLATFORM_mount_user_password=xxx
-PLATFORM_mount_path=/nfs
-PLATFORM_mount_mode=cifs
+PLATFORM_mount_path=atstream/IT/I6DW/iford_systemapp_testcase
+PLATFORM_mount_mode=nfs
 PLATFORM_server_ip=172.19.26.53
 PLATFORM_image_path=xxx
+PLATFORM_local_mount_path=/stream/IT/I6DW/iford_systemapp_testcase
 
 #################### DEVICE ####################
 # PLATFORM_UART: the device of uart, for Windows,it's COM, and for Linux,it's /dev/ttyUSB

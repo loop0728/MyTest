@@ -44,6 +44,7 @@ class DeviceManager():
         with self.lock:
             if device_name in self.devices and self.locks[device_name]:
                 self.devices[device_name].disconnect()
+                self.devices.pop(device_name)
                 self.locks[device_name] = False  # 解锁设备
 
     def update_case_name(self, case_name) -> None:

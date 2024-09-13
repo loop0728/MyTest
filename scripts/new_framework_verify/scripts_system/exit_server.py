@@ -45,7 +45,7 @@ def exit_server(wait_timeout = 5, delimiter = 'mstar'):
         else:
             result = False
     except Exception as e:
-        logger.print_warning(f"Exception e:{e}")
+        logger.print_warning(f"Exception e:{e} {__file__}:{e.__traceback__.tb_lineno}")
         client_socket.settimeout(old_timeout)
         return False
     client_socket.settimeout(old_timeout)

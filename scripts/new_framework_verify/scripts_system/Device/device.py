@@ -54,7 +54,7 @@ class Device(ABC):
         pass
 
     @abstractmethod
-    def read(self) -> bytes:
+    def read(self, wait_timeout = 2) -> bytes:
         """
         从缓冲区中读取一行数据并返回, 这是一个抽象方法，子类必须实现它
 

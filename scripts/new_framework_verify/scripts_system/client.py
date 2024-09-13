@@ -107,7 +107,7 @@ class Client():
                     print(f"data is not in param")
             # print(f'data is {data}')
         except Exception as e:
-            logger.print_warning(f"Exception e:{e}\n")
+            logger.print_warning(f"Exception e:{e} {__file__}:{e.__traceback__.tb_lineno}")
             self.client_socket.settimeout(old_timeout)
             return False, data
         self.client_socket.settimeout(old_timeout)
@@ -217,7 +217,7 @@ class Client():
                 all_data += data
                 line -= 1                             # 剩余行数-1
             except Exception as e:
-                logger.print_warning(f"Exception e:{e}")
+                logger.print_warning(f"Exception e:{e} {__file__}:{e.__traceback__.tb_lineno}")
                 self.client_socket.settimeout(old_timeout)
                 result = False
                 all_data += ''

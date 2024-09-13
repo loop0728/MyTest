@@ -590,7 +590,7 @@ def read_register(device, bank, offset, is_kernel=True):
                 pattern = re.compile(r'0x([A-Fa-f0-9]{4})')
                 match = pattern.search(line)
                 if match:
-                    str_regVal = match.group(1)
+                    str_regVal = match.group(0)
                     result = 0
                     logger.print_info(f"bank:{bank} offset:{offset} register value is {str_regVal}")
                     break

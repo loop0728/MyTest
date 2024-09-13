@@ -16,7 +16,7 @@ class RunUserCase():
 
     def parase_case_run(self) -> int:
         result = 255
-        calss_obj = ''
+        class_obj = ''
         module_name = self.module_path_name.split("/")[-1].split(".")[0]
         logger.print_info("module_path: {}".format(self.module_path))
         logger.print_info("module_name: {}".format(module_name))
@@ -24,13 +24,13 @@ class RunUserCase():
         sys.path.append(self.module_path)
         module = __import__(module_name)
         logger.print_info("case_name:{}".format(self.case_name))
-        calss_obj = getattr(module, module_name) #get mode class
+        class_obj = getattr(module, module_name) #get mode class
         if  self.case_name != 'NULL' and  self.case_name != '' and self.case_name != "help":
-            instance = calss_obj(self.case_name, self.case_run_cnt, self.module_path_name)#use class creat one instance
+            instance = class_obj(self.case_name, self.case_run_cnt, self.module_path_name)#use class creat one instance
             if not instance:
                 logger.print_error("create instance fail!\n")
         else:
-            instance = calss_obj(module_name, self.case_run_cnt, self.module_path_name)#use class creat one instance
+            instance = class_obj(module_name, self.case_run_cnt, self.module_path_name)#use class creat one instance
             if not instance:
                 logger.print_error("create instance fail!\n")
             instance.runcase_help()

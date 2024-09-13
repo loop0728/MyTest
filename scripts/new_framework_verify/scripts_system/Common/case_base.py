@@ -17,6 +17,7 @@ class CaseBase():
         self.module_path_name          = module_path_name
         self.module_path               = "/".join(self.module_path_name.split("/")[:-1])
         self.config_name_path          = ''
+        self.mount_path                = f"scripts_system/Suite/AOV/{self.case_name}/resources"
 
         if self.case_name[len(self.case_name)-1:].isdigit() and '_stress_' in self.case_name:
             parase_list = self.case_name.split('_stress_')
