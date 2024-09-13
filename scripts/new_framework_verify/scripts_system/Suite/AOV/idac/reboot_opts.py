@@ -37,7 +37,7 @@ class RebootOpts():
             logger.print_error(f"dev is not at kernel now, cur_state:{self.borad_cur_state}")
             result = 255
             return result
-        
+
         self.device.write('reboot -f')
         time.sleep(2)
         self.device.clear_borad_cur_state()
@@ -114,7 +114,7 @@ class RebootOpts():
             logger.print_error("dev is not at kernel now")
             result = 255
             return result
-        
+
         self.device.write('reboot -f')
         time.sleep(2)
         self.device.clear_borad_cur_state()

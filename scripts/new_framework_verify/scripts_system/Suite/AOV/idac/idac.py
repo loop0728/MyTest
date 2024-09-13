@@ -33,7 +33,7 @@ class idac(CaseBase):
         self.package_type              = package_type.PACKAGE_TYPE_MAX
         self.base_vcore_check             = 900    # get from hw & IPL macro define(IDAC_BASE_VOLT)
         self.base_vcpu_check              = 900
-        self.overdrive_vcore_check_list      = []     # for ipl core_power check 
+        self.overdrive_vcore_check_list      = []     # for ipl core_power check
         self.overdrive_vcpu_check_list       = []     # for ipl cpu_power check
         self.overdrive_cpufreq_check_list    = []     # for kernel cpufreq check
         self.cpufreq_vcore_check_list        = []     # for kernel core_power check
@@ -159,7 +159,7 @@ class idac(CaseBase):
         bit4 = sys_common.get_bit_value(str_hex, 4)
         bit5 = sys_common.get_bit_value(str_hex, 5)
         value = (bit3 << 3) + (bit2 << 2) + (bit1 << 1) + bit0
-        
+
         if bit4 == 0:
             sign = -1
         else:
@@ -211,7 +211,7 @@ class idac(CaseBase):
                 maxVolt = overdrive_volt_map[2]
                 break
         return minVolt, maxVolt
-    
+
     # get ipl core_power/cpu_power check list
     # self.overdrive_vcore_check_list = [
     #   [minVolt, maxVolt],     #LD
@@ -514,7 +514,7 @@ class idac(CaseBase):
                     parse_cpufreq_done = 0
                     parse_volt_done = 0
                     parse_opp_node_ready = 0
-        
+
         freq_volt_list.sort(key=lambda x: x[0])
         return freq_volt_list
 
@@ -528,18 +528,18 @@ class idac(CaseBase):
         result = self._dump_devicetree()
         if result != 0:
             return result
-        
+
         logger.print_info(f"begin to convert devicetree blob to dts ...")
         result = self._convert_devicetree_to_dts(local_path)
         if result != 0:
             return result
 
-        
+
         logger.print_info(f"get kernel base voltage from dts ...")
         result = self._get_base_volt_from_dts(dts_path)
         if result != 0:
             return result
-        
+
         logger.print_info(f"get kernel opp table from dts ...")
         self.kernel_opp_table = self._get_opp_table_from_dts(dts_path)
         return result
@@ -708,7 +708,7 @@ class idac(CaseBase):
             logger.print_error("Unknown package type!")
             result = 255
             return result
-        
+
         # get overdrive-volt check table
         self.get_ipl_volt_check_list(self.package_type)
 
@@ -722,13 +722,13 @@ class idac(CaseBase):
         result = self.mount_server_path(self.mount_path)
         if result != 0:
             return result
-        
+
         # 3. dump devicetree, 转换成dts，解析base voltage，opp_table信息，保存到case 本地。若解析失败，case结束返回失败。
         result = self.get_kernel_idac_info()
         if result != 0:
             return result
 
-        # cmp base voltage        
+        # cmp base voltage
         result = self.check_base_voltage()
         if result != 0:
             return result
@@ -761,11 +761,11 @@ class idac(CaseBase):
                 result = self.reboot_opt.uboot_to_kernel()
                 if result != 0:
                     return result
-                
+
                 if ret_overdrive[overdrive.value] != 0:
                     logger.print_error(f"{overdrive.name} check uboot voltage fail")
                     continue
-                
+
                 # 7. 获取支持的cpu频率，对比统计的列表看是否一致，如果不一致，记录LD测试失败，进行下一次的NOD测试
                 logger.print_info(f"{overdrive.name}: check kernel avaliable cpufreq")
                 ret_overdrive[overdrive.value] = self.check_avaliable_cpufreq(overdrive)
@@ -816,7 +816,7 @@ class idac(CaseBase):
         result = self.check_kernel_env()
         if result != 0:
             return result
-        
+
         logger.print_info(f"reboot to uboot")
         result = self.reboot_opt.kernel_to_uboot()
         if result != 0:
@@ -832,7 +832,6 @@ class idac(CaseBase):
         if result != 0:
             return result
         return result
-        
 
     @logger.print_line_info
     def runcase(self):

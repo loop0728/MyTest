@@ -34,7 +34,7 @@ class stat_timecost_test(CaseBase):
                 line = line.decode('utf-8', errors='replace').strip()
                 if len(line) == len(cmd) - 5:
                     result = True
-        
+
         return result
 
     def runcase(self) -> int:
