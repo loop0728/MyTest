@@ -45,9 +45,10 @@ class idac(CaseBase):
         self.kernel_opp_table          = []
 
         self.kernel_prompt             = '/ #'
+        self.mount_path                = f"scripts_system/Suite/IDAC/resources"
         self.dtc_tool                  = "dtc"
         self.cmd_uboot_reset           = "reset"
-        self.cmd_cpufreq_avaliable     = f"cat /sys/devices/system/cpu/cpufreq/policy0/scaling_available_frequencies"
+        self.cmd_cpufreq_available     = f"cat /sys/devices/system/cpu/cpufreq/policy0/scaling_available_frequencies"
         self.cmd_cur_cpufreq           = f"cat /sys/devices/system/cpu/cpufreq/cpufreq_testout"
         self.cmd_governor              = "/sys/devices/system/cpu/cpufreq/policy0/scaling_available_governors"
         self.cmd_scaling_min_freq      = "/sys/devices/system/cpu/cpufreq/policy0/scaling_min_freq"
@@ -70,7 +71,7 @@ class idac(CaseBase):
         }
         self.case_cmd_param = {
             'cmd_uboot_reset': 'reset',
-            'cmd_cpufreq_avaliable': 'cat /sys/devices/system/cpu/cpufreq/policy0/scaling_available_frequencies',
+            'cmd_cpufreq_available': 'cat /sys/devices/system/cpu/cpufreq/policy0/scaling_available_frequencies',
             'cmd_cur_cpufreq': 'cat /sys/devices/system/cpu/cpufreq/cpufreq_testout',
             'cmd_governor': '/sys/devices/system/cpu/cpufreq/policy0/scaling_available_governors',
             'cmd_scaling_min_freq': '/sys/devices/system/cpu/cpufreq/policy0/scaling_min_freq',
@@ -579,7 +580,7 @@ class idac(CaseBase):
     def check_avaliable_cpufreq(self, overdrive):
         result = 255
         cpufreq_list = []
-        self.uart.write(self.cmd_cpufreq_avaliable)
+        self.uart.write(self.cmd_cpufreq_available)
         status,line = self.uart.read()
         if status == True:
             if isinstance(line, bytes):
@@ -619,13 +620,13 @@ class idac(CaseBase):
         vcore_check_item = self.overdrive_vcore_check_list[overdrive.value]
         vcpu_check_item = self.overdrive_vcpu_check_list[overdrive.value]
 
-        logger.print_info(f"uboot_vcore:{uboot_vcore}, "
-                          f"target:[{vcore_check_item[0]}, {vcore_check_item[1]}]")
-        logger.print_info(f"uboot_vcpu:{uboot_vcpu}, "
-                          f"target:[{vcpu_check_item[0]}, {vcpu_check_item[1]}]")
-
         uboot_vcore_uv = uboot_vcore * 1000
         uboot_vcpu_uv = uboot_vcpu * 1000
+        logger.print_info(f"uboot_vcore:{uboot_vcore_uv}, "
+                          f"target:[{vcore_check_item[0]}, {vcore_check_item[1]}]")
+        logger.print_info(f"uboot_vcpu:{uboot_vcpu_uv}, "
+                          f"target:[{vcpu_check_item[0]}, {vcpu_check_item[1]}]")
+
         if uboot_vcore_uv >= self.overdrive_vcore_check_list[overdrive.value][0] and \
             uboot_vcore_uv <= self.overdrive_vcore_check_list[overdrive.value][1] and \
             uboot_vcpu_uv >= self.overdrive_vcpu_check_list[overdrive.value][0] and \
@@ -663,13 +664,13 @@ class idac(CaseBase):
                 vcpu_check_item = item
                 break
 
-        logger.print_info(f"kernel_vcore:{kernel_vcore}, freq:{vcore_check_item[0]} "
-                          f"target:[{vcore_check_item[1]}, {vcore_check_item[2]}]")
-        logger.print_info(f"kernel_vcpu:{kernel_vcpu}, freq:{vcpu_check_item[0]} "
-                          f"target:[{vcpu_check_item[1]}, {vcpu_check_item[2]}]")
-
         kernel_vcore_uv = kernel_vcore * 1000
         kernel_vcpu_uv = kernel_vcpu * 1000
+        logger.print_info(f"kernel_vcore:{kernel_vcore_uv}, freq:{vcore_check_item[0]} "
+                          f"target:[{vcore_check_item[1]}, {vcore_check_item[2]}]")
+        logger.print_info(f"kernel_vcpu:{kernel_vcpu_uv}, freq:{vcpu_check_item[0]} "
+                          f"target:[{vcpu_check_item[1]}, {vcpu_check_item[2]}]")
+
         if kernel_vcore_uv >= vcore_check_item[1] and kernel_vcore_uv <= vcore_check_item[2] and \
             kernel_vcpu_uv >= vcpu_check_item[1] and kernel_vcpu_uv <= vcpu_check_item[2]:
             result = 0
@@ -775,9 +776,9 @@ class idac(CaseBase):
 
                 # 8. 依次设置到各个支持的频率档位，并读取电压寄存器值，先全部读取完毕再观察对应频率读取到的寄存器值是否和统计列表中的一致，如果不一致，记录LD测试失败，进行下一次的NOD测试
                 logger.print_info(f"{overdrive.name}: check kernel voltage at different cpufreq")
-                self.set_userspace_governor()
+                #self.set_userspace_governor()
                 for cpufreq in self.overdrive_cpufreq_check_list[overdrive.value]:
-                    cpufreq_khz = cpufreq / 1000
+                    cpufreq_khz = int(cpufreq / 1000)
                     self.set_cpufreq(cpufreq_khz)
                     ret_overdrive[overdrive.value] = self.check_kernel_voltage(overdrive, cpufreq)
                     if ret_overdrive[overdrive.value] != 0:
@@ -789,7 +790,7 @@ class idac(CaseBase):
                     self.dvfs_on = True
                     self.get_kernel_cpufreq_voltage_check_list(self.package_type)
                     for cpufreq in self.overdrive_cpufreq_check_list[overdrive.value]:
-                        cpufreq_khz = cpufreq / 1000
+                        cpufreq_khz = int(cpufreq / 1000)
                         self.set_cpufreq(cpufreq_khz)
                         ret_overdrive[overdrive.value] = self.check_kernel_voltage(overdrive, cpufreq)
                         if ret_overdrive[overdrive.value] != 0:
