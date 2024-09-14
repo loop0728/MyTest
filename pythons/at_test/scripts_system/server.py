@@ -165,9 +165,7 @@ class Server():
         if len(data) > 0:
             if not data.endswith(b'\n'):
                 data += b'\n'
-            print(f"server read: get data[{data}] from device")
             client.sendall(data)
-            print(f"server read: send data[{data}] to client")
 
     def get_borad_cur_state(self, client, msg):
         device_name = msg["device_name"]
@@ -269,7 +267,6 @@ class Server():
             for item in request_msg_list:
                 param = json.loads(item)
                 cmd = param['cmd']
-                print(f"thread_callfun, cmd:{cmd}")
                 if hasattr(server_handle, cmd):
                     cmd_callback = getattr(server_handle, cmd)
                     cmd_callback(client, param)
@@ -298,7 +295,6 @@ class Server():
             for item in request_msg_list:
                 param = json.loads(item)
                 cmd = param['cmd']
-                print(f"get_client_data, cmd:{cmd}")
                 if cmd == 'server_exit':
                     self.server_exit(client)
                     return 0

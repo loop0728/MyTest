@@ -46,7 +46,7 @@ class idac(CaseBase):
         self.kernel_prompt             = '/ #'
         self.dtc_tool                  = "dtc"
         self.cmd_uboot_reset           = "reset"
-        self.cmd_cpufreq_avaliable     = f"cat /sys/devices/system/cpu/cpufreq/policy0/scaling_available_frequencies"
+        self.cmd_cpufreq_available     = f"cat /sys/devices/system/cpu/cpufreq/policy0/scaling_available_frequencies"
         self.cmd_cur_cpufreq           = f"cat /sys/devices/system/cpu/cpufreq/cpufreq_testout"
         self.cmd_governor              = "/sys/devices/system/cpu/cpufreq/policy0/scaling_available_governors"
         self.cmd_scaling_min_freq      = "/sys/devices/system/cpu/cpufreq/policy0/scaling_min_freq"
@@ -69,7 +69,7 @@ class idac(CaseBase):
         }
         self.case_cmd_param = {
             'cmd_uboot_reset': 'reset',
-            'cmd_cpufreq_avaliable': 'cat /sys/devices/system/cpu/cpufreq/policy0/scaling_available_frequencies',
+            'cmd_cpufreq_available': 'cat /sys/devices/system/cpu/cpufreq/policy0/scaling_available_frequencies',
             'cmd_cur_cpufreq': 'cat /sys/devices/system/cpu/cpufreq/cpufreq_testout',
             'cmd_governor': '/sys/devices/system/cpu/cpufreq/policy0/scaling_available_governors',
             'cmd_scaling_min_freq': '/sys/devices/system/cpu/cpufreq/policy0/scaling_min_freq',
@@ -310,7 +310,7 @@ class idac(CaseBase):
             result = self._insmod_emac_ko("sstar_emac")
             if result != 0:
                 return result
-        logger.print_info(f"set board ip and mount server path ...")
+        logger.print_warning(f"set board ip and mount server path ...")
         sys_common.set_board_kernel_ip(self.uart)
         status = sys_common.mount_to_server(self.uart, path)
         if status == True:
@@ -523,23 +523,23 @@ class idac(CaseBase):
         print(f"local_mount_path:{self.local_mount_path}")
         dts_path = f"{self.local_mount_path}/{self.dump_dts_name}"
 
-        logger.print_info(f"begin to dump devicetree ...")
+        logger.print_warning(f"begin to dump devicetree ...")
         result = self._dump_devicetree()
         if result != 0:
             return result
 
-        logger.print_info(f"begin to convert devicetree blob to dts ...")
+        logger.print_warning(f"begin to convert devicetree blob to dts ...")
         result = self._convert_devicetree_to_dts(self.local_mount_path)
         if result != 0:
             return result
 
 
-        logger.print_info(f"get kernel base voltage from dts ...")
+        logger.print_warning(f"get kernel base voltage from dts ...")
         result = self._get_base_volt_from_dts(dts_path)
         if result != 0:
             return result
 
-        logger.print_info(f"get kernel opp table from dts ...")
+        logger.print_warning(f"get kernel opp table from dts ...")
         self.kernel_opp_table = self._get_opp_table_from_dts(dts_path)
         return result
 
@@ -578,7 +578,7 @@ class idac(CaseBase):
     def check_avaliable_cpufreq(self, overdrive):
         result = 255
         cpufreq_list = []
-        self.uart.write(self.cmd_cpufreq_avaliable)
+        self.uart.write(self.cmd_cpufreq_available)
         status,line = self.uart.read()
         if status == True:
             if isinstance(line, bytes):
@@ -740,7 +740,7 @@ class idac(CaseBase):
         # 4. 重启设备，等待设备进到uboot，设置 LD 环境，保存再重启。若此阶段出现卡住问题，case结束返回失败。
         for overdrive in overdrive_type:
             if overdrive != overdrive_type.OVERDRIVE_TYPE_MAX:
-                logger.print_info(f"reboot to set overdrive to {overdrive.name}")
+                logger.print_warning(f"reboot to set overdrive to {overdrive.name}")
                 result = self.reboot_opt.kernel_to_uboot()
                 if result != 0:
                     return result
@@ -752,7 +752,7 @@ class idac(CaseBase):
                     return result
 
                 # 5. 读取寄存器值，判断读取的电压寄存器是否和case保存的table匹配，如果不匹配，记录LD测试失败，进行下一次的NOD测试。
-                logger.print_info(f"{overdrive.name}: check uboot voltage")
+                logger.print_warning(f"{overdrive.name}: check uboot voltage")
                 ret_overdrive[overdrive.value] = self.check_uboot_voltage(overdrive)
 
                 # 6. 执行reset，进到kernel
@@ -766,17 +766,20 @@ class idac(CaseBase):
                     continue
 
                 # 7. 获取支持的cpu频率，对比统计的列表看是否一致，如果不一致，记录LD测试失败，进行下一次的NOD测试
-                logger.print_info(f"{overdrive.name}: check kernel avaliable cpufreq")
+                logger.print_warning(f"{overdrive.name}: check kernel avaliable cpufreq")
                 ret_overdrive[overdrive.value] = self.check_avaliable_cpufreq(overdrive)
                 if ret_overdrive[overdrive.value] != 0:
                     logger.print_error(f"{overdrive.name} check avaliable cpufreq fail")
                     continue
 
                 # 8. 依次设置到各个支持的频率档位，并读取电压寄存器值，先全部读取完毕再观察对应频率读取到的寄存器值是否和统计列表中的一致，如果不一致，记录LD测试失败，进行下一次的NOD测试
-                logger.print_info(f"{overdrive.name}: check kernel voltage at different cpufreq")
+                if self.package_type == package_type.PACKAGE_TYPE_QFN128:
+                    logger.print_warning(f"{overdrive.name} dvfs_off: check kernel voltage at different cpufreq")
+                else:
+                    logger.print_warning(f"{overdrive.name}: check kernel voltage at different cpufreq")
                 self.set_userspace_governor()
                 for cpufreq in self.overdrive_cpufreq_check_list[overdrive.value]:
-                    cpufreq_khz = cpufreq / 1000
+                    cpufreq_khz = int(cpufreq / 1000)
                     self.set_cpufreq(cpufreq_khz)
                     ret_overdrive[overdrive.value] = self.check_kernel_voltage(overdrive, cpufreq)
                     if ret_overdrive[overdrive.value] != 0:
@@ -784,11 +787,12 @@ class idac(CaseBase):
                         break
 
                 if self.package_type == package_type.PACKAGE_TYPE_QFN128:
+                    logger.print_warning(f"{overdrive.name} dvfs_on: check kernel voltage at different cpufreq")
                     self.enable_qfn_dvfs()
                     self.dvfs_on = True
                     self.get_kernel_cpufreq_voltage_check_list(self.package_type)
                     for cpufreq in self.overdrive_cpufreq_check_list[overdrive.value]:
-                        cpufreq_khz = cpufreq / 1000
+                        cpufreq_khz = int(cpufreq / 1000)
                         self.set_cpufreq(cpufreq_khz)
                         ret_overdrive[overdrive.value] = self.check_kernel_voltage(overdrive, cpufreq)
                         if ret_overdrive[overdrive.value] != 0:

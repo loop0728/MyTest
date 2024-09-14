@@ -1,12 +1,7 @@
-#import sys
 import time
 import re
-#import os
-#import json
 from enum import Enum
 from PythonScripts.logger import logger
-#import threading
-#import inspect
 from Common.case_base import CaseBase
 from client import Client
 import Suite.AOV.Common.aov_common as aov_common

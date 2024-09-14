@@ -129,15 +129,13 @@ class TelnetDevice(Device):
         Returns:
             bytes: queue中的一行数据
         """
-        terminator = b'\x04'
         # logger.print_warning("Telnet read.")
         try:
             data = self.tmp_data_queue.get(timeout=wait_timeout-0.5)
-            data += terminator
             return data
         except queue.Empty:
             logger.print_warning("Telnet tmp_data_queue is empty.")
-            return terminator
+            return b''
 
     def start_read_thread(self):
         """ 启动读取线程 """

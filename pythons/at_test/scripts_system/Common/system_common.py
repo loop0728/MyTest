@@ -591,7 +591,7 @@ def read_register(device, bank, offset, is_kernel=True):
             logger.print_error("read lines exceed max_read_lines:%d" %(max_read_lines))
             break
 
-        status, line = device.read(1, 10)
+        status, line = device.read()
         if status  == True:
             read_line_cnt += 1
             if isinstance(line, bytes):

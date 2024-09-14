@@ -8,8 +8,7 @@ class RebootOpts():
 
     def get_cur_boot_state(self):
         result = 255
-        print(f"get_cur_boot_state !!!!!!!!!!!!!!!!!!!!")
-        self.device.write('\n')
+        self.device.write('')
         self.borad_cur_state = self.device.get_borad_cur_state()[1]
         if self.borad_cur_state != 'Unknow':
             result = 0
@@ -43,7 +42,7 @@ class RebootOpts():
         time.sleep(2)
         self.device.clear_borad_cur_state()
 
-        logger.print_info("begin to read keyword")
+        #logger.print_info("begin to read keyword")
         # wait uboot keyword
         while True:
             status,line = self.device.read(1, 10)

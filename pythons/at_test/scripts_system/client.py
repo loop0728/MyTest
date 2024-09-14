@@ -6,7 +6,6 @@ import json
 import re
 from PythonScripts.variables import net_connect_port
 from PythonScripts.logger import logger
-import cProfile
 
 class Client:
     """Device for obtaining server information."""
@@ -35,7 +34,6 @@ class Client:
         if self.device_type != "uart":
             self._regiser_device(self.device_type, self.device_name)
 
-        self.profiler = cProfile.Profile()
 
     def __del__(self):
         if self.is_open is True:
@@ -222,7 +220,6 @@ class Client:
         self.client_socket.settimeout(wait_timeout)  # 设置5秒超时
         result = False
         all_data = ""
-        cnt = 0
         while line > 0:
             msg = {
                 "case_name": self.case_name,
@@ -231,28 +228,19 @@ class Client:
                 "timeout": wait_timeout,
             }
             self._send_msg_to_server(msg)
-            print(f"_send_msg_to_server: {msg}")
-            cnt = 0
             try:
                 data = ""
                 while True:
-                    self.profiler.enable()
                     data += self.client_socket.recv(self.rev_max_datalen).decode(
                         "utf-8"
                     )
-                    cnt += 1
 
                     if '\n' in data:
                         break
-                #self.profiler.print_stats()
-                self.profiler.disable()
                 result = True
                 all_data += data
                 line -= 1  # 剩余行数-1
             except Exception as e:
-                self.profiler.print_stats()
-                self.profiler.disable()
-                print(f"recv cnt:{cnt}")
                 logger.print_warning(f"Exception e:{e} {__file__}:"
 									 f"{e.__traceback__.tb_lineno}")
                 self.client_socket.settimeout(old_timeout)
@@ -261,7 +249,6 @@ class Client:
                 break
         # logger.print_info(f"Client: {all_data}")
         self.client_socket.settimeout(old_timeout)
-        print(f"read return: {result}, {all_data}")
         return result, all_data
 
     def close(self) -> bool:

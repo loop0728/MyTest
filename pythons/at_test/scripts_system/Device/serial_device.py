@@ -100,7 +100,6 @@ class SerialDevice(Device):
             while curr_line < 10:                  # 等待回显的行数
                 data_new = self.read().decode('utf-8', errors='replace').strip()
                 curr_data += data_new
-				#print(f"feed_back:{curr_data} data:{data} {curr_line}")
                 if data in curr_data or '?' in curr_data:
                     result = True
                     break
