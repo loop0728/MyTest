@@ -169,8 +169,9 @@ class Str(CaseBase):
             stage_phase = 'str_app_resume'
             result = 0
 
-        if (self.case_test_param[stage_time] == 0
-                and self.case_test_param[stage_phase] in line):
+        #if (self.case_test_param[stage_time] == 0
+        #        and self.case_test_param[stage_phase] in line):
+        if self.case_test_param[stage_phase] in line:
             pattern = re.compile(r'\[\s*([\d]+\.[\d]+)\]\s')
             match = pattern.search(line)
             if match:

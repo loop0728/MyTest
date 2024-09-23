@@ -261,23 +261,30 @@ class RebootOpts():
         """
         result = 255
         val = ''
+
+        line_cnt = 0
         while True:
             status, line = self.device.read()
             if status:
                 if isinstance(line, bytes):
                     line = line.decode('utf-8', errors='replace').strip()
+                
+                print(f"line[{line_cnt}]: {line}")
                 if "not defined" in line:
                     result = 255
                     break
-                if self.uboot_prompt in line or self.kernel_prompt in line:
+                #if self.uboot_prompt in line or self.kernel_prompt in line:
+                if self.uboot_prompt == line.strip() or self.kernel_prompt == line.strip():
                     if len(val) > 0:
                         result = 0
                     break
                 val += line.strip()
+                line_cnt += 1
             else:
                 logger.print_error(f"read line fail, {line}")
                 result = 255
                 break
+        print(f"val: {val}")
 
         if result == 0:
             index = val.find('=')
@@ -384,7 +391,7 @@ class RebootOpts():
 
         ret, fw_tool_path = self._is_fw_tool_exist("fw_setenv")
         if ret:
-            cmd_setenv = f"{fw_tool_path} {key} {val};saveenv"
+            cmd_setenv = f"{fw_tool_path} {key} {val};"
             self.device.write(cmd_setenv)
             result = 0
         return result
