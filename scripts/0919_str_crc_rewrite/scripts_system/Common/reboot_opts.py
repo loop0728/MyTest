@@ -5,7 +5,9 @@
 
 import time
 from PythonScripts.logger import logger
+import PythonScripts.variables as platform
 from Device.device import BootStage
+from Device.rs232_contrl import rs232_contrl
 
 class RebootOpts():
     """A class representing reboot options
@@ -235,6 +237,55 @@ class RebootOpts():
         result = self._enter_to_uboot()
         return result
 
+    def _cold_reboot(self):
+        """ the device is powered off and then powered on.
+        Args:
+            None
+        Returns:
+            None
+        """
+        rs232_contrl_handle = rs232_contrl(relay=int(platform.relay_port), com=platform.dev_uart)
+        logger.print_info(f"init rs232_contrl_handle {platform.dev_uart}:{platform.relay_port}")
+        rs232_contrl_handle.power_off()
+        time.sleep(2)
+        rs232_contrl_handle.power_on()
+        rs232_contrl_handle.close()
+        logger.print_info("closed rs232_contrl_handle.")
+
+    def cold_reboot_to_uboot(self) -> bool:
+        """ cold reboot device to uboot
+        Args:
+            None
+        Returns:
+            result (int): if the device boots to uboot success, return 0; else, return 255
+        """
+        result = 255
+        self._cold_reboot()
+
+        result = self._enter_to_uboot()
+        if result == 0:
+            logger.print_warning("cold reboot to uboot success!")
+        else:
+            logger.print_error("cold reboot to uboot fail!")
+        return result
+
+    def cold_reboot_to_kernel(self) -> bool:
+        """ cold reboot device to kernel
+        Args:
+            None
+        Returns:
+            result (int): if the device boots to kernel success, return 0; else, return 255
+        """
+        result = 255
+        self._cold_reboot()
+
+        result = self._enter_to_kernel()
+        if result == 0:
+            logger.print_warning("cold reboot to kernel success!")
+        else:
+            logger.print_error("cold reboot to kernel fail!")
+        return result
+
     def check_kernel_env(self):
         """check current status of the dev, if the dev is not at kernel, then reboot to
            kernel if possible
@@ -261,15 +312,11 @@ class RebootOpts():
         """
         result = 255
         val = ''
-
-        line_cnt = 0
         while True:
             status, line = self.device.read()
             if status:
                 if isinstance(line, bytes):
                     line = line.decode('utf-8', errors='replace').strip()
-                
-                print(f"line[{line_cnt}]: {line}")
                 if "not defined" in line:
                     result = 255
                     break
@@ -278,18 +325,19 @@ class RebootOpts():
                     if len(val) > 0:
                         result = 0
                     break
-                val += line.strip()
-                line_cnt += 1
+                val += line
             else:
                 logger.print_error(f"read line fail, {line}")
                 result = 255
                 break
-        print(f"val: {val}")
+        #print("+++++++++++++++++++++++++++++++++++++")
+        #print(f"val: {val}")
+        #print("-------------------------------------")
 
         if result == 0:
             index = val.find('=')
             val = val[index+1:]
-            logger.print_info(f"the value of key:{key} is {val}")
+            logger.print_info(f"the value of {key} is: {val}")
 
         return result, val
 
@@ -325,7 +373,7 @@ class RebootOpts():
             return result
 
         logger.print_warning(f"set {key} to {val}")
-        cmd_setenv = f"setenv {key} {val};saveenv"
+        cmd_setenv = f"setenv {key} '{val}';saveenv"
         self.device.write(cmd_setenv)
         return result
 
@@ -338,20 +386,25 @@ class RebootOpts():
         """
         result = False
         tool_path = ""
-        cmd_find_fw_tool = f"find / -name {tool_name}"
+        cmd_find_fw_tool = f"find / -name {tool_name};echo $?"
         self.device.write(cmd_find_fw_tool)
 
-        status, line = self.device.read()
-        if status:
-            if isinstance(line, bytes):
-                line = line.decode('utf-8', errors='replace').strip()
-            if tool_name in line:
-                logger.print_info(f"{tool_name} is exist")
-                result = True
-                tool_path = line.strip()
-        else:
-            logger.print_error(f"read line fail, {line}")
-            result = False
+        while True:
+            status, line = self.device.read()
+            if status:
+                if isinstance(line, bytes):
+                    line = line.decode('utf-8', errors='replace').strip()
+                if tool_name in line:
+                    result = True
+                    tool_path = line.strip()
+                if "0" in line:
+                    break
+            else:
+                logger.print_error(f"read line fail, {line}")
+                result = False
+                break
+        if result:
+            logger.print_info(f"{tool_path} is exist")
         return result, tool_path
 
     def kernel_get_bootenv(self, key):
@@ -391,7 +444,8 @@ class RebootOpts():
 
         ret, fw_tool_path = self._is_fw_tool_exist("fw_setenv")
         if ret:
-            cmd_setenv = f"{fw_tool_path} {key} {val};"
+            logger.print_info(f"update the value of {key}: {val}")
+            cmd_setenv = f"{fw_tool_path} {key} '{val}';echo $?"
             self.device.write(cmd_setenv)
             result = 0
         return result

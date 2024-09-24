@@ -27,8 +27,8 @@ class StrCrc(CaseBase):
         super().__init__(case_name, case_run_cnt, module_path_name)
         self.uart = Client(self.case_name, "uart", "uart")
         self.reboot_opt = RebootOpts(self.uart)
-        self.suspend_crc_param = (f"suspend_crc={str(SUSPEND_CRC_START_ADDR)},"
-                                  f"{str(SUSPEND_CRC_END_ADDR)}")
+        self.suspend_crc_param = (f"suspend_crc={hex(SUSPEND_CRC_START_ADDR)},"
+                                  f"{hex(SUSPEND_CRC_END_ADDR)}")
         self.default_bootargs = ""
         self.str_crc_bootargs = ""
         self.cmd_str = ("echo 10 > /sys/devices/virtual/sstar/rtcpwc/alarm_timer;"
@@ -41,11 +41,11 @@ class StrCrc(CaseBase):
         result, bootargs = self.reboot_opt.uboot_get_bootenv("bootargs_linux_only")
         if result == 0:
             if self.suspend_crc_param in bootargs:
-                self.str_crc_bootargs = bootargs
-                self.default_bootargs = re.sub(pattern, "", bootargs)
+                self.str_crc_bootargs = bootargs.strip()
+                self.default_bootargs = re.sub(pattern, "", bootargs.strip())
                 logger.print_info("suspend_crc_param has been set, test directly!")
             else:
-                self.default_bootargs = re.sub(pattern, "", bootargs)
+                self.default_bootargs = re.sub(pattern, "", bootargs.strip())
                 self.str_crc_bootargs = self.default_bootargs + " " + self.suspend_crc_param
                 self.reboot_opt.uboot_set_bootenv("bootargs_linux_only", self.str_crc_bootargs)
                 logger.print_info(f"uboot set bootargs: {self.str_crc_bootargs}")
@@ -71,16 +71,16 @@ class StrCrc(CaseBase):
         result, bootargs = self.reboot_opt.kernel_get_bootenv("bootargs_linux_only")
         if result == 0:
             if self.suspend_crc_param in bootargs:
-                self.str_crc_bootargs = bootargs
-                self.default_bootargs = re.sub(pattern, "", bootargs)
+                self.str_crc_bootargs = bootargs.strip()
+                self.default_bootargs = re.sub(pattern, "", bootargs.strip())
                 logger.print_info("suspend_crc_param has been set, test directly!")
             else:
-                self.default_bootargs = re.sub(pattern, "", bootargs)
+                self.default_bootargs = re.sub(pattern, "", bootargs.strip())
                 self.str_crc_bootargs = self.default_bootargs + " " + self.suspend_crc_param
                 result = self.reboot_opt.kernel_set_bootenv("bootargs_linux_only",
                                                             self.str_crc_bootargs)
                 if result == 0:
-                    logger.print_info(f"kernel set bootargs: {self.str_crc_bootargs}")
+                    #logger.print_info(f"kernel set bootargs: {self.str_crc_bootargs}")
                     result = self.reboot_opt.kernel_to_uboot()
                     if result == 0:
                         # check if changing bootargs ok
@@ -105,6 +105,7 @@ class StrCrc(CaseBase):
             result (int): if set success, return 0; else, return 255
         """
         result = 255
+        logger.print_warning("set str_crc param in bootargs for test ...")
         result = self.reboot_opt.check_uboot_phase()
         if result == 0:
             result = self._uboot_set_suspend_crc()
@@ -130,6 +131,7 @@ class StrCrc(CaseBase):
             result (int): test success or fail
         """
         result = 255
+        logger.print_warning("do str crc test ...")
         result = self.uart.write(self.cmd_str)
 
         while True:
@@ -138,7 +140,7 @@ class StrCrc(CaseBase):
                 if isinstance(line, bytes):
                     line = line.decode('utf-8', errors='replace').strip()
                 if str(STR_CRC_OK).strip() in line:
-                    logger.print_info("str crc check success")
+                    logger.print_warning("str crc check success")
                     result = 0
                     break
                 if str(STR_CRC_FAIL).strip() in line:
@@ -154,13 +156,13 @@ class StrCrc(CaseBase):
     def _uboot_remove_suspend_crc(self):
         result = 255
         bootargs = ""
-        pattern = r"suspend_crc=[^ ]* "
+        pattern = r"suspend_crc=[^ ]*"
         result, bootargs = self.reboot_opt.uboot_get_bootenv("bootargs_linux_only")
         if result == 0:
             if "suspend_crc" not in bootargs:
                 logger.print_info("suspend_crc_param has not been set, no need to remove!")
             else:
-                self.default_bootargs = re.sub(pattern, "", bootargs)
+                self.default_bootargs = re.sub(pattern, "", bootargs.strip())
                 self.reboot_opt.uboot_set_bootenv("bootargs_linux_only", self.default_bootargs)
                 logger.print_info(f"uboot set bootargs: {self.default_bootargs}")
                 result = self.reboot_opt.uboot_to_uboot()
@@ -177,13 +179,13 @@ class StrCrc(CaseBase):
     def _kernel_remove_suspend_crc(self):
         result = 255
         bootargs = ""
-        pattern = r"suspend_crc=[^ ]* "
+        pattern = r"suspend_crc=[^ ]*"
         result, bootargs = self.reboot_opt.kernel_get_bootenv("bootargs_linux_only")
         if result == 0:
             if "suspend_crc" not in bootargs:
                 logger.print_info("suspend_crc_param has not been set, no need to remove!")
             else:
-                self.default_bootargs = re.sub(pattern, "", bootargs)
+                self.default_bootargs = re.sub(pattern, "", bootargs.strip())
                 result = self.reboot_opt.kernel_set_bootenv("bootargs_linux_only",
                                                             self.default_bootargs)
                 if result == 0:
@@ -208,6 +210,7 @@ class StrCrc(CaseBase):
             result (int): if recovery bootargs success, return 0; else, return 255
         """
         result = 255
+        logger.print_warning("remove str_crc param in bootargs ...")
         result = self.reboot_opt.check_uboot_phase()
         if result == 0:
             result = self._uboot_remove_suspend_crc()
