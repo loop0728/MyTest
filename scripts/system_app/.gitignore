@@ -1,0 +1,7 @@
+*.d
+*.o
+*.sw*
+scripts_system/json
+scripts_system/log
+scripts_system/out
+out
