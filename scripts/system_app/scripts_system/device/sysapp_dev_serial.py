@@ -4,7 +4,7 @@
 
 import time
 import serial
-from python_scripts.logger import logger
+from suite.common.sysapp_common_logger import logger
 from device.sysapp_dev_base import SysappDevBase
 
 

@@ -7,7 +7,7 @@ import re
 import subprocess
 from cases.platform.sys.idac.idac_var import IFORD_IDAC_VOLT_CPU_TABLE
 from cases.platform.sys.idac.idac_var import IFORD_IPL_OVERDRIVE_CPUFREQ_MAP
-from python_scripts.logger import logger
+from suite.common.sysapp_common_logger import logger
 import suite.common.sysapp_common as sys_common
 
 

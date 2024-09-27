@@ -6,9 +6,9 @@ import re
 import os
 import time
 import json
-from python_scripts.logger import logger
+from suite.common.sysapp_common_logger import logger
 from device.sysapp_dev_relay import SysappDevRelay
-import python_scripts.variables as platform
+import sysapp_platform as platform
 from sysapp_client import SysappClient
 
 
@@ -421,10 +421,10 @@ def cold_reboot():
         bool: result
     """
     rs232_contrl_handle = SysappDevRelay(
-        relay=int(platform.relay_port), port=platform.dev_uart
+        relay=int(platform.PLATFORM_RELAY_PORT), port=platform.PLATFORM_RELAY
     )
     logger.print_info(
-        f"init rs232_contrl_handle {platform.dev_uart}:{platform.relay_port}"
+        f"init rs232_contrl_handle {platform.PLATFORM_RELAY}:{platform.PLATFORM_RELAY_PORT}"
     )
     rs232_contrl_handle.power_off()
     time.sleep(2)
@@ -492,11 +492,12 @@ def set_board_kernel_ip(uart) -> None:
     Returns:
         bool: result
     """
-    set_mac = f"ifconfig eth0 hw ether {platform.mac};"
+    set_mac = f"ifconfig eth0 hw ether {platform.PLATFORM_MOUNT_MAC};"
     eth0_up = "ifconfig eth0 up;"
     set_lo = "ifconfig lo 127.0.0.1;"
-    set_ip = f"ifconfig eth0 {platform.board_ip} netmask {platform.mount_netmask};"
-    set_gw = f"route add default gw {platform.gw};"
+    set_ip = (f"ifconfig eth0 {platform.PLATFORM_BOARD_IP} "
+              f"netmask {platform.PLATFORM_MOUNT_NETMASK};")
+    set_gw = f"route add default gw {platform.PLATFORM_MOUNT_GW};"
     uart.write(set_mac)
     uart.write(eth0_up)
     uart.write(set_lo)
@@ -514,10 +515,10 @@ def set_board_uboot_ip(uart) -> None:
     Returns:
         bool: result
     """
-    set_ethaddr = f"set -f ethaddr  {platform.mac};"
-    set_gw = f"set -f gatewayip {platform.gw};"
-    set_ip = f"set -f ipaddr {platform.board_ip};"
-    set_serverip = f"set -f serverip {platform.server_ip};"
+    set_ethaddr = f"set -f ethaddr  {platform.PLATFORM_MOUNT_MAC};"
+    set_gw = f"set -f gatewayip {platform.PLATFORM_MOUNT_GW};"
+    set_ip = f"set -f ipaddr {platform.PLATFORM_BOARD_IP};"
+    set_serverip = f"set -f serverip {platform.PLATFORM_SERVER_IP};"
     saveenv = "saveenv"
     pri = "pri"
     uart.write(set_ethaddr)
@@ -539,7 +540,8 @@ def mount_to_server(device_handle, sub_path="") -> bool:
         bool: result
     """
     umount_cmd = "umount /mnt/"
-    mount_cmd = f"mount -t nfs -o nolock {platform.mount_ip}:{platform.mount_path}/{sub_path} /mnt/"
+    mount_cmd = (f"mount -t nfs -o nolock {platform.PLATFORM_MOUNT_IP}:"
+                 f"{platform.PLATFORM_MOUNT_PATH}/{sub_path} /mnt/")
     check_cmd = "echo $?"
     returnvalue = 255
     returncode = 0
@@ -720,10 +722,10 @@ def burning_image():
         return False
 
     set_board_uboot_ip(uart)
-    estar_cmd = f"estar {platform.image_path}"
+    estar_cmd = f"estar {platform.PLATFORM_IMAGE_PATH}"
     uart.write(estar_cmd)
 
-def get_ko_insmod_state(uart: object, koname=''):
+def get_ko_insmod_state(uart:object, koname=''):
     """ get_ko_insmod_state
         uart (object): 仅支持uart
         koname (str): mi_sys
@@ -746,7 +748,7 @@ def get_ko_insmod_state(uart: object, koname=''):
         result = "Unknown"
     return result
 
-def get_current_os(uart: object):
+def get_current_os(uart:object):
     """ get_current_os
         uart (object): 仅支持uart
     """
@@ -758,7 +760,7 @@ def get_current_os(uart: object):
         result = "purelinux"
     return result
 
-def check_insmod_ko(uart: object, koname=''):
+def check_insmod_ko(uart:object, koname=''):
     """ check_insmod_ko
         uart (object): 仅支持uart
         koname (str): mi_sys
@@ -776,7 +778,7 @@ def check_insmod_ko(uart: object, koname=''):
         result = "false"
     return result
 
-def switch_os_aov(uart: object, target_os=''):
+def switch_os_aov(uart:object, target_os=''):
     """ switch_os by aov pipe case
         uart (object): 仅支持uart
         target_os (str): purelinux or dualos
@@ -828,7 +830,7 @@ def switch_os_aov(uart: object, target_os=''):
     time.sleep(20)
     return result
 
-def read_register(device: object, bank, offset, is_kernel=True):
+def read_register(device:object, bank, offset, is_kernel=True):
     """run cmd on server
     Args:
         cmd (device): device handle

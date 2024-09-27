@@ -9,7 +9,7 @@ from cases.platform.sys.idac.idac_var import SysappOverdriveType, SysappPackageT
 from cases.platform.sys.idac.idac_var import IFORD_IDAC_VOLT_CORE_TABLE
 from cases.platform.sys.idac.idac_var import IFORD_IDAC_VOLT_CPU_TABLE
 from cases.platform.sys.idac.idac_var import IFORD_IDAC_QFN_DVFS_VCORE_TABLE
-from python_scripts.logger import logger
+from suite.common.sysapp_common_logger import logger
 from suite.common.sysapp_common_case_base import SysappCaseBase as CaseBase
 import suite.common.sysapp_common as sys_common
 from suite.common.sysapp_common_reboot_opts import SysappRebootOpts

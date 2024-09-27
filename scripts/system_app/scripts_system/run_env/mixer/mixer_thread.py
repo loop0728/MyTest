@@ -1,11 +1,11 @@
-""" MixerThread version 0.0.1 """
+""" SysappMixerThread version 0.0.1 """
 import os
-from python_scripts.logger import logger
-from common.thread_waitlock import ThreadWaitLock
-import threading
 import time
+import threading
+from suite.common.sysapp_common_logger import logger
+from run_env.mixer.thread_waitlock import ThreadWaitLock
 
-class MixerThread(threading.Thread):
+class SysappMixerThread(threading.Thread):
     """ thread which can auto run mixer one by one """
     def __init__(self, telnet_handle):
         threading.Thread.__init__(self)
@@ -121,4 +121,3 @@ class MixerThread(threading.Thread):
             self.telnet_handle.close()
         except Exception as exce:
             print(f"Exception:{exce}!")
-

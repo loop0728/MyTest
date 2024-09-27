@@ -2,7 +2,7 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-from python_scripts.logger import logger
+from suite.common.sysapp_common_logger import logger
 from suite.common.sysapp_common_case_base import SysappCaseBase
 from suite.common.sysapp_common_error_codes import ErrorCodes as EC
 import suite.common.sysapp_common as sys_common

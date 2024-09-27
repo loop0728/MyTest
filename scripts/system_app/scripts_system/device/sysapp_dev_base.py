@@ -8,7 +8,7 @@ from enum import Enum
 import queue
 from datetime import datetime
 import threading
-from python_scripts.logger import logger
+from suite.common.sysapp_common_logger import logger
 from suite.common.sysapp_common import ensure_file_exists
 
 

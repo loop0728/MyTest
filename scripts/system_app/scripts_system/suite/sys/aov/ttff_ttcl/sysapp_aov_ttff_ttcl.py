@@ -2,7 +2,7 @@
 import re
 import os
 import time
-from python_scripts.logger import logger
+from suite.common.sysapp_common_logger import logger
 from cases.platform.sys.aov.ttff_ttcl_var import TTFF_TARGET, TTCL_TARGET
 from suite.common.sysapp_common_case_base import SysappCaseBase
 import suite.common.sysapp_common as sys_common

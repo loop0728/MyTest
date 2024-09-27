@@ -1,6 +1,6 @@
 """ ThreadWaitLock version 0.0.1 """
-from python_scripts.logger import logger
 import time
+from suite.common.sysapp_common_logger import logger
 
 class ThreadWaitLock():
     """ write/read lock for timeout """
@@ -30,4 +30,3 @@ class ThreadWaitLock():
     def release(self):
         """ release """
         self.lockstate = False
-

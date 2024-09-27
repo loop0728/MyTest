@@ -4,8 +4,8 @@
 
 import json
 import socket
-from python_scripts.variables import net_connect_port
-from python_scripts.logger import logger
+from sysapp_platform import PLATFORM_NET_CONNECT_PORT
+from suite.common.sysapp_common_logger import logger
 
 def exit_server(wait_timeout=5, delimiter='mstar'):
     """
@@ -16,7 +16,7 @@ def exit_server(wait_timeout=5, delimiter='mstar'):
     """
     logger.print_info("Exit server.")
     host = 'localhost'
-    port = int(net_connect_port)
+    port = int(PLATFORM_NET_CONNECT_PORT)
     try:
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client_socket.connect((host, port))

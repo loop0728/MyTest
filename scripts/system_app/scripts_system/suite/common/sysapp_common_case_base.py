@@ -1,6 +1,6 @@
 """Common operations in cases"""
-from python_scripts.logger import logger
-from python_scripts.variables import debug_mode, log_path, local_mount_path
+from suite.common.sysapp_common_logger import logger
+from sysapp_platform import PLATFORM_DEBUG_MODE, LOG_PATH, PLATFORM_LOCAL_MOUNT_PATH
 import suite.common.sysapp_common as sys_common
 
 
@@ -21,10 +21,10 @@ class SysappCaseBase:
         self.case_run_cnt = case_run_cnt
         # self.script_path = script_path
         self.case_stage = case_stage
-        self.uart_log_path = log_path
+        self.uart_log_path = LOG_PATH
         self.module_path = "/".join(script_path.split("/")[:-1])
         self.case_res_path = f"scripts_system/{self.module_path}/resources"
-        self.local_mount_path = f"{local_mount_path}/{self.case_res_path}"
+        self.local_mount_path = f"{PLATFORM_LOCAL_MOUNT_PATH}/{self.case_res_path}"
 
     def is_stress(self):
         """
@@ -48,13 +48,13 @@ class SysappCaseBase:
 
     def enter_debug_mode(self, device_handle: object):
         """If debug mode existed, run corresponding events."""
-        if debug_mode == "MemLeak":
+        if PLATFORM_DEBUG_MODE == "MemLeak":
             result = sys_common.get_case_json_key_value(
                 self.case_name, "is_support_debug_mode_memleak"
             )
             if result != "no_find_key" and int(result) == 1:
                 device_handle.client_memleak_script_run("init")
-        if debug_mode == "Asan":
+        if PLATFORM_DEBUG_MODE == "Asan":
             result = sys_common.get_case_json_key_value(
                 self.case_name, "is_support_debug_mode_asan"
             )
@@ -64,7 +64,7 @@ class SysappCaseBase:
     def check_debug_mode_result(self, device_handle: object):
         """If debug mode existed, run corresponding events."""
         ret = 0
-        if debug_mode == "MemLeak":
+        if PLATFORM_DEBUG_MODE == "MemLeak":
             result = sys_common.get_case_json_key_value(
                 self.case_name, "is_support_debug_mode_memleak"
             )

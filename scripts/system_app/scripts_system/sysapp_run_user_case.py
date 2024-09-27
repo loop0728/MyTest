@@ -1,6 +1,6 @@
 """Entry point for executing cases."""
 import sys
-from python_scripts.logger import logger
+from suite.common.sysapp_common_logger import logger
 from suite.common.sysapp_common_error_codes import event_handlers
 from suite.common.sysapp_common_case_base import SysappCaseBase
 

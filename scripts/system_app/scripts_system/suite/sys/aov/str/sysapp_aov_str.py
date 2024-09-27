@@ -9,7 +9,7 @@ from enum import Enum
 from cases.platform.sys.aov.str_var import STR_TARGET, STR_KMSG
 from cases.platform.sys.aov.str_var import SUSPEND_ENTRY, SUSPEND_EXIT
 from cases.platform.sys.aov.str_var import APP_RESUME, BOOTING_TIME
-from python_scripts.logger import logger
+from suite.common.sysapp_common_logger import logger
 from suite.common.sysapp_common_case_base import SysappCaseBase as CaseBase
 from suite.common.sysapp_common_reboot_opts import SysappRebootOpts as RebootOpts
 from suite.sys.aov.common.sysapp_aov_common import SysappAovCommon

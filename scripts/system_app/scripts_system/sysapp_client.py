@@ -5,8 +5,8 @@
 import socket
 import json
 import re
-from python_scripts.variables import net_connect_port
-from python_scripts.logger import logger
+from sysapp_platform import PLATFORM_NET_CONNECT_PORT
+from suite.common.sysapp_common_logger import logger
 
 
 class SysappClient:
@@ -42,7 +42,7 @@ class SysappClient:
     def _connect(self):
         """Connect to device."""
         ss_host = "localhost"
-        ss_port = int(net_connect_port)
+        ss_port = int(PLATFORM_NET_CONNECT_PORT)
         try:
             self._client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self._client_socket.connect((ss_host, ss_port))

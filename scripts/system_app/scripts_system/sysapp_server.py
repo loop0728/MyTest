@@ -10,13 +10,13 @@ import json
 import re
 from concurrent.futures import ThreadPoolExecutor
 
-from python_scripts.variables import (
-    net_connect_port,
-    log_path,
-    uart_port,
-    board_ip,
+from sysapp_platform import (
+    PLATFORM_NET_CONNECT_PORT,
+    LOG_PATH,
+    PLATFORM_UART,
+    PLATFORM_BOARD_IP,
 )
-from python_scripts.logger import logger
+from suite.common.sysapp_common_logger import logger
 
 from device.sysapp_dev_serial import SysappDevSerial
 from device.sysapp_dev_telnet import SysappDevTelnet
@@ -112,7 +112,7 @@ class SysappServer:
     def device_init(self):
         """Open uart."""
         dev_name = "uart"
-        uart_device = SysappDevSerial(dev_name, uart_port, log_path)
+        uart_device = SysappDevSerial(dev_name, PLATFORM_UART, LOG_PATH)
         self._dm.register_device(uart_device)
         self._dm.acquire_device(dev_name)
 
@@ -217,10 +217,10 @@ class SysappServer:
         device_name = msg["device_name"]
         if device_name not in self._dm.devices:
             if device_type == "telnet":
-                logger.print_info(f"{device_type}: {device_name}: {board_ip}")
+                logger.print_info(f"{device_type}: {device_name}: {PLATFORM_BOARD_IP}")
                 port = 23
                 telnet_log = "./out/" + device_name + ".log"
-                telnet_device = SysappDevTelnet(device_name, board_ip, port, telnet_log)
+                telnet_device = SysappDevTelnet(device_name, PLATFORM_BOARD_IP, port, telnet_log)
                 self._dm.register_device(telnet_device)
                 self._dm.acquire_device(device_name)
                 self._dm.update_case_name(self._case_name)
@@ -323,7 +323,7 @@ class SysappServer:
     def server_start(self):
         """Start server."""
         ss_host = "localhost"
-        ss_port = int(net_connect_port)
+        ss_port = int(PLATFORM_NET_CONNECT_PORT)
 
         logger.print_info("Server start.")
         # open uart

@@ -1,6 +1,6 @@
 """OS Switch case."""
 import time
-from python_scripts.logger import logger
+from suite.common.sysapp_common_logger import logger
 from suite.common.sysapp_common_case_base import SysappCaseBase
 import suite.common.sysapp_common as sys_common
 from sysapp_client import SysappClient

@@ -1,18 +1,22 @@
+""" show_perf version 0.0.1 """
 import time
 import threading
-from python_scripts.logger import logger
-from common.sysapp_common_case_base import SysappCaseBase as CaseBase
+from suite.common.sysapp_common_logger import logger
+from suite.common.sysapp_common_case_base import SysappCaseBase as CaseBase
+import suite.common.sysapp_common as sys_common
 from sysapp_client import SysappClient as Client
-import common.sysapp_common as sys_common
-import python_scripts.variables as platform
+import sysapp_platform as platform
 
-class MixerThread(threading.Thread):
+class SysappMixerThread(threading.Thread):
+    """ thread which can auto run mixer one by one """
     def __init__(self, telnet_handle):
         threading.Thread.__init__(self)
         self.telnet_handle = telnet_handle
 
     def run(self):
-        cmd = "cd /mnt/scripts/pipeline_iford; ./amicmd --json ./json_out/1snr_4m20p_ipu_vdf/menu_in.json ./json_out/1snr_4m20p_ipu_vdf/isp_3dnr/isp0_3dnr_0.json -l 0x100"
+        cmd = ("cd /mnt/scripts/pipeline_iford; "
+               "./amicmd --json ./json_out/1snr_4m20p_ipu_vdf/menu_in.json "
+               "./json_out/1snr_4m20p_ipu_vdf/isp_3dnr/isp0_3dnr_0.json -l 0x100")
         self.telnet_handle.write(cmd)
         for i in range(1, 25):
             logger.print_warning(f"cnt={i}")
@@ -22,13 +26,15 @@ class MixerThread(threading.Thread):
         time.sleep(5)
         self.telnet_handle.close()
 
-class show_perf(CaseBase):
+class SysappShowPerf(CaseBase):
+    """ case main thread """
     def __init__(self, case_name, case_run_cnt=1, module_path_name='./'):
         super().__init__(case_name, case_run_cnt, module_path_name)
         self.uart = Client(self.case_name, "uart", "uart")
         self.subpath = "iford_systemapp_interrupt_testcase"
 
     def get_ko_insmod_state(self, koname):
+        """check if ko has been insmoded"""
         result = ""
         cmd = f"lsmod | grep {koname} | wc -l"
         # 检查串口信息
@@ -38,7 +44,7 @@ class show_perf(CaseBase):
             return "Unknown"
         wait_keyword = "0"
         status, data = self.uart.read()
-        if status  == True:
+        if status:
             if wait_keyword in data:
                 result = "none"
                 return result
@@ -50,6 +56,7 @@ class show_perf(CaseBase):
             return result
 
     def get_current_os(self):
+        """get the name of current os"""
         wait_keyword = "none"
         data = self.get_ko_insmod_state("mi_sys")
         if wait_keyword in data:
@@ -60,6 +67,7 @@ class show_perf(CaseBase):
             return result
 
     def check_insmod_ko(self, koname):
+        """insmod ko if needed"""
         wait_keyword = "none"
         ko_path = f"/config/modules/5.10/{koname}.ko"
         data = self.get_ko_insmod_state(f"{koname}")
@@ -75,6 +83,7 @@ class show_perf(CaseBase):
             return result
 
     def switch_os(self, target_os):
+        """switch os"""
         result = 0
         cur_os = self.get_current_os()
         if cur_os == target_os:
@@ -87,7 +96,7 @@ class show_perf(CaseBase):
             self.uart.write(cmd)
             wait_keyword = "/customer/sample_code/bin #"
             status, data = self.uart.read()
-            if status  == True:
+            if status:
                 if wait_keyword not in data:
                     return 255
             else:
@@ -105,7 +114,7 @@ class show_perf(CaseBase):
             time.sleep(1)
             wait_keyword = "/customer/sample_code/bin #"
             status, data = self.uart.read()
-            if status == True:
+            if status:
                 if wait_keyword not in data:
                     result = 255
                     return result
@@ -113,7 +122,7 @@ class show_perf(CaseBase):
             cmd = "./prog_preload_linux -t"
             wait_keyword = "press c to change mode"
             result, data = sys_common.write_and_match_keyword(self.uart, cmd, wait_keyword)
-            if result == False:
+            if result is False:
                 return 255
 
             cmd = "c"
@@ -124,10 +133,10 @@ class show_perf(CaseBase):
 
     def runcase(self):
         result = 0
-        mount_path = f"{platform.mount_path}/{self.subpath}"
+        mount_path = f"{platform.PLATFORM_MOUNT_PATH}/{self.subpath}"
         # step1 判断是否在kernel下
         result = sys_common.goto_kernel(self.uart)
-        if result != True:
+        if result is not True:
             logger.print_warning(f"caseName[{self.case_name}] not in kernel!")
             return 255
         # step2 切换到dualos
@@ -147,7 +156,7 @@ class show_perf(CaseBase):
         if self.case_name != "show_perf_dualos":
             logger.print_warning("run mixer case")
             telnetmixer = Client(self.case_name, "telnet", "telnetmixer")
-            mixerthread = MixerThread(telnetmixer)
+            mixerthread = SysappMixerThread(telnetmixer)
             mixerthread.start()
         # step6 telnet cd 到mount目录，并运行show_interrupts.sh脚本
         logger.print_warning("connect telent && run case")
@@ -159,13 +168,17 @@ class show_perf(CaseBase):
         time.sleep(3)
         if self.case_name == "show_perf_dualos":
             logger.print_warning("cat dualos perf")
-            cmd = "echo cli perf > /proc/dualos/rtos;echo cli perf --dump \"/mnt/out/cpu/perf.bin\" > /proc/dualos/rtos"
+            cmd = ("echo cli perf > /proc/dualos/rtos;"
+                   "echo cli perf --dump \"/mnt/out/cpu/perf.bin\" > /proc/dualos/rtos")
             telnet0.write(cmd)
             time.sleep(3)
-            cmd = "echo cli taskstat  > /proc/dualos/rtos; cat /proc/dualos/log > out/cpu/rtos_task.txt"
+            cmd = ("echo cli taskstat  > /proc/dualos/rtos; "
+                   "cat /proc/dualos/log > out/cpu/rtos_task.txt")
             telnet0.write(cmd)
         else:
-            cmd = "./suite/cpu/resource/perf record -e cpu-clock -g -o /mnt/out/cpu/sys.perf; ./suite/cpu/resource/perf script -i /mnt/out/cpu/sys.perf > /mnt/out/cpu/sys_perf.bin"
+            cmd = ("./suite/cpu/resource/perf record -e cpu-clock -g -o /mnt/out/cpu/sys.perf; "
+                   "./suite/cpu/resource/perf script -i /mnt/out/cpu/sys.perf > "
+                   "/mnt/out/cpu/sys_perf.bin")
             telnet0.write(cmd)
         loopcnt = 0
         while loopcnt <= 30:

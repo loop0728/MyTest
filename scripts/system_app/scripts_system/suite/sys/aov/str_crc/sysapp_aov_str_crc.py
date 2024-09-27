@@ -7,7 +7,7 @@ import re
 from cases.platform.sys.aov.str_crc_var import STR_CRC_OK, STR_CRC_FAIL
 from cases.platform.sys.aov.str_crc_var import SUSPEND_CRC_START_ADDR
 from cases.platform.sys.aov.str_crc_var import SUSPEND_CRC_END_ADDR
-from python_scripts.logger import logger
+from suite.common.sysapp_common_logger import logger
 from suite.common.sysapp_common_case_base import SysappCaseBase as CaseBase
 from suite.common.sysapp_common_reboot_opts import SysappRebootOpts as RebootOpts
 from sysapp_client import SysappClient as Client

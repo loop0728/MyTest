@@ -4,7 +4,7 @@
 """IDAC test scenarios"""
 
 from sysapp_client import SysappClient as Client
-from python_scripts.logger import logger
+from suite.common.sysapp_common_logger import logger
 from suite.common.sysapp_common_case_base import SysappCaseBase as CaseBase
 from suite.common.sysapp_common_reboot_opts import SysappRebootOpts as RebootOpts
 

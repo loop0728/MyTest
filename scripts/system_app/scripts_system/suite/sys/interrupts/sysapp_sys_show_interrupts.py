@@ -1,13 +1,12 @@
 """ show_interrupts version 0.0.1 """
 import time
-import threading
-from python_scripts.logger import logger
+from suite.common.sysapp_common_logger import logger
 from suite.common.sysapp_common_case_base import SysappCaseBase as CaseBase
-from suite.common.mixer_thread import MixerThread
+from run_env.mixer.mixer_thread import SysappMixerThread
 import suite.common.sysapp_common as sys_common
 from sysapp_client import SysappClient as Client
 
-class show_interrupts(CaseBase):
+class SysappShowInterrupts(CaseBase):
     """ case main thread """
     def __init__(self, case_name, case_run_cnt=1, module_path_name='./'):
         super().__init__(case_name, case_run_cnt, module_path_name)
@@ -37,7 +36,7 @@ class show_interrupts(CaseBase):
         # step5 串口运行mixer pipeline
         logger.print_warning("run mixer case")
         telnetmixer = Client(self.case_name, "telnet", "telnetmixer")
-        mixerthread = MixerThread(telnetmixer)
+        mixerthread = SysappMixerThread(telnetmixer)
         time.sleep(3)
         casecnt = mixerthread.solve_caselist()
         if casecnt == 0:
@@ -48,7 +47,7 @@ class show_interrupts(CaseBase):
         logger.print_warning("connect telent && run case")
         telnet0 = Client(self.case_name, "telnet", "telnet0")
         cmd = (f"cd /mnt/scripts_system/Suite/Interrupts/resource/;"
-               "./perf_interrupt.sh {casename}")
+               f"./perf_interrupt.sh {self.case_name}")
         mixerthread.loop_run_command_sync(telnet0, cmd)
         telnet0.close()
         self.uart.close()

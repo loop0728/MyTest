@@ -3,7 +3,7 @@
 
 """cold reboot test case for AOV scenarios"""
 
-from python_scripts.logger import logger
+from suite.common.sysapp_common_logger import logger
 from suite.common.sysapp_common_case_base import SysappCaseBase as CaseBase
 from suite.common.sysapp_common_reboot_opts import SysappRebootOpts as RebootOpts
 from sysapp_client import SysappClient as Client
