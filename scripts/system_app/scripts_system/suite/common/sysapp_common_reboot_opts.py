@@ -10,101 +10,67 @@ from device.sysapp_dev_base import BootStage
 from device.sysapp_dev_relay import SysappDevRelay
 
 class SysappRebootOpts():
-    """A class representing reboot options
-    Attributes:
-        device (Device): device handle
-        board_cur_state (str): board current state.
-        reboot_timeout (int): reboot timeout setting
-        enter_uboot_try_cnt (int): the count of pressing enter to jump to uboot
-        get_state_try_cnt (int): the count of pressing enter to get current state of device
     """
-    def __init__(self, device, timeout=30):
-        """Class constructor.
-        Args:
-            device (Device): device handle
-            timeout (int): reboot timeout
-        Returns:
-            None
-        """
-        self.device = device
-        self.uboot_prompt  = 'SigmaStar #'
-        self.kernel_prompt = '/ #'
-        self.board_cur_state = BootStage.E_BOOTSTAGE_UNKNOWN.name
-        self.reboot_timeout = timeout
-        self.enter_uboot_try_cnt = 30
-        self.get_state_try_cnt = 20
+    A class representing reboot options
+    Attributes:
+        __device (Device): device handle
+        __uboot_prompt (str): the prompt of uboot phase
+        __kernel_prompt (str): the prompt of kernel phase
+        __board_cur_state (str): board current state.
+        __reboot_timeout (int): reboot timeout setting
+        __enter_uboot_try_cnt (int): the count of pressing enter to jump to uboot
+        __get_state_try_cnt (int): the count of pressing enter to get current state of device
+    """
+    __device = None
+    __uboot_prompt  = 'SigmaStar #'
+    __kernel_prompt = '/ #'
+    __board_cur_state = BootStage.E_BOOTSTAGE_UNKNOWN.name
+    __reboot_timeout = 30
+    __enter_uboot_try_cnt = 30
+    __get_state_try_cnt = 20
 
-    def _get_cur_boot_state(self):
-        """get current status of the device
-        Args:
-            None
-        Returns:
-            result (int): if the device is at kernel or at uboot, return 0; else return 255
+    @classmethod
+    def _get_cur_boot_state(cls):
         """
-        result = 255
-        self.device.write('')
-        self.board_cur_state = self.device.get_board_cur_state()[1]
-        if self.board_cur_state != BootStage.E_BOOTSTAGE_UNKNOWN.name:
-            result = 0
+        Get current status of the device.
+        Args:
+            None:
+        Returns:
+            result (bool): If the device is at kernel or at uboot, return True; Else, return False;
+        """
+        result = False
+        cls.__device.write('')
+        cls.__board_cur_state = cls.__device.get_board_cur_state()[1]
+        if cls.__board_cur_state != BootStage.E_BOOTSTAGE_UNKNOWN.name:
+            result = True
         else:
             i = 1
-            while i < self.get_state_try_cnt:
-                self.device.write('')
-                self.board_cur_state = self.device.get_board_cur_state()[1]
-                if self.board_cur_state != BootStage.E_BOOTSTAGE_UNKNOWN.name:
-                    result = 0
+            while i < cls.__get_state_try_cnt:
+                cls.__device.write('')
+                cls.__board_cur_state = cls.__device.get_board_cur_state()[1]
+                if cls.__board_cur_state != BootStage.E_BOOTSTAGE_UNKNOWN.name:
+                    result = True
                     break
                 time.sleep(1)
 
-        if self.board_cur_state == BootStage.E_BOOTSTAGE_UNKNOWN.name:
+        if cls.__board_cur_state == BootStage.E_BOOTSTAGE_UNKNOWN.name:
             logger.print_error("dev is not at kernel or at uboot")
         return result
 
-    def check_uboot_phase(self):
-        """check if current state of device is at uboot
-        Args:
-            None
-        Returns:
-            result (int): if the state is at uboot, return 0; else, return 255
+    @classmethod
+    def _enter_to_uboot(cls):
         """
-        result = 255
-        result = self._get_cur_boot_state()
-        if result != 0:
-            return result
-        logger.print_info(f'cur_state: {self.board_cur_state}')
-        if self.board_cur_state != BootStage.E_BOOTSTAGE_UBOOT.name:
-            logger.print_warning(f"dev is not at uboot now, cur_state:{self.board_cur_state}")
-            result = 255
-        return result
-
-    def check_kernel_phase(self):
-        """check if current state of device is at kernel
+        Enter to uboot.
         Args:
-            None
+            None:
         Returns:
-            result (int): if the state is at kernel, return 0; else, return 255
+            result (bool): If run success, return True; Else, return False.
         """
-        result = 255
-        result = self._get_cur_boot_state()
-        if result != 0:
-            return result
-        if self.board_cur_state != BootStage.E_BOOTSTAGE_KERNEL.name:
-            logger.print_warning(f"dev is not at kernel now, cur_state:{self.board_cur_state}")
-            result = 255
-        return result
-
-    def _enter_to_uboot(self):
-        """enter to uboot
-        Args:
-            None
-        Returns:
-            result (int): if run success, return 0; else, return 255
-        """
-        result = 255
+        result = False
         try_time = 0
         # wait uboot keyword
         while True:
-            status, line = self.device.read()
+            status, line = cls.__device.read()
             if status:
                 if isinstance(line, bytes):
                     line = line.decode('utf-8', errors='replace').strip()
@@ -112,142 +78,138 @@ class SysappRebootOpts():
                     break
             else:
                 logger.print_error("read line fail")
-                result = 255
+                result = False
                 return result
 
         # enter to uboot
         while True:
-            if try_time >= self.enter_uboot_try_cnt:
+            if try_time >= cls.__enter_uboot_try_cnt:
                 logger.print_error("enter to uboot timeout")
-                result = 255
+                result = False
                 break
-            self.device.write('')
-            self.board_cur_state = self.device.get_board_cur_state()[1]
-            if self.board_cur_state == BootStage.E_BOOTSTAGE_UBOOT.name:
+            cls.__device.write('')
+            cls.__board_cur_state = cls.__device.get_board_cur_state()[1]
+            if cls.__board_cur_state == BootStage.E_BOOTSTAGE_UBOOT.name:
                 logger.print_info("enter to uboot success")
-                result = 0
+                result = True
                 break
-            if self.board_cur_state == BootStage.E_BOOTSTAGE_KERNEL.name:
-                logger.print_error("enter to uboot fail")
-                result = 255
+            if cls.__board_cur_state == BootStage.E_BOOTSTAGE_KERNEL.name:
+                logger.print_error(f"enter to uboot fail, current state:{cls.__board_cur_state}")
+                result = False
                 break
             try_time += 1
             time.sleep(0.1)
         return result
 
-    def _enter_to_kernel(self):
-        """enter to kernel
-        Args:
-            None
-        Returns:
-            result (int): if run success, return 0; else, return 255
+    @classmethod
+    def _enter_to_kernel(cls):
         """
-        result = 255
+        Enter to kernel.
+        Args:
+            None:
+        Returns:
+            result (bool): If run success, return True; Else, return False.
+        """
+        result = False
         try_time = 0
         # enter to kernel
         while True:
-            if try_time >= self.reboot_timeout:
+            if try_time >= cls.__reboot_timeout:
                 logger.print_error("enter to kernel timeout")
-                result = 255
+                result = False
                 break
-            self.board_cur_state = self.device.get_board_cur_state()[1]
-            if self.board_cur_state == BootStage.E_BOOTSTAGE_KERNEL.name:
+            cls.__board_cur_state = cls.__device.get_board_cur_state()[1]
+            if cls.__board_cur_state == BootStage.E_BOOTSTAGE_KERNEL.name:
                 logger.print_info("enter to kernel success")
-                result = 0
+                result = True
                 break
             try_time += 1
             time.sleep(1)
         return result
 
-    def kernel_to_uboot(self):
-        """reboot device from kernel to uboot
-        Args:
-            None
-        Returns:
-            result (int): if device go to uboot success, return 0; else, return 255
+    @classmethod
+    def _kernel_to_uboot(cls):
         """
-        result = 255
-        logger.print_info('begin to run kernel_to_uboot')
-        result = self.check_kernel_phase()
-        if result != 0:
-            return result
-
-        self.device.write('reboot -f')
+        Reboot the device from kernel to uboot.
+        Args:
+            None:
+        Returns:
+            result (bool): If the device go to uboot success, return True; Else, return False.
+        """
+        result = False
+        logger.print_info('begin to run _kernel_to_uboot')
+        cls.__device.write('reboot -f')
         #time.sleep(2)
-        self.device.clear_board_cur_state()
+        cls.__device.clear_board_cur_state()
 
-        result = self._enter_to_uboot()
+        result = cls._enter_to_uboot()
         return result
 
-    def uboot_to_kernel(self):
-        """reboot device from uboot to kernel
-        Args:
-            None
-        Returns:
-            result (int): if device go to kernel success, return 0; else, return 255
+    @classmethod
+    def _uboot_to_kernel(cls):
         """
-        result = 255
-        logger.print_info('begin to run uboot_to_kernel')
-        result = self.check_uboot_phase()
-        if result != 0:
-            return result
+        Reboot the device from uboot to kernel.
+        Args:
+            None:
+        Returns:
+            result (bool): If the device go to kernel success, return True; Else, return False.
+        """
+        result = False
+        logger.print_info('begin to run _uboot_to_kernel')
+        cls.__device.write('reset')
+        cls.__device.clear_board_cur_state()
 
-        self.device.write('reset')
-        self.device.clear_board_cur_state()
-
-        result = self._enter_to_kernel()
+        result = cls._enter_to_kernel()
         return result
 
-    def kernel_to_kernel(self):
-        """reboot device from kernel to kernel
-        Args:
-            None
-        Returns:
-            result (int): if device go to kernel success, return 0; else, return 255
+    @classmethod
+    def _kernel_to_kernel(cls):
         """
-        result = 255
-        logger.print_info('begin to run kernel_to_kernel')
-        result = self.check_kernel_phase()
-        if result != 0:
-            return result
+        Reboot the device from kernel to kernel.
+        Args:
+            None:
+        Returns:
+            result (bool): If the device go to kernel success, return True; Else, return False.
+        """
+        result = False
+        logger.print_info('begin to run _kernel_to_kernel')
+        cls.__device.write('reboot -f')
+        #time.sleep(2)
+        cls.__device.clear_board_cur_state()
 
-        self.device.write('reboot -f')
-        time.sleep(2)
-        self.device.clear_board_cur_state()
-
-        result = self._enter_to_kernel()
+        result = cls._enter_to_kernel()
         return result
 
-    def uboot_to_uboot(self):
-        """reboot device from uboot to uboot
-        Args:
-            None
-        Returns:
-            result (int): if device go to uboot success, return 0; else, return 255
+    @classmethod
+    def _uboot_to_uboot(cls):
         """
-        result = 255
-        logger.print_info('begin to run uboot_to_uboot')
-        result = self.check_uboot_phase()
-        if result != 0:
-            return result
+        Reboot the device from uboot to uboot.
+        Args:
+            None:
+        Returns:
+            result (bool): If the device go to uboot success, return True; Else, return False.
+        """
+        result = False
+        logger.print_info('begin to run _uboot_to_uboot')
+        cls.__device.write('reset')
+        cls.__device.clear_board_cur_state()
 
-        self.device.write('reset')
-        self.device.clear_board_cur_state()
-
-        result = self._enter_to_uboot()
+        result = cls._enter_to_uboot()
         return result
 
-    def _cold_reboot(self):
-        """ the device is powered off and then powered on.
-        Args:
-            None
-        Returns:
-            None
+    @staticmethod
+    def _cold_reboot():
         """
-        rs232_contrl_handle = SysappDevRelay(relay=int(platform.PLATFORM_RELAY_PORT),
-                                             port=platform.PLATFORM_RELAY)
-        logger.print_info(f"init rs232_contrl_handle {platform.PLATFORM_RELAY}:"
-                          f"{platform.PLATFORM_RELAY_PORT}")
+        Power off the device and then power on.
+        Args:
+            None:
+        Returns:
+            None:
+        """
+        relay_name = platform.PLATFORM_RELAY
+        relay_no = platform.PLATFORM_RELAY_PORT
+        rs232_contrl_handle = SysappDevRelay(relay=relay_no, port=relay_name)
+        logger.print_info(f"init rs232_contrl_handle {relay_name}:{relay_no}")
         rs232_contrl_handle.connect()
         rs232_contrl_handle.power_off()
         time.sleep(2)
@@ -255,147 +217,96 @@ class SysappRebootOpts():
         rs232_contrl_handle.disconnect()
         logger.print_info("closed rs232_contrl_handle.")
 
-    def cold_reboot_to_uboot(self) -> bool:
-        """ cold reboot device to uboot
-        Args:
-            None
-        Returns:
-            result (int): if the device boots to uboot success, return 0; else, return 255
+    @classmethod
+    def _get_key_value(cls, key):
         """
-        result = 255
-        self._cold_reboot()
-        self.device.clear_board_cur_state()
-
-        result = self._enter_to_uboot()
-        if result == 0:
-            logger.print_warning("cold reboot to uboot success!")
-        else:
-            logger.print_error("cold reboot to uboot fail!")
-        return result
-
-    def cold_reboot_to_kernel(self) -> bool:
-        """ cold reboot device to kernel
+        Get the value of key.
         Args:
-            None
+            key (str): key's name.
         Returns:
-            result (int): if the device boots to kernel success, return 0; else, return 255
+            tuple:
+            - result (bool): If the key exists, return True; Else, return False.
+            - val (str): If the key is unset, return ""; Else, return the actual value.
         """
-        result = 255
-        self._cold_reboot()
-        self.device.clear_board_cur_state()
-
-        result = self._enter_to_kernel()
-        if result == 0:
-            logger.print_warning("cold reboot to kernel success!")
-        else:
-            logger.print_error("cold reboot to kernel fail!")
-        return result
-
-    def check_kernel_env(self):
-        """check current status of the dev, if the dev is not at kernel, then reboot to
-           kernel if possible
-        Args:
-            None
-        Returns:
-            result (int): if device go to kernel success, return 0; else, return 255
-        """
-        result = 255
-        result = self._get_cur_boot_state()
-        if result == 0:
-            if self.board_cur_state == BootStage.E_BOOTSTAGE_UBOOT.name:
-                result = self.uboot_to_kernel()
-
-        return result
-
-    def _get_key_value(self, key):
-        """get the value of key
-        Args:
-            key (str): key's name
-        Returns:
-            result (int): if the key exists, return 0; else, return 255
-            val (str): if the key is unset, return ""; else, return actual value
-        """
-        result = 255
+        result = False
         val = ''
         while True:
-            status, line = self.device.read()
+            status, line = cls.__device.read()
             if status:
                 if isinstance(line, bytes):
                     line = line.decode('utf-8', errors='replace').strip()
                 if "not defined" in line:
-                    result = 255
+                    result = False
                     break
-                #if self.uboot_prompt in line or self.kernel_prompt in line:
-                if self.uboot_prompt == line.strip() or self.kernel_prompt == line.strip():
-                    if len(val) > 0:
-                        result = 0
+                #if self.__uboot_prompt in line or self.__kernel_prompt in line:
+                if cls.__uboot_prompt == line.strip() or cls.__kernel_prompt == line.strip():
+                    #if len(val) > 0:
+                    if val:
+                        result = True
                     break
                 val += line
             else:
                 logger.print_error(f"read line fail, {line}")
-                result = 255
+                result = False
                 break
-        #print("+++++++++++++++++++++++++++++++++++++")
-        #print(f"val: {val}")
-        #print("-------------------------------------")
 
-        if result == 0:
+        if result:
             index = val.find('=')
             val = val[index+1:]
             logger.print_info(f"the value of {key} is: {val}")
 
         return result, val
 
-    def uboot_get_bootenv(self, key):
-        """get bootenv at uboot phase
-        Args:
-            None
-        Returns:
-            result (int): if get env success, return 0; else, return 255
-            val (str): if get env success, return ""; else, return actual value
+    @classmethod
+    def _uboot_get_bootenv(cls, key):
         """
-        result = 255
+        Get bootenv at uboot phase.
+        Args:
+            key (str): key's name.
+        Returns:
+            tuple:
+            - result (bool): If get env success, return True; Else, return False.
+            - val (str): If get env success, return the actual value; Else, return "".
+        """
+        result = False
         val = ""
-        result = self.check_uboot_phase()
-        if result != 0:
-            return result
-
         cmd_setenv = f"printenv {key}"
-        self.device.write(cmd_setenv)
-        result, val = self._get_key_value(key)
-        return result, val
+        cls.__device.write(cmd_setenv)
+        result, val = cls._get_key_value(key)
+        return (result, val)
 
-    def uboot_set_bootenv(self, key, val):
-        """set bootenv at uboot phase
-        Args:
-            None
-        Returns:
-            result (int): if set env success, return 0; else, return 255
+    @classmethod
+    def _uboot_set_bootenv(cls, key, val):
         """
-        result = 255
-        result = self.check_uboot_phase()
-        if result != 0:
-            return result
-
+        Set bootenv at uboot phase.
+        Args:
+            key (str): key's name.
+            val (str): key's value.
+        Returns:
+            result (bool): If set env success, return True; Else, return False.
+        """
+        result = False
         logger.print_warning(f"set {key} to {val}")
         cmd_setenv = f"setenv {key} '{val}';saveenv"
-        self.device.write(cmd_setenv)
+        result = cls.__device.write(cmd_setenv)
         return result
 
-    def _is_fw_tool_exist(self, tool_name) -> bool:
-        """check if tool exists
+    @classmethod
+    def _is_fw_tool_exist(cls, tool_name) -> bool:
+        """
+        Check if fw_tools exist.
         Args:
-            tool_name (str): tool name
+            tool_name (str): tool's name.
         Returns:
-            result (int): if tool exists, return True; else, return False
+            result (bool): If the tool exists, return True; Else, return False.
         """
         result = False
         tool_path = ""
         cmd_find_fw_tool = f"find / -name {tool_name};echo $?"
-        self.device.write(cmd_find_fw_tool)
+        cls.__device.write(cmd_find_fw_tool)
 
         while True:
-            status, line = self.device.read()
+            status, line = cls.__device.read()
             if status:
                 if isinstance(line, bytes):
                     line = line.decode('utf-8', errors='replace').strip()
@@ -412,45 +323,216 @@ class SysappRebootOpts():
             logger.print_info(f"{tool_path} is exist")
         return result, tool_path
 
-    def kernel_get_bootenv(self, key):
-        """get bootenv at kernel phase
-        Args:
-            None
-        Returns:
-            result (int): if get env success, return 0; else, return 255
-            val (str): if get env success, return ""; else, return actual value
+    @classmethod
+    def _kernel_get_bootenv(cls, key):
         """
-        result = 255
+        Get bootenv at kernel phase.
+        Args:
+            key (str): key's name.
+        Returns:
+            tuple:
+            - result (bool): If get env success, return True; Else, return False.
+            - val (str): If get env success, return return the actual value; Else if fw tool
+            exists, return ""; Else, return None.
+        """
+        result = False
         val = ""
         fw_tool_path = ""
-        result = self.check_kernel_phase()
-        if result != 0:
-            return result
-
-        ret, fw_tool_path = self._is_fw_tool_exist("fw_printenv")
+        ret, fw_tool_path = cls._is_fw_tool_exist("fw_printenv")
         if ret:
             cmd_setenv = f"{fw_tool_path} {key}"
-            self.device.write(cmd_setenv)
-            result, val = self._get_key_value(key)
+            cls.__device.write(cmd_setenv)
+            result, val = cls._get_key_value(key)
+        else:
+            val = None
         return result, val
 
-    def kernel_set_bootenv(self, key, val):
-        """set bootenv at kernel phase
-        Args:
-            None
-        Returns:
-            result (int): if set env success, return 0; else, return 255
+    @classmethod
+    def _kernel_set_bootenv(cls, key, val):
         """
-        result = 255
+        Set bootenv at kernel phase.
+        Args:
+            key (str): key's name.
+            val (str): key's value.
+        Returns:
+            result (bool): If set env success, return True; Else, return False.
+        """
+        result = False
         fw_tool_path = ""
-        result = self.check_kernel_phase()
-        if result != 0:
-            return result
-
-        ret, fw_tool_path = self._is_fw_tool_exist("fw_setenv")
+        ret, fw_tool_path = cls._is_fw_tool_exist("fw_setenv")
         if ret:
             logger.print_info(f"update the value of {key}: {val}")
             cmd_setenv = f"{fw_tool_path} {key} '{val}';echo $?"
-            self.device.write(cmd_setenv)
-            result = 0
+            result = cls.__device.write(cmd_setenv)
+        return result
+
+
+
+
+    @classmethod
+    def set_client_device(cls, device:object):
+        """
+        Set the client handle used by case
+        Args:
+            device (object): device handle
+        Returns:
+            None:
+        """
+        cls.__device = device
+
+    @classmethod
+    def init_kernel_env(cls):
+        """
+        Check current status of the dev. If the dev is not at kernel, then reboot to
+        kernel if possible.
+        Args:
+            None:
+        Returns:
+            result (bool): If device go to kernel success, return True; Else, return False.
+        """
+        result = False
+        result = cls._get_cur_boot_state()
+        if result:
+            if cls.__board_cur_state == BootStage.E_BOOTSTAGE_UBOOT.name:
+                result = cls._uboot_to_kernel()
+
+        return result
+
+    @classmethod
+    def init_uboot_env(cls):
+        """
+        Check current status of the dev. If the dev is not at uboot, then reboot to
+        uboot if possible.
+        Args:
+            None:
+        Returns:
+            result (bool): If the device go to kernel success, return True; Else, return False.
+        """
+        result = False
+        result = cls._get_cur_boot_state()
+        if result:
+            if cls.__board_cur_state == BootStage.E_BOOTSTAGE_KERNEL.name:
+                result = cls._kernel_to_uboot()
+
+        return result
+
+    @classmethod
+    def reboot_to_kernel(cls):
+        """
+        Reboot the device from current booting state to kernel
+        Args:
+            None:
+        Returns:
+            result (bool): If reboot to kernel success, return True; Else, return False
+        """
+        result = False
+        result = cls._get_cur_boot_state()
+        if result:
+            if cls.__board_cur_state == BootStage.E_BOOTSTAGE_UBOOT.name:
+                result = cls._uboot_to_kernel()
+            if cls.__board_cur_state == BootStage.E_BOOTSTAGE_KERNEL.name:
+                result = cls._kernel_to_kernel()
+
+        return result
+
+    @classmethod
+    def reboot_to_uboot(cls):
+        """
+        Reboot the device from current booting state to uboot
+        Args:
+            None:
+        Returns:
+            result (bool): If reboot to uboot success, return True; Else, return False
+        """
+        result = False
+        result = cls._get_cur_boot_state()
+        if result:
+            if cls.__board_cur_state == BootStage.E_BOOTSTAGE_UBOOT.name:
+                result = cls._uboot_to_uboot()
+            if cls.__board_cur_state == BootStage.E_BOOTSTAGE_KERNEL.name:
+                result = cls._kernel_to_uboot()
+
+        return result
+
+    @classmethod
+    def cold_reboot_to_kernel(cls) -> bool:
+        """
+        Cold reboot the device to kernel.
+        Args:
+            None:
+        Returns:
+            result (bool): If the device boots to kernel success, return True; Else, return False.
+        """
+        result = False
+        cls._cold_reboot()
+        cls.__device.clear_board_cur_state()
+
+        result = cls._enter_to_kernel()
+        if result:
+            logger.print_warning("cold reboot to kernel success!")
+        else:
+            logger.print_error("cold reboot to kernel fail!")
+        return result
+
+    @classmethod
+    def cold_reboot_to_uboot(cls) -> bool:
+        """
+        Cold reboot the device to uboot.
+        Args:
+            None:
+        Returns:
+            result (bool): If the device boots to uboot success, return True; Else, return False.
+        """
+        result = False
+        cls._cold_reboot()
+        cls.__device.clear_board_cur_state()
+
+        result = cls._enter_to_uboot()
+        if result:
+            logger.print_warning("cold reboot to uboot success!")
+        else:
+            logger.print_error("cold reboot to uboot fail!")
+        return result
+
+    @classmethod
+    def get_bootenv(cls, key):
+        """
+        Get bootenv.
+        Args:
+            key (str): key's name.
+        Returns:
+            tuple:
+            - result (bool): If get env success, return True; Else, return False.
+            - val (str): If get env success, return return the actual value; Else if fw tool
+            exists, return ""; Else, return None.
+        """
+        result = False
+        val = ""
+        result = cls._get_cur_boot_state()
+        if result:
+            if cls.__board_cur_state == BootStage.E_BOOTSTAGE_UBOOT.name:
+                result, val = cls._uboot_get_bootenv(key)
+            if cls.__board_cur_state == BootStage.E_BOOTSTAGE_KERNEL.name:
+                result, val = cls._kernel_get_bootenv(key)
+
+        return result, val
+
+    @classmethod
+    def set_bootenv(cls, key, val):
+        """
+        Set bootenv.
+        Args:
+            key (str): key's name
+            val (str): key's value
+        Returns:
+            result (int): If set env success, return True; Else, return False.
+        """
+        result = False
+        result = cls._get_cur_boot_state()
+        if result:
+            if cls.__board_cur_state == BootStage.E_BOOTSTAGE_UBOOT.name:
+                result = cls._uboot_set_bootenv(key, val)
+            if cls.__board_cur_state == BootStage.E_BOOTSTAGE_KERNEL.name:
+                result = cls._kernel_set_bootenv(key, val)
+
         return result

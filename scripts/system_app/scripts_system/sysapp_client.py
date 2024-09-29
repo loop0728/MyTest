@@ -42,7 +42,7 @@ class SysappClient:
     def _connect(self):
         """Connect to device."""
         ss_host = "localhost"
-        ss_port = int(PLATFORM_NET_CONNECT_PORT)
+        ss_port = PLATFORM_NET_CONNECT_PORT
         try:
             self._client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self._client_socket.connect((ss_host, ss_port))

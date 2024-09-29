@@ -5,7 +5,7 @@
 
 from suite.common.sysapp_common_logger import logger
 from suite.common.sysapp_common_case_base import SysappCaseBase as CaseBase
-from suite.common.sysapp_common_reboot_opts import SysappRebootOpts as RebootOpts
+from suite.common.sysapp_common_reboot_opts import SysappRebootOpts
 from sysapp_client import SysappClient as Client
 
 class ColdReboot(CaseBase):
@@ -23,7 +23,7 @@ class ColdReboot(CaseBase):
         """
         super().__init__(case_name, case_run_cnt, module_path_name)
         self.uart = Client(self.case_name, "uart", "uart")
-        self.reboot_opt = RebootOpts(self.uart)
+        SysappRebootOpts.set_client_device(self.uart)
 
     @logger.print_line_info
     def runcase(self):
@@ -31,10 +31,10 @@ class ColdReboot(CaseBase):
         Args:
             None
         Returns:
-            result (int): result of test
+            result (bool): result of test
         """
-        result = self.reboot_opt.cold_reboot_to_uboot()
-        result |= self.reboot_opt.cold_reboot_to_kernel()
+        result = SysappRebootOpts.cold_reboot_to_uboot()
+        result |= SysappRebootOpts.cold_reboot_to_kernel()
         return result
 
     @logger.print_line_info

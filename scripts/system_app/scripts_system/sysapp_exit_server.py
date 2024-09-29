@@ -16,7 +16,7 @@ def exit_server(wait_timeout=5, delimiter='mstar'):
     """
     logger.print_info("Exit server.")
     host = 'localhost'
-    port = int(PLATFORM_NET_CONNECT_PORT)
+    port = PLATFORM_NET_CONNECT_PORT
     try:
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client_socket.connect((host, port))

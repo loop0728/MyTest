@@ -99,9 +99,9 @@ class SysappIdacOpts():
         Args:
             cmd (str): command string
         Returns:
-            result (int): execute success, return 0; else, return 255
+            result (bool): execute success, return True; else, return False
         """
-        result = 255
+        result = False
         logger.print_info(f"server run {cmd}")
         try:
             ret = subprocess.run(cmd, universal_newlines=True, stdout=subprocess.PIPE,
@@ -114,10 +114,10 @@ class SysappIdacOpts():
 
         if ret.returncode == 0:
             logger.print_info(f"run {cmd} ok")
-            result = 0
+            result = True
         else:
             logger.print_error(f"run {cmd} fail, errorcode: {ret.returncode}")
-            result = 255
+            result = False
         return result
 
     @staticmethod

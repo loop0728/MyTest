@@ -420,12 +420,10 @@ def cold_reboot():
     Returns:
         bool: result
     """
-    rs232_contrl_handle = SysappDevRelay(
-        relay=int(platform.PLATFORM_RELAY_PORT), port=platform.PLATFORM_RELAY
-    )
-    logger.print_info(
-        f"init rs232_contrl_handle {platform.PLATFORM_RELAY}:{platform.PLATFORM_RELAY_PORT}"
-    )
+    relay_name= platform.PLATFORM_RELAY
+    relay_no = platform.PLATFORM_RELAY_PORT
+    rs232_contrl_handle = SysappDevRelay(relay=relay_no, port=relay_name)
+    logger.print_info(f"init rs232_contrl_handle {relay_name}:{relay_no}")
     rs232_contrl_handle.power_off()
     time.sleep(2)
     rs232_contrl_handle.power_on()
@@ -492,7 +490,7 @@ def set_board_kernel_ip(uart) -> None:
     Returns:
         bool: result
     """
-    set_mac = f"ifconfig eth0 hw ether {platform.PLATFORM_MOUNT_MAC};"
+    set_mac = f"ifconfig eth0 hw ether {platform.PLATFORM_BOARD_MAC};"
     eth0_up = "ifconfig eth0 up;"
     set_lo = "ifconfig lo 127.0.0.1;"
     set_ip = (f"ifconfig eth0 {platform.PLATFORM_BOARD_IP} "
@@ -515,7 +513,7 @@ def set_board_uboot_ip(uart) -> None:
     Returns:
         bool: result
     """
-    set_ethaddr = f"set -f ethaddr  {platform.PLATFORM_MOUNT_MAC};"
+    set_ethaddr = f"set -f ethaddr  {platform.PLATFORM_BOARD_MAC};"
     set_gw = f"set -f gatewayip {platform.PLATFORM_MOUNT_GW};"
     set_ip = f"set -f ipaddr {platform.PLATFORM_BOARD_IP};"
     set_serverip = f"set -f serverip {platform.PLATFORM_SERVER_IP};"

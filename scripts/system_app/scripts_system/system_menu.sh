@@ -215,6 +215,27 @@ case_help()
     python3 -B sysapp_run_user_case.py $@ help
 }
 
+case_list()
+{
+    if [ -z "${module_list}" ]; then
+        source ./cases/platform/setup.sh
+    else
+        echo "module list: ${module_list}"
+        source ./cases/platform/setup.sh "${module_list}"
+    fi
+}
+
+check_env()
+{
+    # 检查文件
+    if [ ! -d "./cases/platform" ]; then
+        echo "PATH: './cases/platform' not existed."
+        exit 255
+    fi
+}
+
+
+check_env
 run_case_help=case_help
 run_case="RunCaseDebug"
 python3 -B sysapp_server.py &
@@ -244,21 +265,6 @@ if [ ${conv2json} -ne 0 ]; then
     generate_json_before_test "__sep__"
     exit $final_result
 fi
-
-case_list()
-{
-    if [ ! -d "./cases/platform" ]; then
-        echo "PATH: './cases/platform' not existed."
-        server_cleanup
-        exit -1
-    fi
-    if [ -z "${module_list}" ]; then
-        source ./cases/platform/setup.sh
-    else
-        echo "module list: ${module_list}"
-        source ./cases/platform/setup.sh "${module_list}"
-    fi
-}
 
 case_list
 SetupUi

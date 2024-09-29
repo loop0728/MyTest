@@ -323,7 +323,7 @@ class SysappServer:
     def server_start(self):
         """Start server."""
         ss_host = "localhost"
-        ss_port = int(PLATFORM_NET_CONNECT_PORT)
+        ss_port = PLATFORM_NET_CONNECT_PORT
 
         logger.print_info("Server start.")
         # open uart

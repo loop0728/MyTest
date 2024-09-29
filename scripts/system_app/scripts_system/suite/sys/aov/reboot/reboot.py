@@ -3,7 +3,7 @@ import time
 import re
 import os
 import json
-from logger import logger
+from suite.common.sysapp_common_logger import logger
 import threading
 import inspect
 

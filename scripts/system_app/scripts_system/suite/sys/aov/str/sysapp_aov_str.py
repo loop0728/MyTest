@@ -11,18 +11,20 @@ from cases.platform.sys.aov.str_var import SUSPEND_ENTRY, SUSPEND_EXIT
 from cases.platform.sys.aov.str_var import APP_RESUME, BOOTING_TIME
 from suite.common.sysapp_common_logger import logger
 from suite.common.sysapp_common_case_base import SysappCaseBase as CaseBase
-from suite.common.sysapp_common_reboot_opts import SysappRebootOpts as RebootOpts
+from suite.common.sysapp_common_reboot_opts import SysappRebootOpts
 from suite.sys.aov.common.sysapp_aov_common import SysappAovCommon
 from sysapp_client import SysappClient as Client
 
 class StrStage(Enum):
-    """A class representing str stage"""
+    """
+    A class representing str stage"""
     E_STAGE_SUSPEND_ENTRY = 1
     E_STAGE_SUSPEND_EXIT = 2
     E_STAGE_APP_RESUME = 3
 
 class SysappAovStr(CaseBase):
-    """A class representing str test flow
+    """
+    A class representing str test flow
     Attributes:
         case_env_param (dict): env parameters
         case_cmd_param (dict): test commands
@@ -30,7 +32,8 @@ class SysappAovStr(CaseBase):
     """
 
     def __init__(self, case_name, case_run_cnt=1, module_path_name='./'):
-        """Class constructor.
+        """
+        Class constructor.
         Args:
             case_name (str): case name
             case_run_cnt (int): the number of times the test case runs
@@ -38,7 +41,8 @@ class SysappAovStr(CaseBase):
         """
         super().__init__(case_name, case_run_cnt, module_path_name)
         self.uart = Client(self.case_name, "uart", "uart")
-        self.reboot_opt = RebootOpts(self.uart)
+        #self.reboot_opt = RebootOpts(self.uart)
+        SysappRebootOpts.set_client_device(self.uart)
         self.case_env_param = {
             'max_read_lines': 10240
         }
@@ -71,54 +75,49 @@ class SysappAovStr(CaseBase):
 
     @logger.print_line_info
     def reboot_dev(self):
-        """check current status of the dev, if the dev is at uboot or at kernel, then reboot the dev
-        Args:
-            None
-        Returns:
-            result (int): result of reboot
         """
-        result = 255
-        result = self.reboot_opt.check_uboot_phase()
-        if result == 0:
-            result = self.reboot_opt.uboot_to_kernel()
-        else:
-            result = self.reboot_opt.check_kernel_phase()
-            if result == 0:
-                result = self.reboot_opt.kernel_to_kernel()
-            else:
-                result = 255
+        Check current status of the dev, if the dev is at uboot or at kernel, then reboot the dev.
+        Args:
+            None:
+        Returns:
+            result (bool): Reboot device success, return True; Else, return False.
+        """
+        result = SysappRebootOpts.reboot_to_kernel()
         return result
 
     # show timestamp of printk log
     @logger.print_line_info
     def enable_printk_time(self):
-        """Enable print timestamp in the kernel print.
+        """
+        Enable print timestamp in the kernel print.
         Args:
-            None
+            None:
         Returns:
-            None
+            None:
         """
         self.uart.write(self.case_cmd_param['cmd_printk_time_on'])
 
     # hide timestamp of printk log
     @logger.print_line_info
     def disable_printk_time(self):
-        """Disable print timestamp in the kernel print.
+        """
+        Disable print timestamp in the kernel print.
         Args:
-            None
+            None:
         Returns:
-            None
+            None:
         """
         self.uart.write(self.case_cmd_param['cmd_printk_time_off'])
 
     # run aov demo in test mode
     @logger.print_line_info
     def run_aov_demo_test(self):
-        """Run aov demo.
+        """
+        Run aov demo.
         Args:
-            None
+            None:
         Returns:
-            None
+            None:
         """
         retry_cnt = 0
         logger.print_info("start app")
@@ -137,11 +136,12 @@ class SysappAovStr(CaseBase):
 
     @logger.print_line_info
     def redirect_kmsg(self):
-        """Redirect kmsg to memory.
+        """
+        Redirect kmsg to memory.
         Args:
-            None
+            None:
         Returns:
-            None
+            None:
         """
         logger.print_info(f"redirect kmsg to {STR_KMSG}")
         self.uart.write(self.case_cmd_param['cmd_redirect_kmsg'])
@@ -149,15 +149,16 @@ class SysappAovStr(CaseBase):
         self.uart.write(self.case_cmd_param['cmd_kill_kmsg'])
 
     def _parse_str_stage(self, line, check_stage, retry_cnt):
-        """Parse kmsg line.
+        """
+        Parse kmsg line.
         Args:
             line (str): kmsg line
             check_stage (StrStage): test stage
             retry_cnt (int): current retry time
         Returns:
-            result (int): result of parsing stage, 0: parse next line; 255: go to next step
+            result (bool): result of parsing stage, True: parse next line; False: go to next step
         """
-        result = 255
+        result = False
         stage_time = ''
         stage_phase = ''
         if check_stage == StrStage.E_STAGE_SUSPEND_ENTRY:
@@ -169,7 +170,7 @@ class SysappAovStr(CaseBase):
         elif check_stage == StrStage.E_STAGE_APP_RESUME:
             stage_time = 'app_resume_time'
             stage_phase = 'str_app_resume'
-            result = 0
+            result = True
 
         #if (self.case_test_param[stage_time] == 0
         #        and self.case_test_param[stage_phase] in line):
@@ -180,21 +181,22 @@ class SysappAovStr(CaseBase):
                 self.case_test_param[stage_time] = match.group(1)
                 logger.print_warning(f"{retry_cnt}: {stage_time} is "
                                      f"{self.case_test_param[stage_time]}")
-                result = 0
+                result = True
 
         if check_stage == StrStage.E_STAGE_APP_RESUME:
-            result = 255
+            result = False
         return result
 
     @logger.print_line_info
     def _parse_kmsg(self):
-        """Parse kmsg.
-        Args:
-            None
-        Returns:
-            result (int): result of parsing kmsg
         """
-        result = 255
+        Parse kmsg.
+        Args:
+            None:
+        Returns:
+            result (bool): result of parsing kmsg
+        """
+        result = False
         retry_cnt = 1
         read_line_cnt = 0
         logger.print_warning(f"it will do suspend and resume "
@@ -204,7 +206,7 @@ class SysappAovStr(CaseBase):
             if read_line_cnt > self.case_env_param['max_read_lines']:
                 logger.print_error(f"read lines exceed max_read_lines: "
                                    f"{self.case_env_param['max_read_lines']}")
-                result = 255
+                result = False
                 break
 
             status, line = self.uart.read()
@@ -216,12 +218,12 @@ class SysappAovStr(CaseBase):
 
                 # check suspend entry
                 result = self._parse_str_stage(line, StrStage.E_STAGE_SUSPEND_ENTRY, retry_cnt)
-                if result == 0:
+                if result:
                     continue
 
                 # check suspend exit
                 result = self._parse_str_stage(line, StrStage.E_STAGE_SUSPEND_EXIT, retry_cnt)
-                if result == 0:
+                if result:
                     continue
 
                 if (self.case_test_param['suspend_enter_time'] != 0
@@ -243,22 +245,23 @@ class SysappAovStr(CaseBase):
                         self.case_test_param['app_resume_time'] = 0
                         retry_cnt += 1
                     else:
-                        result = 0
+                        result = True
                         break
             else:
                 logger.print_error(f"read line:{read_line_cnt} fail")
-                result = 255
+                result = False
                 break
         return result
 
     # cat kmsg saved in tmpfile
     @logger.print_line_info
     def cat_kmsg(self):
-        """Show kmsg.
+        """
+        Show kmsg.
         Args:
-            None
+            None:
         Returns:
-            None
+            None:
         """
         self.uart.write(self.case_cmd_param['cmd_cat_tmpfile'])
         time.sleep(5)
@@ -267,13 +270,14 @@ class SysappAovStr(CaseBase):
     # parse booting_time from case loacl log file
     @logger.print_line_info
     def _parse_booting_time(self):
-        """Parse the time takes in the IPL phase and kernel phase in resume flow.
-        Args:
-            None
-        Returns:
-            result (int): result of parsing booting time
         """
-        result = 255
+        Parse the time takes in the IPL phase and kernel phase in resume flow.
+        Args:
+            None:
+        Returns:
+            result (bool): Result of parsing booting time.
+        """
+        result = False
         is_kernel_part = 0
         read_line_cnt = 0
 
@@ -281,7 +285,7 @@ class SysappAovStr(CaseBase):
             if read_line_cnt > self.case_env_param['max_read_lines']:
                 logger.print_error(f"read lines exceed max_read_lines: "
                                    f"{self.case_env_param['max_read_lines']}")
-                result = 255
+                result = False
                 break
 
             status, line = self.uart.read()
@@ -314,22 +318,23 @@ class SysappAovStr(CaseBase):
 
                 if (self.case_test_param['ipl_resume_time'] != 0
                         and self.case_test_param['kernel_resume_time'] != 0):
-                    result = 0
+                    result = True
                     break
             else:
                 logger.print_error(f"read line:{read_line_cnt} fail")
-                result = 255
+                result = False
                 break
         return result
 
     # get booting time after resume
     @logger.print_line_info
     def cat_booting_time(self):
-        """Show the time takes in the IPL pahse and kernel phase in resume flow.
+        """
+        Show the time takes in the IPL pahse and kernel phase in resume flow.
         Args:
-            None
+            None:
         Returns:
-            None
+            None:
         """
         self.uart.write(self.case_cmd_param['cmd_cat_booting_time'])
         time.sleep(5)
@@ -338,13 +343,14 @@ class SysappAovStr(CaseBase):
     # judge pass or fail
     @logger.print_line_info
     def judge_test_result(self):
-        """Analyze test result
-        Args:
-            None
-        Returns:
-            result (int): result of analysis
         """
-        result = 255
+        Analyze test result.
+        Args:
+            None:
+        Returns:
+            result (bool): Result of analysis.
+        """
+        result = False
         kernel_str_us = 0
         total_str_us = 0
 
@@ -379,14 +385,14 @@ class SysappAovStr(CaseBase):
                                  f"{int(self.case_test_param['kernel_resume_time'])} us")
 
             if total_str_us <= float(self.case_test_param['target_time']):
-                result = 0
+                result = True
             break
 
         # force to pass, will be removed if the sdk runs stablely.
-        result = 0
+        result = True
 
         logger.print_info("")
-        if result == 0:
+        if result:
             time_info = (f"target_l2l:{int(self.case_test_param['target_time'])};"
                          f"total_l2l:{int(total_str_us)};sys_l2l:{int(kernel_str_us)};"
                          f"ipl_l2l:{int(self.case_test_param['ipl_resume_time'])};"
@@ -400,17 +406,18 @@ class SysappAovStr(CaseBase):
 
     @logger.print_line_info
     def runcase(self):
-        """test function body
-        Args:
-            None
-        Returns:
-            result (int): result of test
         """
-        result = 255
+        test function body
+        Args:
+            None:
+        Returns:
+            result (bool): Result of test.
+        """
+        result = False
 
         # reboot first to clear board status, for temporary testing
         result = self.reboot_dev()
-        if result == 0:
+        if result:
             # open kernel timestamp
             self.enable_printk_time()
             # run aov app in test mode
@@ -419,10 +426,10 @@ class SysappAovStr(CaseBase):
             self.redirect_kmsg()
             # cat kmsg
             result = self.cat_kmsg()
-            if result == 0:
+            if result:
                 # cat booting time
                 result = self.cat_booting_time()
-                if result == 0:
+                if result:
                     # judge test result
                     result = self.judge_test_result()
             # close kernel timestamp
@@ -430,7 +437,7 @@ class SysappAovStr(CaseBase):
         else:
             logger.print_error("reboot timeout!")
 
-        if result == 0:
+        if result:
             logger.print_warning("str test pass!")
         else:
             logger.print_error("str test fail!")
@@ -440,11 +447,12 @@ class SysappAovStr(CaseBase):
     @logger.print_line_info
     @staticmethod
     def system_help():
-        """help info
+        """
+        Help info.
         Args:
-            None
+            None:
         Returns:
-            None
+            None:
         """
         logger.print_warning("stat str cost time")
         logger.print_warning("cmd: str")
