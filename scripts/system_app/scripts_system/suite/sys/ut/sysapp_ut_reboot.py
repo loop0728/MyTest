@@ -7,12 +7,13 @@ from sysapp_client import SysappClient as Client
 from suite.common.sysapp_common_logger import logger
 from suite.common.sysapp_common_case_base import SysappCaseBase as CaseBase
 from suite.common.sysapp_common_reboot_opts import SysappRebootOpts
+from suite.common.sysapp_common_error_codes import ErrorCodes
 
 class SysappUtRebootTest(CaseBase):
     """
     A class representing reboot test flow.
     Attributes:
-        uart (Device): device handle.
+        uart (Client): Clinet instance.
     """
     def __init__(self, case_name, case_run_cnt=1, module_path_name='./'):
         """Class constructor.
@@ -23,7 +24,6 @@ class SysappUtRebootTest(CaseBase):
         """
         super().__init__(case_name, case_run_cnt, module_path_name)
         self.uart = Client(self.case_name, "uart", "uart")
-        SysappRebootOpts.set_client_device(self.uart)
 
     def reboot_test(self):
         """
@@ -31,31 +31,36 @@ class SysappUtRebootTest(CaseBase):
         Args:
             None:
         Returns:
-            result (bool): Test success, return True; Else, return False.
+            error_code (ErrorCodes): Test success, return ErrorCodes.SUCCESS;
+            Else, return ErrorCodes.FAIL.
         """
+        error_code = ErrorCodes.FAIL
         result = False
-        result = SysappRebootOpts.init_kernel_env()
+        result = SysappRebootOpts.init_kernel_env(self.uart)
         if not result:
             return result
 
         logger.print_info("reboot to uboot")
-        result = SysappRebootOpts.reboot_to_uboot()
+        result = SysappRebootOpts.reboot_to_uboot(self.uart)
         if not result:
             return result
         cmd_set_overdrive = "setenv overdrive 2;saveenv"
         self.uart.write(cmd_set_overdrive)
         logger.print_info("reset to uboot for testing ...")
-        result = SysappRebootOpts.reboot_to_uboot()
+        result = SysappRebootOpts.reboot_to_uboot(self.uart)
         if not result:
             return result
         logger.print_info("reset to kernel for testing ...")
-        result = SysappRebootOpts.reboot_to_kernel()
+        result = SysappRebootOpts.reboot_to_kernel(self.uart)
         if not result:
             return result
         logger.print_info("reboot to kernel for testing ...")
-        result = SysappRebootOpts.reboot_to_kernel()
+        result = SysappRebootOpts.reboot_to_kernel(self.uart)
 
-        return result
+        if result:
+            error_code = ErrorCodes.SUCCESS
+
+        return error_code
 
     def set_default_bootargs(self):
         """
@@ -79,11 +84,11 @@ class SysappUtRebootTest(CaseBase):
         #             "5m(KERNEL_BACKUP),7m(MISC),7m(RO_FILES),5m(RTOS),5m(RTOS_BACKUP),"
         #             "1m(RAMDISK),1m(RAMDISK_BACKUP),89344k(ubia) nohz=off")
         #cmd_set_default_bootargs = (f"setenv bootargs_linux_only {bootargs}")
-        result = SysappRebootOpts.cold_reboot_to_uboot()
+        result = SysappRebootOpts.cold_reboot_to_uboot(self.uart)
         if result:
-            result = SysappRebootOpts.set_bootenv("bootargs_linux_only", bootargs)
+            result = SysappRebootOpts.set_bootenv(self.uart, "bootargs_linux_only", bootargs)
             if result:
-                result = SysappRebootOpts.reboot_to_kernel()
+                result = SysappRebootOpts.reboot_to_kernel(self.uart)
             else:
                 logger.print_error("uboot set str_crc env fail")
         else:
@@ -104,13 +109,15 @@ class SysappUtRebootTest(CaseBase):
         Args:
             None:
         Returns:
-            result (int): Result of test.
+            error_code (ErrorCodes): Result of test.
         """
-        result = 255
+        error_code = ErrorCodes.FAIL
         #result = self.reboot_test()
         result = self.set_default_bootargs()
+        if result:
+            error_code = ErrorCodes.SUCCESS
 
-        return result
+        return error_code
 
     @logger.print_line_info
     @staticmethod

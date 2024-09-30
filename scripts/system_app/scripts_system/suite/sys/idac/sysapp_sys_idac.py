@@ -5,14 +5,18 @@
 
 import os
 from sysapp_sys_idac_opts import SysappIdacOpts as IdacOpts
-from cases.platform.sys.idac.idac_var import SysappOverdriveType, SysappPackageType, SysappDvfsState
-from cases.platform.sys.idac.idac_var import IFORD_IDAC_VOLT_CORE_TABLE
-from cases.platform.sys.idac.idac_var import IFORD_IDAC_VOLT_CPU_TABLE
-from cases.platform.sys.idac.idac_var import IFORD_IDAC_QFN_DVFS_VCORE_TABLE
+from cases.platform.sys.idac.idac_var import (SysappOverdriveType,
+                                              SysappPackageType,
+                                              SysappDvfsState,
+                                              IFORD_IDAC_VOLT_CORE_TABLE,
+                                              IFORD_IDAC_VOLT_CPU_TABLE,
+                                              IFORD_IDAC_QFN_DVFS_VCORE_TABLE)
 from suite.common.sysapp_common_logger import logger
 from suite.common.sysapp_common_case_base import SysappCaseBase as CaseBase
-import suite.common.sysapp_common as sys_common
 from suite.common.sysapp_common_reboot_opts import SysappRebootOpts
+from suite.common.sysapp_common_register_opts import SysappRegisterOpts
+from suite.common.sysapp_common_error_codes import ErrorCodes
+import suite.common.sysapp_common as sys_common
 from sysapp_client import SysappClient as Client
 
 class SysappIdac(CaseBase):
@@ -32,7 +36,6 @@ class SysappIdac(CaseBase):
         """
         super().__init__(case_name, case_run_cnt, module_path_name)
         self.uart = Client(self.case_name, "uart", "uart")
-        SysappRebootOpts.set_client_device(self.uart)
         self.case_target_param = {
             'base_vcore_check': 900,    # get from hw & IPL macro define(IDAC_BASE_VOLT)
             'base_vcpu_check': 900,
@@ -72,10 +75,10 @@ class SysappIdac(CaseBase):
             (SysappPackageType): return the package type of chip
         """
         result = False
-        result, str_reg_value = sys_common.read_register(self.uart, "101e", "48")
+        result, str_reg_value = SysappRegisterOpts.read_register(self.uart, "101e", "48")
         if result:
-            bit4 = sys_common.get_bit_value(str_reg_value, 4)
-            bit5 = sys_common.get_bit_value(str_reg_value, 5)
+            bit4 = SysappRegisterOpts.get_bit_value(str_reg_value, 4)
+            bit5 = SysappRegisterOpts.get_bit_value(str_reg_value, 5)
             if bit4 == 0 and bit5 == 0:
                 return SysappPackageType.PACKAGE_TYPE_QFN128
             if bit4 == 0 and bit5 == 1:
@@ -83,38 +86,36 @@ class SysappIdac(CaseBase):
             return SysappPackageType.PACKAGE_TYPE_BGA11
         return SysappPackageType.PACKAGE_TYPE_MAX
 
-    def get_vcore_offset(self, is_kernel=True):
+    def get_vcore_offset(self):
         """read register of core_power offset
         Args:
-            is_kernel (bool): if is_kernel is True, read kernel register; else, read uboot register
+            None:
         Returns:
             result (bool): option executes success or fail
             offset (int): return register value
         """
         offset = 0
         result = False
-        result, str_reg_value = sys_common.read_register(self.uart, "14", "71", is_kernel)
+        result, str_reg_value = SysappRegisterOpts.read_register(self.uart, "14", "71")
         if result:
-            #offset = self._calc_volt_offset(str_reg_value)
             offset = IdacOpts.calc_volt_offset(str_reg_value)
         else:
             logger.print_error("get core_power offset fail!")
         print(f"vcore_offset:{offset}")
         return result, offset
 
-    def get_vcpu_offset(self, is_kernel=True):
+    def get_vcpu_offset(self):
         """read register of cpu_power offset
         Args:
-            is_kernel (bool): if is_kernel is True, read kernel register; else, read uboot register
+            None:
         Returns:
             result (bool): option executes success or fail
             offset (int): return register value
         """
         offset = 0
         result = False
-        result, str_reg_value = sys_common.read_register(self.uart, "15", "11", is_kernel)
+        result, str_reg_value = SysappRegisterOpts.read_register(self.uart, "15", "11")
         if result:
-            #offset = self._calc_volt_offset(str_reg_value)
             offset = IdacOpts.calc_volt_offset(str_reg_value)
         else:
             logger.print_error("get cpu_power offset fail!")
@@ -541,10 +542,10 @@ class SysappIdac(CaseBase):
         vcore_check_item = []
         vcpu_check_item = []
 
-        result, vcore_offset = self.get_vcore_offset(False)
+        result, vcore_offset = self.get_vcore_offset()
         if not result:
             return result
-        result, vcpu_offset = self.get_vcpu_offset(False)
+        result, vcpu_offset = self.get_vcpu_offset()
         if not result:
             return result
         uboot_vcore = self.case_target_param['base_vcore_check'] + vcore_offset
@@ -588,10 +589,10 @@ class SysappIdac(CaseBase):
         vcore_check_item = []
         vcpu_check_item = []
 
-        result, vcore_offset = self.get_vcore_offset(True)
+        result, vcore_offset = self.get_vcore_offset()
         if not result:
             return result
-        result, vcpu_offset = self.get_vcpu_offset(True)
+        result, vcpu_offset = self.get_vcpu_offset()
         if not result:
             return result
         kernel_vcore = self.case_target_param['base_vcore_check'] + vcore_offset
@@ -658,7 +659,7 @@ class SysappIdac(CaseBase):
     def _idac_prepare(self):
         result = False
         # 1. 判断当前设备状态，确保进入kernel
-        result = SysappRebootOpts.init_kernel_env()
+        result = SysappRebootOpts.init_kernel_env(self.uart)
         if not result:
             return result
 
@@ -702,23 +703,24 @@ class SysappIdac(CaseBase):
         result = False
         ret = False
         logger.print_warning(f"reboot to set overdrive to {overdrive.name}")
-        result = SysappRebootOpts.reboot_to_uboot()
+        result = SysappRebootOpts.reboot_to_uboot(self.uart)
         if not result:
             return result, ret
         cmd_set_overdrive = f"setenv overdrive {overdrive.value};saveenv"
         self.uart.write(cmd_set_overdrive)
         logger.print_info("reset to uboot for testing ...")
-        result = SysappRebootOpts.reboot_to_uboot()
+        result = SysappRebootOpts.reboot_to_uboot(self.uart)
         if not result:
             return result, ret
 
-        # 5. 读取寄存器值，判断读取的电压寄存器是否和case保存的table匹配，如果不匹配，记录LD测试失败，进行下一次的NOD测试。
+        # 5. 读取寄存器值，判断读取的电压寄存器是否和case保存的table匹配，如果不匹配，
+        # 记录LD测试失败，进行下一次的NOD测试。
         logger.print_warning(f"{overdrive.name}: check uboot voltage")
         ret = self.check_uboot_voltage(overdrive)
 
         # 6. 执行reset，进到kernel
         logger.print_info("reset to kernel for testing ...")
-        result = SysappRebootOpts.reboot_to_kernel()
+        result = SysappRebootOpts.reboot_to_kernel(self.uart)
         return result, ret
 
     def _idac_check_kernel(self, overdrive):
@@ -821,12 +823,16 @@ class SysappIdac(CaseBase):
         Args:
             None
         Returns:
-            result (bool): result of test
+            error_code (ErrorCodes): result of test
         """
+        error_code = ErrorCodes.FAIL
         result = False
         result = self.idac_test()
 
-        return result
+        if result:
+            error_code = ErrorCodes.SUCCESS
+
+        return error_code
 
     @logger.print_line_info
     @staticmethod

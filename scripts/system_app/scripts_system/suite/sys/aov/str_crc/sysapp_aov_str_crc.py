@@ -4,12 +4,13 @@
 """str_crc test case for AOV scenarios"""
 
 import re
-from cases.platform.sys.aov.str_crc_var import STR_CRC_OK, STR_CRC_FAIL
-from cases.platform.sys.aov.str_crc_var import SUSPEND_CRC_START_ADDR
-from cases.platform.sys.aov.str_crc_var import SUSPEND_CRC_END_ADDR
+from cases.platform.sys.aov.str_crc_var import (STR_CRC_OK, STR_CRC_FAIL,
+                                                SUSPEND_CRC_START_ADDR,
+                                                SUSPEND_CRC_END_ADDR)
 from suite.common.sysapp_common_logger import logger
 from suite.common.sysapp_common_case_base import SysappCaseBase as CaseBase
 from suite.common.sysapp_common_reboot_opts import SysappRebootOpts
+from suite.common.sysapp_common_error_codes import ErrorCodes
 from sysapp_client import SysappClient as Client
 
 
@@ -39,7 +40,6 @@ class SysappAovStrCrc(CaseBase):
         self.str_crc_bootargs = ""
         self.cmd_str = ("echo 10 > /sys/devices/virtual/sstar/rtcpwc/alarm_timer;"
                         "echo mem > /sys/power/state")
-        SysappRebootOpts.set_client_device(self.uart)
 
     @logger.print_line_info
     def str_crc_test(self):
@@ -51,7 +51,7 @@ class SysappAovStrCrc(CaseBase):
             result (bool): If parse log success, return True; Else, return False.
         """
         result = False
-        logger.print_warning("do str crc test ...")
+        logger.print_warning("do str crc check ...")
         result = self.uart.write(self.cmd_str)
 
         while True:
@@ -84,17 +84,18 @@ class SysappAovStrCrc(CaseBase):
         result = False
         bootargs = ""
         pattern = r"suspend_crc=[^ ]* "
-        result = SysappRebootOpts.init_kernel_env()
+        logger.print_warning("set crc test env ...")
+        result = SysappRebootOpts.init_kernel_env(self.uart)
         if not result:
             logger.print_error("the device is not at kernel or at uboot")
             return result
-        result, bootargs = SysappRebootOpts.get_bootenv("bootargs_linux_only")
+        result, bootargs = SysappRebootOpts.get_bootenv(self.uart, "bootargs_linux_only")
 
         # if fw tool is not exsit, reboot to uboot to get bootenv
         if not result and bootargs is None:
-            result = SysappRebootOpts.reboot_to_uboot()
+            result = SysappRebootOpts.reboot_to_uboot(self.uart)
             if result:
-                result, bootargs = SysappRebootOpts.get_bootenv("bootargs_linux_only")
+                result, bootargs = SysappRebootOpts.get_bootenv(self.uart, "bootargs_linux_only")
 
         if result:
             self.default_bootargs = re.sub(pattern, "", bootargs.strip())
@@ -104,20 +105,27 @@ class SysappAovStrCrc(CaseBase):
             else:
                 # change bootargs and check if change success
                 self.str_crc_bootargs = self.default_bootargs + " " + self.suspend_crc_param
-                result = SysappRebootOpts.set_bootenv("bootargs_linux_only", self.str_crc_bootargs)
+                result = SysappRebootOpts.set_bootenv(self.uart, "bootargs_linux_only",
+                                                      self.str_crc_bootargs)
                 # if fw_printenv is exist, but fw_setenv is not exist
                 if not result:
-                    result = SysappRebootOpts.reboot_to_uboot()
+                    result = SysappRebootOpts.reboot_to_uboot(self.uart)
                     if result:
-                        SysappRebootOpts.set_bootenv("bootargs_linux_only", self.str_crc_bootargs)
+                        SysappRebootOpts.set_bootenv(self.uart, "bootargs_linux_only",
+                                                     self.str_crc_bootargs)
                 logger.print_info(f"set bootargs: {self.str_crc_bootargs}")
                 # reboot to uboot to check if change bootargs success
-                result = SysappRebootOpts.reboot_to_uboot()
+                result = SysappRebootOpts.reboot_to_uboot(self.uart)
                 if result:
-                    result, bootargs = SysappRebootOpts.get_bootenv("bootargs_linux_only")
+                    result, bootargs = SysappRebootOpts.get_bootenv(self.uart,
+                                                                    "bootargs_linux_only")
                     if result and self.suspend_crc_param in bootargs:
-                        logger.print_warning("set str_crc bootargs success")
-                        result = SysappRebootOpts.reboot_to_kernel()
+                        logger.print_info("set str_crc bootargs success")
+                        result = SysappRebootOpts.reboot_to_kernel(self.uart)
+        if result:
+            logger.print_warning("set crc test env success")
+        else:
+            logger.print_error("set crc test env fail")
 
         return result
 
@@ -132,13 +140,14 @@ class SysappAovStrCrc(CaseBase):
         result = False
         bootargs = ""
         pattern = r"suspend_crc=[^ ]*"
-        result, bootargs = SysappRebootOpts.get_bootenv("bootargs_linux_only")
+        logger.print_warning("recovery default env ...")
+        result, bootargs = SysappRebootOpts.get_bootenv(self.uart, "bootargs_linux_only")
 
         # if fw tool is not exsit, reboot to uboot to get bootenv
         if not result and bootargs is None:
-            result = SysappRebootOpts.reboot_to_uboot()
+            result = SysappRebootOpts.reboot_to_uboot(self.uart)
             if result:
-                result, bootargs = SysappRebootOpts.get_bootenv("bootargs_linux_only")
+                result, bootargs = SysappRebootOpts.get_bootenv(self.uart, "bootargs_linux_only")
 
         if result:
             self.default_bootargs = re.sub(pattern, "", bootargs.strip())
@@ -146,21 +155,30 @@ class SysappAovStrCrc(CaseBase):
                 logger.print_info("suspend_crc_param has not been set, no need to remove!")
             else:
                 # change bootargs and check if change success
-                result = SysappRebootOpts.set_bootenv("bootargs_linux_only", self.default_bootargs)
+                result = SysappRebootOpts.set_bootenv(self.uart, "bootargs_linux_only",
+                                                      self.default_bootargs)
                 # if fw_printenv is exist, but fw_setenv is not exist
                 if not result:
-                    result = SysappRebootOpts.reboot_to_uboot()
+                    result = SysappRebootOpts.reboot_to_uboot(self.uart)
                     if result:
-                        SysappRebootOpts.set_bootenv("bootargs_linux_only", self.default_bootargs)
+                        SysappRebootOpts.set_bootenv(self.uart, "bootargs_linux_only",
+                                                     self.default_bootargs)
                 logger.print_info(f"set bootargs: {self.default_bootargs}")
                 # reboot to uboot to check if change bootargs success
-                result = SysappRebootOpts.reboot_to_uboot()
+                result = SysappRebootOpts.reboot_to_uboot(self.uart)
                 if result:
-                    result, bootargs = SysappRebootOpts.get_bootenv("bootargs_linux_only")
+                    result, bootargs = SysappRebootOpts.get_bootenv(self.uart,
+                                                                    "bootargs_linux_only")
                     if result and "suspend_crc" in bootargs:
                         logger.print_error("recovery bootargs fail")
                         result = False
-        result |= SysappRebootOpts.reboot_to_kernel()
+        result &= SysappRebootOpts.reboot_to_kernel(self.uart)
+
+        if result:
+            logger.print_warning("recovery default env success")
+        else:
+            logger.print_error("recovery default env fail")
+
         return result
 
     def runcase(self):
@@ -169,22 +187,24 @@ class SysappAovStrCrc(CaseBase):
         Args:
             None:
         Returns:
-            result (bool): Result of test.
+            error_code (Errorcodes): Result of test.
         """
+        error_code = ErrorCodes.FAIL
         result = False
         result = self.set_crc_test_env()
 
-        self.uart.write("echo ==================================")
         if result:
             result = self.str_crc_test()
-        else:
-            logger.print_error("str crc test fail")
 
-        self.uart.write("echo ++++++++++++++++++++++++++++++++++")
         # need to judge if it needs to burn image refer to the return value.
-        self.recovery_default_env()
+        result &= self.recovery_default_env()
 
-        return result
+        if result:
+            error_code = ErrorCodes.SUCCESS
+        else:
+            error_code = ErrorCodes.FAIL
+
+        return error_code
 
     @logger.print_line_info
     @staticmethod

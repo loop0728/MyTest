@@ -2,6 +2,7 @@
 import time
 from suite.common.sysapp_common_logger import logger
 from suite.common.sysapp_common_case_base import SysappCaseBase
+from suite.common.sysapp_common_error_codes import ErrorCodes
 import suite.common.sysapp_common as sys_common
 from sysapp_client import SysappClient
 
@@ -108,12 +109,15 @@ class SysappAovOsSwitch(SysappCaseBase):
         time.sleep(20)
         return result
 
-    def runcase(self):
+    def os_switch_test(self):
         """
-        Run case entry.
+        Run os switch test flow.
+
+        Args:
+            None:
 
         Returns:
-            int: Error code
+            int: result
         """
         result = 0
         # step1 go to kernel
@@ -132,3 +136,18 @@ class SysappAovOsSwitch(SysappCaseBase):
             logger.print_warning(f"caseName[{self.case_name}] run done!")
             return 255
         return 0
+
+    def runcase(self):
+        """
+        Run case entry.
+
+        Returns:
+            ErrorCodes: Error code
+        """
+        error_code = ErrorCodes.FAIL
+        result = self.os_switch_test()
+        print(f"result:{result} <-----------")
+        if result == 0:
+            error_code =  ErrorCodes.SUCCESS
+
+        return error_code

@@ -4,6 +4,7 @@ import os
 import time
 from suite.common.sysapp_common_logger import logger
 from suite.common.sysapp_common_case_base import SysappCaseBase
+from suite.common.sysapp_common_error_codes import ErrorCodes
 import suite.common.sysapp_common as sys_common
 from sysapp_client import SysappClient
 from cases.platform.sys.aov.ttff_ttcl_var import TTFF_TARGET, TTCL_TARGET
@@ -212,14 +213,16 @@ class SysappAovTtffTtcl(SysappCaseBase):
 
         return result
 
-    def runcase(self):
+    def ttff_ttcl_test(self):
         """
-        Run case entry.
+        Run ttff/ttcl test flow.
+
+        Args:
+            None:
 
         Returns:
-            int: Error code
+            int: result
         """
-        # step1 go to kernel
         result = sys_common.goto_kernel(self.uart)
         if result is not True:
             logger.print_warning(f"caseName[{self.case_name}] not in kernel!")
@@ -239,3 +242,17 @@ class SysappAovTtffTtcl(SysappCaseBase):
 
         self.uart.close()
         return 0
+
+    def runcase(self):
+        """
+        Run case entry.
+
+        Returns:
+            ErrorCodes: Error code
+        """
+        error_code = ErrorCodes.FAIL
+        result = self.ttff_ttcl_test()
+        if result == 0:
+            error_code =  ErrorCodes.SUCCESS
+
+        return error_code
