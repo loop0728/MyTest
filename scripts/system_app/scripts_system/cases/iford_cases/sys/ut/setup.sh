@@ -6,5 +6,7 @@ AddCaseSystem 0x80 /ut "suite/sys/ut/sysapp_ut_client.py" SysappUtClient on
 AddCaseSystem 0x80 /ut "suite/sys/ut/sysapp_ut_dm.py" SysappUtDm on
 AddCaseSystem 0x80 /ut "suite/sys/ut/sysapp_ut_common.py" SysappUtCommon on
 AddCaseSystem 0x80 /ut "suite/sys/ut/sysapp_ut_stat_timecost.py" SysappUtStatTimecost on
-AddCaseSystem 0x80 /ut "suite/sys/ut/sysapp_ut_reboot.py" SysappUtRebootTest on
+AddCaseSystem 0x80 /ut "suite/sys/ut/sysapp_ut_reboot_opts.py" SysappUtRebootTest on
+AddCaseSystem 0x80 /ut "suite/sys/ut/sysapp_ut_register_opts.py" SysappUtRegisterTest on
+AddCaseSystem 0x80 /ut "suite/sys/ut/sysapp_ut_device_opts.py" SysappUtDeviceTest on
 ############################## UT ##############################

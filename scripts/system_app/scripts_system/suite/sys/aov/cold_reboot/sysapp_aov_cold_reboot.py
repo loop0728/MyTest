@@ -9,7 +9,7 @@ from suite.common.sysapp_common_reboot_opts import SysappRebootOpts
 from suite.common.sysapp_common_error_codes import ErrorCodes
 from sysapp_client import SysappClient as Client
 
-class ColdReboot(CaseBase):
+class SysappAovColdReboot(CaseBase):
     """A class representing cold reboot test flow
     Attributes:
         uart (Device): device handle

@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-"""IDAC test scenarios"""
+"""Reboot ut test"""
 
 from sysapp_client import SysappClient as Client
 from suite.common.sysapp_common_logger import logger
@@ -72,17 +72,17 @@ class SysappUtRebootTest(CaseBase):
         """
         result = False
         bootargs = ("ubi.mtd=ubia,2048 root=/dev/ram rdinit=/linuxrc initrd=0x21800000,0x100000 "
-                    "rootwait LX_MEM=0x8000000 mma_heap=mma_heap_name0,miu=0,sz=0x5000000 "
+                    "rootwait LX_MEM=0x10000000 mma_heap=mma_heap_name0,miu=0,sz=0xb000000 "
                     "mma_memblock_remove=1 cma=2M disable_rtos=1 loglevel=3 "
-                    "mtdparts=nand0:1664k@1280k(BOOT),1664k(BOOT_BAK),256k(ENV),256k(ENV1),"
-                    "5m(KERNEL),5m(KERNEL_BACKUP),7m(MISC),7m(RO_FILES),5m(RTOS),5m(RTOS_BACKUP),"
-                    "1m(RAMDISK),1m(RAMDISK_BACKUP),87m(ubia) nohz=off")
+                    "mtdparts=nand0:1664k@1280k(BOOT),1664k(BOOT_BAK),256k(ENV),5m(KERNEL),"
+                    "5m(KERNEL_BACKUP),7m(MISC),7m(RO_FILES),5m(RTOS),5m(RTOS_BACKUP),"
+                    "1m(RAMDISK),1m(RAMDISK_BACKUP),89344k(ubia) nohz=off")
         # bootargs = ("ubi.mtd=ubia,2048 root=/dev/ram rdinit=/linuxrc initrd=0x21800000,0x100000 "
-        #             "rootwait LX_MEM=0x10000000 mma_heap=mma_heap_name0,miu=0,sz=0xb000000 "
+        #             "rootwait LX_MEM=0x8000000 mma_heap=mma_heap_name0,miu=0,sz=0x5000000 "
         #             "mma_memblock_remove=1 cma=2M disable_rtos=1 loglevel=3 "
-        #             "mtdparts=nand0:1664k@1280k(BOOT),1664k(BOOT_BAK),256k(ENV),5m(KERNEL),"
-        #             "5m(KERNEL_BACKUP),7m(MISC),7m(RO_FILES),5m(RTOS),5m(RTOS_BACKUP),"
-        #             "1m(RAMDISK),1m(RAMDISK_BACKUP),89344k(ubia) nohz=off")
+        #             "mtdparts=nand0:1664k@1280k(BOOT),1664k(BOOT_BAK),256k(ENV),256k(ENV1),"
+        #             "5m(KERNEL),5m(KERNEL_BACKUP),7m(MISC),7m(RO_FILES),5m(RTOS),5m(RTOS_BACKUP),"
+        #             "1m(RAMDISK),1m(RAMDISK_BACKUP),87m(ubia) nohz=off")
         #cmd_set_default_bootargs = (f"setenv bootargs_linux_only {bootargs}")
         result = SysappRebootOpts.cold_reboot_to_uboot(self.uart)
         if result:
