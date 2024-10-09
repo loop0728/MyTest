@@ -1,18 +1,18 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-"""Register ut test"""
+"""newwork ut test"""
 
 from sysapp_client import SysappClient as Client
 from suite.common.sysapp_common_logger import logger
 from suite.common.sysapp_common_case_base import SysappCaseBase as CaseBase
 from suite.common.sysapp_common_reboot_opts import SysappRebootOpts
-from suite.common.sysapp_common_register_opts import SysappRegisterOpts
+from suite.common.sysapp_common_net_opts import SysappNetOpts
 from suite.common.sysapp_common_error_codes import ErrorCodes
 
-class SysappUtRegisterTest(CaseBase):
+class SysappUtNetworkTest(CaseBase):
     """
-    A class representing regiseter test flow.
+    A class representing network test flow.
     Attributes:
         uart (Client): Clinet instance.
     """
@@ -26,63 +26,39 @@ class SysappUtRegisterTest(CaseBase):
         super().__init__(case_name, case_run_cnt, module_path_name)
         self.uart = Client(self.case_name, "uart", "uart")
 
-    def register_test(self):
+    def network_test(self):
         """
-        Register test.
+        Network test.
         Args:
             None:
         Returns:
             result (bool): Test success, return True; Else, return False.
         """
         result = False
-        str_reg_value = ""
-        bank = "3f"
-        offset = "1"
-        set_value = "78"
         fail_cnt = 0
         result = SysappRebootOpts.init_uboot_env(self.uart)
         if not result:
             return result
 
-        logger.print_info("test read register at uboot phase ...")
-        result, str_reg_value = SysappRegisterOpts.read_register(self.uart, bank, offset)
+        logger.print_info("test set board ip at uboot phase ...")
+        result = SysappNetOpts.setup_network(self.uart)
         if result:
-            logger.print_warning("test read register success at uboot phase, the value of "
-                                 f"{bank}:{offset} is {str_reg_value}")
+            logger.print_warning("test set board ip success at uboot phase")
         else:
-            logger.print_error("test read register fail at uboot phase")
+            logger.print_error("test set board ip fail at uboot phase")
             fail_cnt += 1
 
-        logger.print_info("test write register at uboot phase ...")
-        result = SysappRegisterOpts.write_register(self.uart, bank, offset, set_value)
-        if result:
-            logger.print_warning("test write register success at uboot phase, set the value of "
-                                 f"{bank}:{offset} to {set_value}")
-        else:
-            logger.print_error("test write register fail at uboot phase")
-            fail_cnt += 1
-
-        logger.print_info("test read register at kernel phase ...")
+        logger.print_info("test set board ip at kernel phase ...")
         logger.print_info("reboot to kernel")
         result = SysappRebootOpts.reboot_to_kernel(self.uart)
         if not result:
             return result
 
-        result, str_reg_value = SysappRegisterOpts.read_register(self.uart, bank, offset)
+        result = SysappNetOpts.setup_network(self.uart)
         if result:
-            logger.print_warning("test read register success at kernel phase, the value of "
-                                 f"{bank}:{offset} is {str_reg_value}")
+            logger.print_warning("test set board ip success at kernel phase")
         else:
-            logger.print_error("test read register fail at kernel phase")
-            fail_cnt += 1
-
-        logger.print_info("test write register at kernel phase ...")
-        result = SysappRegisterOpts.write_register(self.uart, bank, offset, set_value)
-        if result:
-            logger.print_warning("test write register success at kernel phase, set the value of "
-                                 f"{bank}:{offset} to {set_value}")
-        else:
-            logger.print_error("test write register fail at kernel phase")
+            logger.print_error("test set board ip fail at kernel phase")
             fail_cnt += 1
 
         if fail_cnt > 0:
@@ -100,7 +76,7 @@ class SysappUtRegisterTest(CaseBase):
             error_code (ErrorCodes): Result of test.
         """
         error_code = ErrorCodes.FAIL
-        result = self.register_test()
+        result = self.network_test()
         if result:
             error_code = ErrorCodes.SUCCESS
 

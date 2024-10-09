@@ -859,7 +859,8 @@ def read_register(device:object, bank, offset, is_kernel=True):
         if status:
             read_line_cnt += 1
             if isinstance(line, bytes):
-                line = line.decode('utf-8', errors='replace').strip()
+                line = line.decode('utf-8', errors='replace')
+            line = line.strip()
             if "BANK" in line:
                 is_register_value_ready = 1
                 continue

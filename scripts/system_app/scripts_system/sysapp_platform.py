@@ -10,6 +10,7 @@ LOG_PATH = "./out/uart.log"
 # PLATFORM_mount_ip: ip of the mount server
 # PLATFORM_board_ip: ip of the board
 # PLATFORM_board_mac: mac address of the board
+# PLATFORM_board_mac_type: emac or gmac
 # PLATFORM_mount_gw: gateway of the board
 # PLATFORM_mount_netmask: netmask of the board
 # PLATFORM_mount_user: the user name(just for cifs)
@@ -20,6 +21,7 @@ LOG_PATH = "./out/uart.log"
 PLATFORM_MOUNT_IP = "172.19.30.183"
 PLATFORM_BOARD_IP = "172.19.26.93"
 PLATFORM_BOARD_MAC = "00:70:42:00:00:23"
+PLATFORM_BOARD_MAC_TYPE = "emac"
 PLATFORM_MOUNT_GW = "172.19.26.254"
 PLATFORM_MOUNT_NETMASK = "255.255.255.0"
 PLATFORM_MOUNT_USER = ""

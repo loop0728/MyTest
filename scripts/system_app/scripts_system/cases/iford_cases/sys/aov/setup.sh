@@ -27,10 +27,10 @@ else
                 case_class="Reboot"
             ;;
             "str_crc")
-                case_class="StrCrc"
+                case_class="SysappAovStrCrc"
             ;;
             "str")
-                case_class="Str"
+                case_class="SysappAovStr"
             ;;
             "ttff_ttcl")
                 case_class="SysappAovTtffTtcl"

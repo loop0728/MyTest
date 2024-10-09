@@ -216,7 +216,8 @@ class SysappIdac(CaseBase):
         status, line = self.uart.read(1, 30)
         if status:
             if isinstance(line, bytes):
-                line = line.decode('utf-8', errors='replace').strip()
+                line = line.decode('utf-8', errors='replace')
+            line = line.strip()
             if net_interface in line:
                 logger.print_info("ko has insmoded already")
                 result = True
@@ -278,7 +279,8 @@ class SysappIdac(CaseBase):
         status, line = self.uart.read()
         if status:
             if isinstance(line, bytes):
-                line = line.decode('utf-8', errors='replace').strip()
+                line = line.decode('utf-8', errors='replace')
+            line = line.strip()
             if "No such file or directory" in line:
                 logger.print_info("dump file is not exist, no need to delete")
                 result = True
@@ -293,8 +295,9 @@ class SysappIdac(CaseBase):
         status, line = self.uart.read(1, 120)
         if status:
             if isinstance(line, bytes):
-                line = line.decode('utf-8', errors='replace').strip()
-            if "0" in line:
+                line = line.decode('utf-8', errors='replace')
+            line = line.strip()
+            if "0" == line:
                 logger.print_info("rm old dump file ok")
                 result = True
         else:
@@ -319,8 +322,9 @@ class SysappIdac(CaseBase):
         status, line = self.uart.read(1, 120)
         if status:
             if isinstance(line, bytes):
-                line = line.decode('utf-8', errors='replace').strip()
-            if "0" in line:
+                line = line.decode('utf-8', errors='replace')
+            line = line.strip()
+            if "0" == line:
                 logger.print_info("dump devicetree ok")
                 result = True
             else:
@@ -373,7 +377,8 @@ class SysappIdac(CaseBase):
         with open(dts_file, 'r', encoding='utf-8') as file:
             for line in file:
                 if isinstance(line, bytes):
-                    line = line.decode('utf-8', errors='replace').strip()
+                    line = line.decode('utf-8', errors='replace')
+                line = line.strip()
                 if "core_power" in line:
                     core_base_volt_ready = 1
                     is_core_power_exist = 1
@@ -513,7 +518,8 @@ class SysappIdac(CaseBase):
         status, line = self.uart.read()
         if status:
             if isinstance(line, bytes):
-                line = line.decode('utf-8', errors='replace').strip()
+                line = line.decode('utf-8', errors='replace')
+            line = line.strip()
             cpufreq_map = line.strip().split()
             for cpufreq_khz in cpufreq_map:
                 cpufreq_hz = int(cpufreq_khz) * 1000

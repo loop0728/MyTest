@@ -107,7 +107,8 @@ class SysappRebootOptsOld():
             status, line = self.device.read()
             if status:
                 if isinstance(line, bytes):
-                    line = line.decode('utf-8', errors='replace').strip()
+                    line = line.decode('utf-8', errors='replace')
+                line = line.strip()
                 if "Auto-Negotiation" in line:
                     break
             else:
@@ -322,7 +323,8 @@ class SysappRebootOptsOld():
             status, line = self.device.read()
             if status:
                 if isinstance(line, bytes):
-                    line = line.decode('utf-8', errors='replace').strip()
+                    line = line.decode('utf-8', errors='replace')
+                line = line.strip()
                 if "not defined" in line:
                     result = 255
                     break
@@ -400,11 +402,12 @@ class SysappRebootOptsOld():
             status, line = self.device.read()
             if status:
                 if isinstance(line, bytes):
-                    line = line.decode('utf-8', errors='replace').strip()
+                    line = line.decode('utf-8', errors='replace')
+                line = line.strip()
                 if tool_name in line:
                     result = True
                     tool_path = line.strip()
-                if "0" in line:
+                if "0" == line:
                     break
             else:
                 logger.print_error(f"read line fail, {line}")

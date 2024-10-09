@@ -160,7 +160,7 @@ class SysappDeviceOpts():
                 if isinstance(line, bytes):
                     line = line.decode('utf-8', errors='replace')
                 line = line.strip()
-                if "0" is line:
+                if "0" == line:
                     result = True
                     break
 

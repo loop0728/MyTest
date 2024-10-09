@@ -58,7 +58,8 @@ class SysappAovStrCrc(CaseBase):
             status, line = self.uart.read(1, 15)
             if status:
                 if isinstance(line, bytes):
-                    line = line.decode('utf-8', errors='replace').strip()
+                    line = line.decode('utf-8', errors='replace')
+                line = line.strip()
                 if str(STR_CRC_OK).strip() in line:
                     logger.print_warning("str crc check success")
                     result = True

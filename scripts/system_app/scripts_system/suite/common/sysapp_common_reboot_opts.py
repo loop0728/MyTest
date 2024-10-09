@@ -71,7 +71,8 @@ class SysappRebootOpts():
             status, line = device.read()
             if status:
                 if isinstance(line, bytes):
-                    line = line.decode('utf-8', errors='replace').strip()
+                    line = line.decode('utf-8', errors='replace')
+                line = line.strip()
                 if "Auto-Negotiation" in line:
                     break
             else:
@@ -233,7 +234,8 @@ class SysappRebootOpts():
             status, line = device.read()
             if status:
                 if isinstance(line, bytes):
-                    line = line.decode('utf-8', errors='replace').strip()
+                    line = line.decode('utf-8', errors='replace')
+                line = line.strip()
                 if "not defined" in line:
                     result = False
                     break
@@ -311,11 +313,12 @@ class SysappRebootOpts():
             status, line = device.read()
             if status:
                 if isinstance(line, bytes):
-                    line = line.decode('utf-8', errors='replace').strip()
+                    line = line.decode('utf-8', errors='replace')
+                line = line.strip()
                 if tool_name in line:
                     result = True
                     tool_path = line.strip()
-                if "0" in line:
+                if "0" == line:
                     break
             else:
                 logger.print_error(f"read line fail, {line}")
@@ -448,7 +451,7 @@ class SysappRebootOpts():
         if result:
             if cls.__board_cur_state == BootStage.E_BOOTSTAGE_UBOOT.name:
                 result = cls._uboot_to_kernel(device)
-            if cls.__board_cur_state == BootStage.E_BOOTSTAGE_KERNEL.name:
+            elif cls.__board_cur_state == BootStage.E_BOOTSTAGE_KERNEL.name:
                 result = cls._kernel_to_kernel(device)
 
         return result
@@ -467,7 +470,7 @@ class SysappRebootOpts():
         if result:
             if cls.__board_cur_state == BootStage.E_BOOTSTAGE_UBOOT.name:
                 result = cls._uboot_to_uboot(device)
-            if cls.__board_cur_state == BootStage.E_BOOTSTAGE_KERNEL.name:
+            elif cls.__board_cur_state == BootStage.E_BOOTSTAGE_KERNEL.name:
                 result = cls._kernel_to_uboot(device)
 
         return result
@@ -531,7 +534,7 @@ class SysappRebootOpts():
         if result:
             if cls.__board_cur_state == BootStage.E_BOOTSTAGE_UBOOT.name:
                 result, val = cls._uboot_get_bootenv(device, key)
-            if cls.__board_cur_state == BootStage.E_BOOTSTAGE_KERNEL.name:
+            elif cls.__board_cur_state == BootStage.E_BOOTSTAGE_KERNEL.name:
                 result, val = cls._kernel_get_bootenv(device, key)
 
         return result, val
@@ -552,7 +555,24 @@ class SysappRebootOpts():
         if result:
             if cls.__board_cur_state == BootStage.E_BOOTSTAGE_UBOOT.name:
                 result = cls._uboot_set_bootenv(device, key, val)
-            if cls.__board_cur_state == BootStage.E_BOOTSTAGE_KERNEL.name:
+            elif cls.__board_cur_state == BootStage.E_BOOTSTAGE_KERNEL.name:
                 result = cls._kernel_set_bootenv(device, key, val)
 
+        return result
+
+    @classmethod
+    def check_bootenv(cls, device:object, key, check_value):
+        """
+        Check if the actual value of env key is equal to the target value.
+        Args:
+            device (object): device handle.
+            key (str): env key.
+            check_value (str): env target value.
+        Returns:
+            result (bool): If the actual value of env key is equal to the target value,
+            return True; Else, return False.
+        """
+        result, get_value = cls.get_bootenv(device, key)
+        if result and get_value != check_value:
+            result = False
         return result

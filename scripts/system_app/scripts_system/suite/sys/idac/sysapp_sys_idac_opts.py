@@ -149,7 +149,8 @@ class SysappIdacOpts():
         with open(dts_file, 'r', encoding='utf-8') as file:
             for line in file:
                 if isinstance(line, bytes):
-                    line = line.decode('utf-8', errors='replace').strip()
+                    line = line.decode('utf-8', errors='replace')
+                line = line.strip()
                 pattern = re.compile(r'opp[\d]{2} {')
                 match = pattern.search(line)
                 if match:

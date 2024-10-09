@@ -34,10 +34,8 @@ class SysappUtDeviceTest(CaseBase):
         Args:
             None:
         Returns:
-            error_code (ErrorCodes): Test success, return ErrorCodes.SUCCESS;
-            Else, return ErrorCodes.FAIL.
+            result (bool): Test success, return True; Else, return False.
         """
-        error_code = ErrorCodes.FAIL
         result = False
         package_type = SysappPackageType.PACKAGE_TYPE_MAX
         bootstrap_type = SysappBootstrapType.BOOTSTRAP_TYPE_MAX
@@ -65,8 +63,7 @@ class SysappUtDeviceTest(CaseBase):
         logger.print_info("reboot to kernel")
         result = SysappRebootOpts.reboot_to_kernel(self.uart)
         if not result:
-            error_code = ErrorCodes.FAIL
-            return error_code
+            return result
 
         package_type = SysappDeviceOpts.get_package_type(self.uart)
         logger.print_warning(f"The package type is {package_type.name}")
@@ -82,10 +79,7 @@ class SysappUtDeviceTest(CaseBase):
         else:
             logger.print_error("get partitons fail at kernel phase")
 
-        if result:
-            error_code = ErrorCodes.SUCCESS
-
-        return error_code
+        return result
 
     @logger.print_line_info
     def runcase(self):

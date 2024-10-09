@@ -213,7 +213,8 @@ class SysappAovStr(CaseBase):
                 read_line_cnt += 1
 
                 if isinstance(line, bytes):
-                    line = line.decode('utf-8', errors='replace').strip()
+                    line = line.decode('utf-8', errors='replace')
+                line = line.strip()
 
                 # check suspend entry
                 result = self._parse_str_stage(line, StrStage.E_STAGE_SUSPEND_ENTRY, retry_cnt)
@@ -291,7 +292,8 @@ class SysappAovStr(CaseBase):
             if status:
                 read_line_cnt += 1
                 if isinstance(line, bytes):
-                    line = line.decode('utf-8', errors='replace').strip()
+                    line = line.decode('utf-8', errors='replace')
+                line = line.strip()
                 if (self.case_test_param['ipl_resume_time'] == 0
                         and self.case_test_param['str_booting_time'] in line):
                     pattern = re.compile(r'(\d+)\(us\)')

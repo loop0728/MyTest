@@ -9,4 +9,5 @@ AddCaseSystem 0x80 /ut "suite/sys/ut/sysapp_ut_stat_timecost.py" SysappUtStatTim
 AddCaseSystem 0x80 /ut "suite/sys/ut/sysapp_ut_reboot_opts.py" SysappUtRebootTest on
 AddCaseSystem 0x80 /ut "suite/sys/ut/sysapp_ut_register_opts.py" SysappUtRegisterTest on
 AddCaseSystem 0x80 /ut "suite/sys/ut/sysapp_ut_device_opts.py" SysappUtDeviceTest on
+AddCaseSystem 0x80 /ut "suite/sys/ut/sysapp_ut_net_opts.py" SysappUtNetworkTest on
 ############################## UT ##############################

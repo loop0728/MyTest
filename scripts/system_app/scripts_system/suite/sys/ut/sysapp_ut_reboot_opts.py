@@ -31,10 +31,8 @@ class SysappUtRebootTest(CaseBase):
         Args:
             None:
         Returns:
-            error_code (ErrorCodes): Test success, return ErrorCodes.SUCCESS;
-            Else, return ErrorCodes.FAIL.
+            result (bool): Test success, return True; Else, return False.
         """
-        error_code = ErrorCodes.FAIL
         result = False
         result = SysappRebootOpts.init_kernel_env(self.uart)
         if not result:
@@ -57,10 +55,7 @@ class SysappUtRebootTest(CaseBase):
         logger.print_info("reboot to kernel for testing ...")
         result = SysappRebootOpts.reboot_to_kernel(self.uart)
 
-        if result:
-            error_code = ErrorCodes.SUCCESS
-
-        return error_code
+        return result
 
     def set_default_bootargs(self):
         """
