@@ -4,7 +4,7 @@
 """newwork ut test"""
 
 from sysapp_client import SysappClient as Client
-from suite.common.sysapp_common_logger import logger
+from suite.common.sysapp_common_logger import logger, sysapp_print
 from suite.common.sysapp_common_case_base import SysappCaseBase as CaseBase
 from suite.common.sysapp_common_reboot_opts import SysappRebootOpts
 from suite.common.sysapp_common_net_opts import SysappNetOpts
@@ -40,25 +40,25 @@ class SysappUtNetworkTest(CaseBase):
         if not result:
             return result
 
-        logger.print_info("test set board ip at uboot phase ...")
+        logger.info("test set board ip at uboot phase ...")
         result = SysappNetOpts.setup_network(self.uart)
         if result:
-            logger.print_warning("test set board ip success at uboot phase")
+            logger.warning("test set board ip success at uboot phase")
         else:
-            logger.print_error("test set board ip fail at uboot phase")
+            logger.error("test set board ip fail at uboot phase")
             fail_cnt += 1
 
-        logger.print_info("test set board ip at kernel phase ...")
-        logger.print_info("reboot to kernel")
+        logger.info("test set board ip at kernel phase ...")
+        logger.info("reboot to kernel")
         result = SysappRebootOpts.reboot_to_kernel(self.uart)
         if not result:
             return result
 
         result = SysappNetOpts.setup_network(self.uart)
         if result:
-            logger.print_warning("test set board ip success at kernel phase")
+            logger.warning("test set board ip success at kernel phase")
         else:
-            logger.print_error("test set board ip fail at kernel phase")
+            logger.error("test set board ip fail at kernel phase")
             fail_cnt += 1
 
         if fail_cnt > 0:
@@ -66,7 +66,7 @@ class SysappUtNetworkTest(CaseBase):
 
         return result
 
-    @logger.print_line_info
+    @sysapp_print.print_line_info
     def runcase(self):
         """
         Test function body.
@@ -82,7 +82,7 @@ class SysappUtNetworkTest(CaseBase):
 
         return error_code
 
-    @logger.print_line_info
+    @sysapp_print.print_line_info
     @staticmethod
     def system_help():
         """
@@ -92,5 +92,5 @@ class SysappUtNetworkTest(CaseBase):
         Returns:
             None:
         """
-        logger.print_warning("test register")
-        logger.print_warning("cmd: RegisterTest")
+        logger.warning("test register")
+        logger.warning("cmd: RegisterTest")

@@ -39,7 +39,7 @@ class SysappUtClient(SysappCaseBase):
         for write_cmd in self.write_cmd_lst:
             result = device.write(write_cmd)
             if result is False:
-                logger.print_error(f"Write fail: {write_cmd}")
+                logger.error(f"Write fail: {write_cmd}")
                 continue
             time.sleep(1)
         return result
@@ -61,14 +61,14 @@ class SysappUtClient(SysappCaseBase):
             test_cmd = test_cmd2
         if os.path.exists(log_path):
             os.remove(log_path)
-            logger.print_info(f"{log_path} removed.")
+            logger.info(f"{log_path} removed.")
         sys_common.ensure_file_exists(log_path)
         device.write(test_cmd)
         while True:
             result, data = device.read()
             if result is True:
                 if data.strip() == "/ #":
-                    logger.print_info("Read end.")
+                    logger.info("Read end.")
                     break
                 else:
                     with open(log_path, "a+", encoding="utf-8") as file:
@@ -77,14 +77,14 @@ class SysappUtClient(SysappCaseBase):
                         # file.write(f"[{formatted_time}]{data}")
                         file.write(f"{data}")
             else:
-                logger.print_warning("Read time out.")
+                logger.warning("Read time out.")
                 break
         result = sys_common.are_files_equal_line_by_line(log_path, resource_log)
         if result == 255:
-            logger.print_error(f"{test_cmd} fail.")
+            logger.error(f"{test_cmd} fail.")
             return result
         else:
-            logger.print_info(f"{test_cmd} pass.")
+            logger.info(f"{test_cmd} pass.")
         return True
 
     def runcase(self) -> int:
@@ -107,15 +107,15 @@ class SysappUtClient(SysappCaseBase):
 
         ret = self.write_cmd_test(uart)
         if ret is False:
-            logger.print_error("Write test fail.")
+            logger.error("Write test fail.")
             err_code = EC.FAIL
         ret = self.read_cmd_test(uart, 1, test_cmd1_log, resource_test1_log)
         if ret is False:
-            logger.print_error("Read test1 fail.")
+            logger.error("Read test1 fail.")
             err_code = EC.FAIL
         ret = self.read_cmd_test(uart, 2, test_cmd2_log, resource_test2_log)
         if ret is False:
-            logger.print_error("Read test fail.")
+            logger.error("Read test fail.")
             err_code = EC.FAIL
 
         return err_code

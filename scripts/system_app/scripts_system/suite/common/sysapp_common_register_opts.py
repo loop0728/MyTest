@@ -15,7 +15,7 @@ class SysappRegisterOpts():
     """
 
     @staticmethod
-    def read_register(device:object, bank, offset):
+    def read_register(device: object, bank, offset):
         """
         Get the value of the specified register.
         Args:
@@ -40,14 +40,14 @@ class SysappRegisterOpts():
         elif SysappRebootOpts.check_kernel_phase():
             cmd_read_register = f"/customer/riu_r {bank} {offset}"
         else:
-            logger.print_error("the device is not at kernel or at uboot, read register fail")
+            logger.error("the device is not at kernel or at uboot, read register fail")
             return False
 
         device.write(cmd_read_register)
 
         while True:
             if read_line_cnt > max_read_lines:
-                logger.print_error(f"read lines exceed max_read_lines:{max_read_lines}")
+                logger.error(f"read lines exceed max_read_lines:{max_read_lines}")
                 break
 
             status, line = device.read()
@@ -66,16 +66,16 @@ class SysappRegisterOpts():
                     if match:
                         str_reg_value = match.group(0)
                         result = True
-                        logger.print_info(f"bank:{bank} offset:{offset} "
+                        logger.info(f"bank:{bank} offset:{offset} "
                                         f"register value is {str_reg_value}")
                         break
             else:
-                logger.print_error(f"read line:{read_line_cnt} fail")
+                logger.error(f"read line:{read_line_cnt} fail")
                 break
         return result, str_reg_value
 
     @staticmethod
-    def write_register(device:object, bank, offset, value):
+    def write_register(device: object, bank, offset, value):
         """
         Set the value to the specified register.
         Args:
@@ -95,7 +95,7 @@ class SysappRegisterOpts():
         elif SysappRebootOpts.check_kernel_phase():
             cmd_write_register = f"/customer/riu_w {bank} {offset} {value}"
         else:
-            logger.print_error("the device is not at kernel or uboot, read register fail")
+            logger.error("the device is not at kernel or uboot, read register fail")
             return False
 
         device.write(cmd_write_register)

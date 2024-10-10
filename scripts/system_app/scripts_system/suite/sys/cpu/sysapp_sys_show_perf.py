@@ -19,7 +19,7 @@ class SysappMixerThread(threading.Thread):
                "./json_out/1snr_4m20p_ipu_vdf/isp_3dnr/isp0_3dnr_0.json -l 0x100")
         self.telnet_handle.write(cmd)
         for i in range(1, 25):
-            logger.print_warning(f"cnt={i}")
+            logger.warning(f"cnt={i}")
             time.sleep(1)
         cmd = "y"
         self.telnet_handle.write(cmd)
@@ -40,7 +40,7 @@ class SysappShowPerf(CaseBase):
         # 检查串口信息
         res = self.uart.write(cmd)
         if res is False:
-            logger.print_error(f"{self.uart} is disconnected.")
+            logger.error(f"{self.uart} is disconnected.")
             return "Unknown"
         wait_keyword = "0"
         status, data = self.uart.read()
@@ -73,12 +73,12 @@ class SysappShowPerf(CaseBase):
         data = self.get_ko_insmod_state(f"{koname}")
         if wait_keyword in data:
             cmd = f"insmod {ko_path}"
-            logger.print_warning(f"we will {cmd}")
+            logger.warning(f"we will {cmd}")
             self.uart.write(cmd)
             result = "true"
             return result
         else:
-            logger.print_warning(f"we no need insmod {koname}")
+            logger.warning(f"we no need insmod {koname}")
             result = "false"
             return result
 
@@ -87,10 +87,10 @@ class SysappShowPerf(CaseBase):
         result = 0
         cur_os = self.get_current_os()
         if cur_os == target_os:
-            logger.print_warning(f"[{self.case_name}] current os is match {target_os}")
+            logger.warning(f"[{self.case_name}] current os is match {target_os}")
             return 0
 
-        logger.print_warning(f"will switch to OS({target_os})!")
+        logger.warning(f"will switch to OS({target_os})!")
         if target_os == "dualos":
             cmd = "cd /customer/sample_code/bin/"
             self.uart.write(cmd)
@@ -100,7 +100,7 @@ class SysappShowPerf(CaseBase):
                 if wait_keyword not in data:
                     return 255
             else:
-                logger.print_error(f"Read fail,no keyword: {wait_keyword}")
+                logger.error(f"Read fail,no keyword: {wait_keyword}")
                 return 255
             cmd = "./prog_aov_aov_demo -t"
             self.uart.write(cmd)
@@ -137,37 +137,37 @@ class SysappShowPerf(CaseBase):
         # step1 判断是否在kernel下
         result = sys_common.goto_kernel(self.uart)
         if result is not True:
-            logger.print_warning(f"caseName[{self.case_name}] not in kernel!")
+            logger.warning(f"caseName[{self.case_name}] not in kernel!")
             return 255
         # step2 切换到dualos
         if self.case_name == "show_cpu_dualos":
             result = self.switch_os("dualos")
             if result == 255:
-                logger.print_warning(f"caseName[{self.case_name}] run done!")
+                logger.warning(f"caseName[{self.case_name}] run done!")
                 return 255
         # step3 挂载网络
-        logger.print_warning("config network")
+        logger.warning("config network")
         self.check_insmod_ko("sstar_emac")
         sys_common.set_board_kernel_ip(self.uart)
         # step4 mount nfs
-        logger.print_warning(f"mount[{self.subpath}]")
+        logger.warning(f"mount[{self.subpath}]")
         sys_common.mount_to_server(self.uart, f"{self.subpath}")
         # step5 串口运行mixer pipeline
         if self.case_name != "show_perf_dualos":
-            logger.print_warning("run mixer case")
+            logger.warning("run mixer case")
             telnetmixer = Client(self.case_name, "telnet", "telnetmixer")
             mixerthread = SysappMixerThread(telnetmixer)
             mixerthread.start()
         # step6 telnet cd 到mount目录，并运行show_interrupts.sh脚本
-        logger.print_warning("connect telent && run case")
+        logger.warning("connect telent && run case")
         telnet0 = Client(self.case_name, "telnet", "telnet0")
         time.sleep(5)
         cmd = "cd /mnt/;mkdir -p out/cpu;"
         telnet0.write(cmd)
-        logger.print_warning(f"case name:{self.case_name}")
+        logger.warning(f"case name:{self.case_name}")
         time.sleep(3)
         if self.case_name == "show_perf_dualos":
-            logger.print_warning("cat dualos perf")
+            logger.warning("cat dualos perf")
             cmd = ("echo cli perf > /proc/dualos/rtos;"
                    "echo cli perf --dump \"/mnt/out/cpu/perf.bin\" > /proc/dualos/rtos")
             telnet0.write(cmd)
@@ -187,7 +187,7 @@ class SysappShowPerf(CaseBase):
             loopcnt += 1
             # print(f"telnet read data:{data}")
         # step7 从mount 目录将原始数据和最终结果保存至指定目录，为了后续自动化展示结果
-        logger.print_warning("read result")
+        logger.warning("read result")
         if self.case_name != "show_perf_dualos":
             mixerthread.join()
         telnet0.close()
@@ -195,6 +195,6 @@ class SysappShowPerf(CaseBase):
         # step8 切换到purelinux
         result = self.switch_os("purelinux")
         if result == 255:
-            logger.print_warning(f"caseName[{self.case_name}] run done!")
+            logger.warning(f"caseName[{self.case_name}] run done!")
             return 255
         return 0

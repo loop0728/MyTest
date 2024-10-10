@@ -31,7 +31,7 @@ class SysappDeviceOpts():
     """
 
     @staticmethod
-    def get_package_type(device:object):
+    def get_package_type(device: object):
         """
         Get the package type of chip.
         Args:
@@ -52,11 +52,11 @@ class SysappDeviceOpts():
             else:
                 package_type = SysappPackageType.PACKAGE_TYPE_BGA11
 
-        #logger.print_warning(f"The package type is {package_type.name}")
+        #logger.warning(f"The package type is {package_type.name}")
         return package_type
 
     @staticmethod
-    def get_bootstrap_type(device:object):
+    def get_bootstrap_type(device: object):
         """
         Get the bootstrap type of device.
         Args:
@@ -81,11 +81,11 @@ class SysappDeviceOpts():
             elif emmc_flag == 1:
                 bootstrap_type = SysappBootstrapType.BOOTSTRAP_TYPE_EMMC
 
-        #logger.print_warning(f"The bootstrap type is {bootstrap_type.name}")
+        #logger.warning(f"The bootstrap type is {bootstrap_type.name}")
         return bootstrap_type
 
     @staticmethod
-    def _uboot_get_mtdparts(device:object):
+    def _uboot_get_mtdparts(device: object):
         """
         Get the partitions of device in uboot phase.
         Args:
@@ -128,12 +128,12 @@ class SysappDeviceOpts():
                         #print(f"{line}, {parts[0]}, {parts[1]}, {parts[2]}, {parts[3]}, "
                         #      f"{parts[4]}, {len(parts)}")
             else:
-                logger.print_error(f"read line:{read_line_cnt} fail")
+                logger.error(f"read line:{read_line_cnt} fail")
                 break
         return result, partition_list
 
     @staticmethod
-    def _kernel_get_mtdparts(device:object):
+    def _kernel_get_mtdparts(device: object):
         """
         Get the partitions of device in kernel phase.
         Args:
@@ -176,12 +176,12 @@ class SysappDeviceOpts():
                         #print(f"{line}, {parts[0]}, {parts[1]}, {parts[2]}, {parts[3]}, "
                         #      f"{len(parts)}")
             else:
-                logger.print_error(f"read line:{read_line_cnt} fail")
+                logger.error(f"read line:{read_line_cnt} fail")
                 break
         return result, partition_list
 
     @staticmethod
-    def get_mtdparts(device:object):
+    def get_mtdparts(device: object):
         """
         Get the partitions of device.
         Args:
@@ -202,5 +202,5 @@ class SysappDeviceOpts():
         elif SysappRebootOpts.check_kernel_phase():
             result, partition_list = SysappDeviceOpts._kernel_get_mtdparts(device)
         else:
-            logger.print_error("the device is not at kernel or at uboot, read register fail")
+            logger.error("the device is not at kernel or at uboot, read register fail")
         return result, partition_list

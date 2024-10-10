@@ -7,7 +7,7 @@ import re
 from cases.platform.sys.aov.str_crc_var import (STR_CRC_OK, STR_CRC_FAIL,
                                                 SUSPEND_CRC_START_ADDR,
                                                 SUSPEND_CRC_END_ADDR)
-from suite.common.sysapp_common_logger import logger
+from suite.common.sysapp_common_logger import logger, sysapp_print
 from suite.common.sysapp_common_case_base import SysappCaseBase as CaseBase
 from suite.common.sysapp_common_reboot_opts import SysappRebootOpts
 from suite.common.sysapp_common_error_codes import ErrorCodes
@@ -41,7 +41,7 @@ class SysappAovStrCrc(CaseBase):
         self.cmd_str = ("echo 10 > /sys/devices/virtual/sstar/rtcpwc/alarm_timer;"
                         "echo mem > /sys/power/state")
 
-    @logger.print_line_info
+    @sysapp_print.print_line_info
     def str_crc_test(self):
         """
         do str crc test and parse log.
@@ -51,7 +51,7 @@ class SysappAovStrCrc(CaseBase):
             result (bool): If parse log success, return True; Else, return False.
         """
         result = False
-        logger.print_warning("do str crc check ...")
+        logger.warning("do str crc check ...")
         result = self.uart.write(self.cmd_str)
 
         while True:
@@ -61,15 +61,15 @@ class SysappAovStrCrc(CaseBase):
                     line = line.decode('utf-8', errors='replace')
                 line = line.strip()
                 if str(STR_CRC_OK).strip() in line:
-                    logger.print_warning("str crc check success")
+                    logger.warning("str crc check success")
                     result = True
                     break
                 if str(STR_CRC_FAIL).strip() in line:
-                    logger.print_error("str crc check fail")
+                    logger.error("str crc check fail")
                     result = False
                     break
             else:
-                logger.print_error(f"read line fail after cmd:{self.cmd_str}")
+                logger.error(f"read line fail after cmd:{self.cmd_str}")
                 result = False
                 break
         return result
@@ -85,10 +85,10 @@ class SysappAovStrCrc(CaseBase):
         result = False
         bootargs = ""
         pattern = r"suspend_crc=[^ ]* "
-        logger.print_warning("set crc test env ...")
+        logger.warning("set crc test env ...")
         result = SysappRebootOpts.init_kernel_env(self.uart)
         if not result:
-            logger.print_error("the device is not at kernel or at uboot")
+            logger.error("the device is not at kernel or at uboot")
             return result
         result, bootargs = SysappRebootOpts.get_bootenv(self.uart, "bootargs_linux_only")
 
@@ -102,7 +102,7 @@ class SysappAovStrCrc(CaseBase):
             self.default_bootargs = re.sub(pattern, "", bootargs.strip())
             if self.suspend_crc_param in bootargs:
                 self.str_crc_bootargs = bootargs.strip()
-                logger.print_info("suspend_crc_param has been set, test directly!")
+                logger.info("suspend_crc_param has been set, test directly!")
             else:
                 # change bootargs and check if change success
                 self.str_crc_bootargs = self.default_bootargs + " " + self.suspend_crc_param
@@ -114,19 +114,19 @@ class SysappAovStrCrc(CaseBase):
                     if result:
                         SysappRebootOpts.set_bootenv(self.uart, "bootargs_linux_only",
                                                      self.str_crc_bootargs)
-                logger.print_info(f"set bootargs: {self.str_crc_bootargs}")
+                logger.info(f"set bootargs: {self.str_crc_bootargs}")
                 # reboot to uboot to check if change bootargs success
                 result = SysappRebootOpts.reboot_to_uboot(self.uart)
                 if result:
                     result, bootargs = SysappRebootOpts.get_bootenv(self.uart,
                                                                     "bootargs_linux_only")
                     if result and self.suspend_crc_param in bootargs:
-                        logger.print_info("set str_crc bootargs success")
+                        logger.info("set str_crc bootargs success")
                         result = SysappRebootOpts.reboot_to_kernel(self.uart)
         if result:
-            logger.print_warning("set crc test env success")
+            logger.warning("set crc test env success")
         else:
-            logger.print_error("set crc test env fail")
+            logger.error("set crc test env fail")
 
         return result
 
@@ -141,7 +141,7 @@ class SysappAovStrCrc(CaseBase):
         result = False
         bootargs = ""
         pattern = r"suspend_crc=[^ ]*"
-        logger.print_warning("recovery default env ...")
+        logger.warning("recovery default env ...")
         result, bootargs = SysappRebootOpts.get_bootenv(self.uart, "bootargs_linux_only")
 
         # if fw tool is not exsit, reboot to uboot to get bootenv
@@ -153,7 +153,7 @@ class SysappAovStrCrc(CaseBase):
         if result:
             self.default_bootargs = re.sub(pattern, "", bootargs.strip())
             if "suspend_crc" not in bootargs:
-                logger.print_info("suspend_crc_param has not been set, no need to remove!")
+                logger.info("suspend_crc_param has not been set, no need to remove!")
             else:
                 # change bootargs and check if change success
                 result = SysappRebootOpts.set_bootenv(self.uart, "bootargs_linux_only",
@@ -164,21 +164,21 @@ class SysappAovStrCrc(CaseBase):
                     if result:
                         SysappRebootOpts.set_bootenv(self.uart, "bootargs_linux_only",
                                                      self.default_bootargs)
-                logger.print_info(f"set bootargs: {self.default_bootargs}")
+                logger.info(f"set bootargs: {self.default_bootargs}")
                 # reboot to uboot to check if change bootargs success
                 result = SysappRebootOpts.reboot_to_uboot(self.uart)
                 if result:
                     result, bootargs = SysappRebootOpts.get_bootenv(self.uart,
                                                                     "bootargs_linux_only")
                     if result and "suspend_crc" in bootargs:
-                        logger.print_error("recovery bootargs fail")
+                        logger.error("recovery bootargs fail")
                         result = False
         result &= SysappRebootOpts.reboot_to_kernel(self.uart)
 
         if result:
-            logger.print_warning("recovery default env success")
+            logger.warning("recovery default env success")
         else:
-            logger.print_error("recovery default env fail")
+            logger.error("recovery default env fail")
 
         return result
 
@@ -207,7 +207,7 @@ class SysappAovStrCrc(CaseBase):
 
         return error_code
 
-    @logger.print_line_info
+    @sysapp_print.print_line_info
     @staticmethod
     def system_help():
         """
@@ -217,8 +217,8 @@ class SysappAovStrCrc(CaseBase):
         Returns:
             None:
         """
-        logger.print_warning("stat str crc test")
-        logger.print_warning("cmd : echo 3 > /sys/devices/virtual/sstar/rtcpwc/alarm_timer")
-        logger.print_warning("cmd : echo mem > /sys/power/state")
-        logger.print_warning("if the result return 'CRC check success', test pass; "
+        logger.warning("stat str crc test")
+        logger.warning("cmd : echo 3 > /sys/devices/virtual/sstar/rtcpwc/alarm_timer")
+        logger.warning("cmd : echo mem > /sys/power/state")
+        logger.warning("if the result return 'CRC check success', test pass; "
                              "if the result return 'CRC check fail', test fail.")

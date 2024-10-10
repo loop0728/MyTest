@@ -20,7 +20,7 @@ class SysappNetOpts():
     """
 
     @staticmethod
-    def _check_emac_ko_insmod_status(device:object):
+    def _check_emac_ko_insmod_status(device: object):
         """
         Check if net ko insmod
         Args:
@@ -38,15 +38,15 @@ class SysappNetOpts():
                 line = line.decode('utf-8', errors='replace')
             line = line.strip()
             if net_interface in line:
-                logger.print_info("ko has insmoded already")
+                logger.info("ko has insmoded already")
                 result = True
         else:
-            logger.print_error(f"read line fail, {line}")
+            logger.error(f"read line fail, {line}")
             result = False
         return result
 
     @classmethod
-    def _insmod_emac_ko(cls, device:object, koname):
+    def _insmod_emac_ko(cls, device: object, koname):
         """
         Insmod net ko.
         Args:
@@ -60,11 +60,11 @@ class SysappNetOpts():
         device.write(cmd_insmod_emac_ko)
         result = cls._check_emac_ko_insmod_status(device)
         if not result:
-            logger.print_error(f"insmod {koname} fail")
+            logger.error(f"insmod {koname} fail")
         return result
 
     @classmethod
-    def _rmmod_emac_ko(cls, device:object, koname):
+    def _rmmod_emac_ko(cls, device: object, koname):
         """
         Remove net ko.
         Args:
@@ -78,12 +78,12 @@ class SysappNetOpts():
         device.write(cmd_rmmod_emac_ko)
         result = cls._check_emac_ko_insmod_status(device)
         if not result:
-            logger.print_error(f"rmmod {koname} success")
+            logger.error(f"rmmod {koname} success")
         result = not result
         return result
 
     @staticmethod
-    def _check_kernel_ifconfig_setting(device:object, check_ifconfig_setting):
+    def _check_kernel_ifconfig_setting(device: object, check_ifconfig_setting):
         """
         Check board mac, ip, netmask setting.
         Args:
@@ -117,16 +117,16 @@ class SysappNetOpts():
                 for key in check_ifconfig_setting.keys():
                     if check_ifconfig_setting[key] in line:
                         check_result[key] = True
-                        logger.print_info(f"{check_ifconfig_setting[key]}")
+                        logger.info(f"{check_ifconfig_setting[key]}")
             else:
-                logger.print_error(f"read line:{read_line_cnt} fail")
+                logger.error(f"read line:{read_line_cnt} fail")
                 break
 
         result = all(check_result.values())
         return result
 
     @staticmethod
-    def _check_kernel_route_setting(device:object, check_gateway_ip):
+    def _check_kernel_route_setting(device: object, check_gateway_ip):
         """
         Check board gateway setting.
         Args:
@@ -156,16 +156,16 @@ class SysappNetOpts():
                     get_gw_str =  line.split()[1]
                     if get_gw_str == check_gateway_ip:
                         result = True
-                        logger.print_info(f"{line}")
+                        logger.info(f"{line}")
                     break
             else:
-                logger.print_error(f"read line:{read_line_cnt} fail")
+                logger.error(f"read line:{read_line_cnt} fail")
                 break
 
         return result
 
     @classmethod
-    def _check_kenrel_network_setting(cls, device:object):
+    def _check_kenrel_network_setting(cls, device: object):
         """
         Check board kernel network setting.
         Args:
@@ -189,7 +189,7 @@ class SysappNetOpts():
         return result
 
     @classmethod
-    def _setup_kernel_network(cls, device:object):
+    def _setup_kernel_network(cls, device: object):
         """
         Set board kernel ip.
         Args:
@@ -228,7 +228,7 @@ class SysappNetOpts():
         return result
 
     @staticmethod
-    def _setup_uboot_network(device:object):
+    def _setup_uboot_network(device: object):
         """
         Set board uboot ip.
         Args:
@@ -268,7 +268,7 @@ class SysappNetOpts():
         return result
 
     @classmethod
-    def setup_network(cls, device:object):
+    def setup_network(cls, device: object):
         """
         Set board ip.
         Args:
@@ -282,13 +282,13 @@ class SysappNetOpts():
         elif SysappRebootOpts.check_kernel_phase():
             result = cls._setup_kernel_network(device)
         else:
-            logger.print_error("the device is not at kernel or at uboot, read register fail")
+            logger.error("the device is not at kernel or at uboot, read register fail")
         return result
 
 
 
     @staticmethod
-    def mount_to_server(device:object, sub_path="") -> bool:
+    def mount_to_server(device: object, sub_path="") -> bool:
         """
         mount to server path
 
@@ -316,7 +316,7 @@ class SysappNetOpts():
             try:
                 returncode = int(data)
             except Exception as exce:
-                logger.print_info(f"{data} cause {exce}")
+                logger.info(f"{data} cause {exce}")
                 returncode = -1
             if result is True and returncode == 0:
                 return True

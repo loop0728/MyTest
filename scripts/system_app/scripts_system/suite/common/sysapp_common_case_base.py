@@ -1,6 +1,6 @@
 """Common operations in cases"""
-from suite.common.sysapp_common_logger import logger
 from sysapp_platform import PLATFORM_DEBUG_MODE, LOG_PATH, PLATFORM_LOCAL_MOUNT_PATH
+from suite.common.sysapp_common_logger import logger, sysapp_print
 import suite.common.sysapp_common as sys_common
 
 
@@ -87,13 +87,13 @@ class SysappCaseBase:
 
         return result
 
-    @logger.print_line_info
+    @sysapp_print.print_line_info
     def runcase(self) -> int:
         """Run case entry."""
-        logger.print_error("base runcase!")
-        logger.print_info(f"case stage {self.case_stage}")
+        logger.error("base runcase!")
+        logger.info(f"case stage {self.case_stage}")
         return 0
 
     def runcase_help(self):
         """Run case help info entry."""
-        logger.print_info(f"case stage {self.case_stage}")
+        logger.info(f"case stage {self.case_stage}")

@@ -4,7 +4,7 @@
 """Register ut test"""
 
 from sysapp_client import SysappClient as Client
-from suite.common.sysapp_common_logger import logger
+from suite.common.sysapp_common_logger import logger, sysapp_print
 from suite.common.sysapp_common_case_base import SysappCaseBase as CaseBase
 from suite.common.sysapp_common_reboot_opts import SysappRebootOpts
 from suite.common.sysapp_common_register_opts import SysappRegisterOpts
@@ -44,45 +44,45 @@ class SysappUtRegisterTest(CaseBase):
         if not result:
             return result
 
-        logger.print_info("test read register at uboot phase ...")
+        logger.info("test read register at uboot phase ...")
         result, str_reg_value = SysappRegisterOpts.read_register(self.uart, bank, offset)
         if result:
-            logger.print_warning("test read register success at uboot phase, the value of "
-                                 f"{bank}:{offset} is {str_reg_value}")
+            logger.warning("test read register success at uboot phase, the value of "
+                           f"{bank}:{offset} is {str_reg_value}")
         else:
-            logger.print_error("test read register fail at uboot phase")
+            logger.error("test read register fail at uboot phase")
             fail_cnt += 1
 
-        logger.print_info("test write register at uboot phase ...")
+        logger.info("test write register at uboot phase ...")
         result = SysappRegisterOpts.write_register(self.uart, bank, offset, set_value)
         if result:
-            logger.print_warning("test write register success at uboot phase, set the value of "
-                                 f"{bank}:{offset} to {set_value}")
+            logger.warning("test write register success at uboot phase, set the value of "
+                           f"{bank}:{offset} to {set_value}")
         else:
-            logger.print_error("test write register fail at uboot phase")
+            logger.error("test write register fail at uboot phase")
             fail_cnt += 1
 
-        logger.print_info("test read register at kernel phase ...")
-        logger.print_info("reboot to kernel")
+        logger.info("test read register at kernel phase ...")
+        logger.info("reboot to kernel")
         result = SysappRebootOpts.reboot_to_kernel(self.uart)
         if not result:
             return result
 
         result, str_reg_value = SysappRegisterOpts.read_register(self.uart, bank, offset)
         if result:
-            logger.print_warning("test read register success at kernel phase, the value of "
-                                 f"{bank}:{offset} is {str_reg_value}")
+            logger.warning("test read register success at kernel phase, the value of "
+                           f"{bank}:{offset} is {str_reg_value}")
         else:
-            logger.print_error("test read register fail at kernel phase")
+            logger.error("test read register fail at kernel phase")
             fail_cnt += 1
 
-        logger.print_info("test write register at kernel phase ...")
+        logger.info("test write register at kernel phase ...")
         result = SysappRegisterOpts.write_register(self.uart, bank, offset, set_value)
         if result:
-            logger.print_warning("test write register success at kernel phase, set the value of "
-                                 f"{bank}:{offset} to {set_value}")
+            logger.warning("test write register success at kernel phase, set the value of "
+                           f"{bank}:{offset} to {set_value}")
         else:
-            logger.print_error("test write register fail at kernel phase")
+            logger.error("test write register fail at kernel phase")
             fail_cnt += 1
 
         if fail_cnt > 0:
@@ -90,7 +90,7 @@ class SysappUtRegisterTest(CaseBase):
 
         return result
 
-    @logger.print_line_info
+    @sysapp_print.print_line_info
     def runcase(self):
         """
         Test function body.
@@ -106,7 +106,7 @@ class SysappUtRegisterTest(CaseBase):
 
         return error_code
 
-    @logger.print_line_info
+    @sysapp_print.print_line_info
     @staticmethod
     def system_help():
         """
@@ -116,5 +116,5 @@ class SysappUtRegisterTest(CaseBase):
         Returns:
             None:
         """
-        logger.print_warning("test register")
-        logger.print_warning("cmd: RegisterTest")
+        logger.warning("test register")
+        logger.warning("cmd: RegisterTest")

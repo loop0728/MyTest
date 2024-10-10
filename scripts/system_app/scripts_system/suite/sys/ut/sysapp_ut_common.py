@@ -36,9 +36,9 @@ class SysappUtCommon(SysappCaseBase):
         """
         result = sys_common.goto_uboot(self.uart)
         if result is True:
-            logger.print_info("Please see the ./out/uart.log")
+            logger.info("Please see the ./out/uart.log")
         else:
-            logger.print_info("Go to uboot fail.Please check env.")
+            logger.info("Go to uboot fail.Please check env.")
         return result
 
     def goto_kernel_test(self):
@@ -50,9 +50,9 @@ class SysappUtCommon(SysappCaseBase):
         """
         result = sys_common.goto_kernel(self.uart)
         if result is True:
-            logger.print_info("Please see the ./out/uart.log")
+            logger.info("Please see the ./out/uart.log")
         else:
-            logger.print_info("Go to kernel fail.Please check env.")
+            logger.info("Go to kernel fail.Please check env.")
         return result
 
     def runcase(self):
@@ -65,14 +65,14 @@ class SysappUtCommon(SysappCaseBase):
         err_code = EC.SUCCESS
         ret = self.goto_kernel_test()
         if ret is False:
-            logger.print_error("Go to kernel test fail.")
+            logger.error("Go to kernel test fail.")
             err_code = EC.FAIL
         ret = self.goto_uboot_test()
         if ret is False:
-            logger.print_error("Go to Uboot test fail.")
+            logger.error("Go to Uboot test fail.")
             err_code = EC.FAIL
         ret = self.goto_kernel_test()
         if ret is False:
-            logger.print_error("Go to kernel test fail.")
+            logger.error("Go to kernel test fail.")
             err_code = EC.FAIL
         return err_code

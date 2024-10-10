@@ -49,13 +49,13 @@ class SysappDevRelay:
                 self.port, self.baudrate, timeout=self.timeout
             )
             if self._connection.is_open:
-                logger.print_info(f"Connected to {self.port} baudrate {self.baudrate}")
+                logger.info(f"Connected to {self.port} baudrate {self.baudrate}")
                 result = True
             else:
-                logger.print_error(f"Failed to connect to {self.port}")
+                logger.error(f"Failed to connect to {self.port}")
                 result = False
         except serial.SerialException as e:
-            logger.print_error(f"Failed to connect to {self.port}: {e}")
+            logger.error(f"Failed to connect to {self.port}: {e}")
             result = False
         return result
 
@@ -63,7 +63,7 @@ class SysappDevRelay:
         """Disconnect relay."""
         if self._connection and self._connection.is_open:
             self._connection.close()
-            logger.print_info(f"Disconnected from {self.port}")
+            logger.info(f"Disconnected from {self.port}")
         return True
 
     def power_off(self):
@@ -72,10 +72,10 @@ class SysappDevRelay:
         power_off_arr[6] = power_off_arr[6] + self.relay
         power_off_arr[7] = power_off_arr[7] + self.relay
         if self._connection.is_open:
-            logger.print_info(f"Power off relay:{self.relay}")
+            logger.info(f"Power off relay:{self.relay}")
             self._connection.write(power_off_arr)
         else:
-            logger.print_error("power_off open failed")
+            logger.error("power_off open failed")
 
     def power_on(self):
         """Board power on."""
@@ -83,7 +83,7 @@ class SysappDevRelay:
         power_on_arr[7] = power_on_arr[7] + self.relay
         power_on_arr[6] = power_on_arr[6] + self.relay
         if self._connection.is_open:
-            logger.print_info(f"Power on relay:{self.relay}")
+            logger.info(f"Power on relay:{self.relay}")
             self._connection.write(power_on_arr)
         else:
-            logger.print_error("power_on open failed")
+            logger.error("power_on open failed")

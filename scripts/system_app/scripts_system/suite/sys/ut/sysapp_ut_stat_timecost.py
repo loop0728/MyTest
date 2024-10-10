@@ -37,7 +37,7 @@ class SysappUtStatTimecost(SysappCaseBase):
                "0123456789012345678901234567890123456789012345678901234567890")
         result = self.uart.write(cmd)
         if result is False:
-            logger.print_error(f"Write fail: {cmd}")
+            logger.error(f"Write fail: {cmd}")
             return result
         status, line = self.uart.read()
         if status is True:

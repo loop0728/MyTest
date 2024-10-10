@@ -22,8 +22,8 @@ class SysappRunUserCase:
         self.case_stage = param_list[3]
         self.case_run_cnt = 1
 
-        logger.print_info(f"module_path_name: {self.script_path}")
-        logger.print_info(f"case_name: {self.case_name}")
+        logger.info(f"module_path_name: {self.script_path}")
+        logger.info(f"case_name: {self.case_name}")
 
     def parase_case_run(self) -> int:
         """
@@ -35,14 +35,13 @@ class SysappRunUserCase:
         Returns:
             bool: result
         """
-        #result = 255
         result = ErrorCodes.FAIL
         calss_obj = ""
         module_path = "/".join(self.script_path.split("/")[:-1])
         module_name = self.script_path.split("/")[-1].split(".")[0]
-        logger.print_info(f"module_path: {module_path}")
-        logger.print_info(f"module_name: {module_name}")
-        logger.print_info(f"case_name:{self.case_name}")
+        logger.info(f"module_path: {module_path}")
+        logger.info(f"module_name: {module_name}")
+        logger.info(f"case_name:{self.case_name}")
 
         sys.path.append(module_path)
         module = __import__(module_name)
@@ -68,7 +67,7 @@ class SysappRunUserCase:
             )  # use class creat one instance
             instance.case_stage = self.case_stage
             if not instance:
-                logger.print_error("create instance fail!")
+                logger.error("create instance fail!")
         else:
             instance = calss_obj(
                 module_name,
@@ -77,17 +76,17 @@ class SysappRunUserCase:
             )  # use class creat one instance
             instance.case_stage = self.case_stage
             if not instance:
-                logger.print_error("create instance fail!")
+                logger.error("create instance fail!")
             instance.runcase_help()
             return 0
         try:
             result = instance.runcase()
         except Exception as e:
-            logger.print_error(e)
+            logger.error(e)
         self.print_run_result(result)
         if result != ErrorCodes.SUCCESS:
             self.exception_handling(result)
-        return result
+        return result.value
 
     def print_run_result(self, result):
         """
@@ -100,11 +99,11 @@ class SysappRunUserCase:
             bool: result
         """
         if result != ErrorCodes.SUCCESS:
-            logger.print_error(
+            logger.error(
                 f"[AutoTest][{self.case_name}][fail][{result}][run_cnt:{self.case_run_cnt}]"
             )
         else:
-            logger.print_warning(
+            logger.warning(
                 f"[AutoTest][{self.case_name}][pass][{result}][run_cnt:{self.case_run_cnt}]"
             )
 
@@ -123,14 +122,14 @@ class SysappRunUserCase:
         if handler:
             handler()
         else:
-            logger.print_warning("Unknown error code.")
+            logger.warning("Unknown error code.")
         return err_code
 
 
 def main(argv):
     """Run user case entry."""
     if len(argv) < 3:
-        logger.print_error("run_user_case param num less 3")
+        logger.error("run_user_case param num less 3")
         sys.exit(255)
     run_case_handle = SysappRunUserCase(argv)
     ret = run_case_handle.parase_case_run()

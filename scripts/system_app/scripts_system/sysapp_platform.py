@@ -36,6 +36,7 @@ PLATFORM_LOCAL_MOUNT_PATH = "/stream/IT/I6DW/iford_systemapp_testcase"
 # PLATFORM_UART: the device of uart, for Windows,it's COM, and for Linux,it's /dev/ttyUSB
 # PLATFORM_RELAY: the device of relay in Linux, such as /dev/ttyUSB1
 # PLATFORM_RELAY_PORT: the port number of relay, such as 1
+# PLATFORM_NET_CONNECT_PORT: the port number of net, such as 8801
 PLATFORM_UART = "/dev/i6dw_nand_uart_8"
 PLATFORM_RELAY = "/dev/relay_uart"
 PLATFORM_RELAY_PORT = 8

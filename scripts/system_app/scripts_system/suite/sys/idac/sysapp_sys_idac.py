@@ -11,7 +11,7 @@ from cases.platform.sys.idac.idac_var import (SysappOverdriveType,
                                               IFORD_IDAC_VOLT_CORE_TABLE,
                                               IFORD_IDAC_VOLT_CPU_TABLE,
                                               IFORD_IDAC_QFN_DVFS_VCORE_TABLE)
-from suite.common.sysapp_common_logger import logger
+from suite.common.sysapp_common_logger import logger, sysapp_print
 from suite.common.sysapp_common_case_base import SysappCaseBase as CaseBase
 from suite.common.sysapp_common_reboot_opts import SysappRebootOpts
 from suite.common.sysapp_common_register_opts import SysappRegisterOpts
@@ -66,7 +66,7 @@ class SysappIdac(CaseBase):
         }
 
     # get dev package type
-    @logger.print_line_info
+    @sysapp_print.print_line_info
     def get_package_type(self):
         """get the package type of chip
         Args:
@@ -100,7 +100,7 @@ class SysappIdac(CaseBase):
         if result:
             offset = IdacOpts.calc_volt_offset(str_reg_value)
         else:
-            logger.print_error("get core_power offset fail!")
+            logger.error("get core_power offset fail!")
         print(f"vcore_offset:{offset}")
         return result, offset
 
@@ -118,7 +118,7 @@ class SysappIdac(CaseBase):
         if result:
             offset = IdacOpts.calc_volt_offset(str_reg_value)
         else:
-            logger.print_error("get cpu_power offset fail!")
+            logger.error("get cpu_power offset fail!")
         print(f"vcpu_offset:{offset}")
         return result, offset
 
@@ -219,10 +219,10 @@ class SysappIdac(CaseBase):
                 line = line.decode('utf-8', errors='replace')
             line = line.strip()
             if net_interface in line:
-                logger.print_info("ko has insmoded already")
+                logger.info("ko has insmoded already")
                 result = True
         else:
-            logger.print_error(f"read line fail, {line}")
+            logger.error(f"read line fail, {line}")
             result = False
         return result
 
@@ -238,7 +238,7 @@ class SysappIdac(CaseBase):
         self.uart.write(cmd_insmod_emac_ko)
         result = self._check_emac_ko_insmod_status()
         if not result:
-            logger.print_error(f"insmod {koname} fail")
+            logger.error(f"insmod {koname} fail")
         return result
 
     def mount_server_path(self, path):
@@ -254,14 +254,14 @@ class SysappIdac(CaseBase):
             result = self._insmod_emac_ko("sstar_emac")
             if not result:
                 return result
-        logger.print_warning("set board ip and mount server path ...")
+        logger.warning("set board ip and mount server path ...")
         sys_common.set_board_kernel_ip(self.uart)
         status = sys_common.mount_to_server(self.uart, path)
         if status:
-            logger.print_info(f"mount {path} success")
+            logger.info(f"mount {path} success")
             result = True
         else:
-            logger.print_error(f"mount {path} fail")
+            logger.error(f"mount {path} fail")
             result = False
         return result
 
@@ -282,11 +282,11 @@ class SysappIdac(CaseBase):
                 line = line.decode('utf-8', errors='replace')
             line = line.strip()
             if "No such file or directory" in line:
-                logger.print_info("dump file is not exist, no need to delete")
+                logger.info("dump file is not exist, no need to delete")
                 result = True
                 return result
         else:
-            logger.print_error("stat dump file fail")
+            logger.error("stat dump file fail")
             result = False
             return result
 
@@ -298,12 +298,12 @@ class SysappIdac(CaseBase):
                 line = line.decode('utf-8', errors='replace')
             line = line.strip()
             if "0" == line:
-                logger.print_info("rm old dump file ok")
+                logger.info("rm old dump file ok")
                 result = True
         else:
-            logger.print_error("rm old dump file fail")
+            logger.error("rm old dump file fail")
             result = False
-        logger.print_info(f"{line}")
+        logger.info(f"{line}")
         return result
 
     def _dump_devicetree(self):
@@ -325,13 +325,13 @@ class SysappIdac(CaseBase):
                 line = line.decode('utf-8', errors='replace')
             line = line.strip()
             if "0" == line:
-                logger.print_info("dump devicetree ok")
+                logger.info("dump devicetree ok")
                 result = True
             else:
-                logger.print_error("dump devicetree fail")
+                logger.error("dump devicetree fail")
                 result = False
         else:
-            logger.print_error(f"read line fail after cmd:{cmd_dump_devicetree}")
+            logger.error(f"read line fail after cmd:{cmd_dump_devicetree}")
             result = False
         return result
 
@@ -351,9 +351,9 @@ class SysappIdac(CaseBase):
         #old_dir = os.getcwd()
         try:
             os.chdir(path)
-            logger.print_info(f"Changed directory to {path}")
+            logger.info(f"Changed directory to {path}")
         except OSError as error:
-            logger.print_error(f"Error changing directory: {error.strerror}")
+            logger.error(f"Error changing directory: {error.strerror}")
             return result
 
         # convert to dts
@@ -382,19 +382,19 @@ class SysappIdac(CaseBase):
                 if "core_power" in line:
                     core_base_volt_ready = 1
                     is_core_power_exist = 1
-                    logger.print_info("core_power node exist")
+                    logger.info("core_power node exist")
                     continue
 
                 if "cpu_power" in line:
                     cpu_base_volt_ready = 1
                     is_cpu_power_exist = 1
-                    logger.print_info("cpu_power node exist")
+                    logger.info("cpu_power node exist")
 
                 if core_base_volt_ready == 1 and "base_voltage" in line:
                     bast_voltage_attr = line.strip().split('=')
                     base_vcore = bast_voltage_attr[1].strip().strip('<>;')
                     self.case_test_param['kernel_base_vcore'] = int(base_vcore, 16)
-                    logger.print_info(f"get core_power:base voltage "
+                    logger.info(f"get core_power:base voltage "
                                       f"{self.case_test_param['kernel_base_vcore']} mv")
                     core_base_volt_ready = 0
                     if (self.case_test_param['package_type'] ==
@@ -409,7 +409,7 @@ class SysappIdac(CaseBase):
                     bast_voltage_attr = line.strip().split('=')
                     base_vcpu = bast_voltage_attr[1].strip().strip('<>;')
                     self.case_test_param['kernel_base_vcpu'] = int(base_vcpu, 16)
-                    logger.print_info(f"get cpu_power:base voltage "
+                    logger.info(f"get cpu_power:base voltage "
                                       f"{self.case_test_param['kernel_base_vcpu']} mv")
                     cpu_base_volt_ready = 0
                     if is_core_power_exist == 1 and is_cpu_power_exist == 1:
@@ -417,7 +417,7 @@ class SysappIdac(CaseBase):
                         break
 
         if not result:
-            logger.print_error("get base voltage fail")
+            logger.error("get base voltage fail")
 
         return result
 
@@ -432,23 +432,23 @@ class SysappIdac(CaseBase):
         print(f"local_mount_path:{self.local_mount_path}")
         dts_path = f"{self.local_mount_path}/{self.case_test_param['dump_dts_name']}"
 
-        logger.print_warning("begin to dump devicetree ...")
+        logger.warning("begin to dump devicetree ...")
         result = self._dump_devicetree()
         if not result:
             return result
 
-        logger.print_warning("begin to convert devicetree blob to dts ...")
+        logger.warning("begin to convert devicetree blob to dts ...")
         result = self._convert_devicetree_to_dts(self.local_mount_path)
         if not result:
             return result
 
 
-        logger.print_warning("get kernel base voltage from dts ...")
+        logger.warning("get kernel base voltage from dts ...")
         result = self._get_base_volt_from_dts(dts_path)
         if not result:
             return result
 
-        logger.print_warning("get kernel opp table from dts ...")
+        logger.warning("get kernel opp table from dts ...")
         #self.case_test_param['kernel_opp_table'] = self._get_opp_table_from_dts(dts_path)
         self.case_test_param['kernel_opp_table'] = IdacOpts.get_opp_table_from_dts(dts_path)
         return result
@@ -472,7 +472,7 @@ class SysappIdac(CaseBase):
                          self.case_target_param['base_vcpu_check'])):
                 result = True
         if not result:
-            logger.print_error("kernel base voltage is not match with hw base vcore!")
+            logger.error("kernel base voltage is not match with hw base vcore!")
         return result
 
     def check_opp_table(self):
@@ -500,9 +500,9 @@ class SysappIdac(CaseBase):
                 result = True
 
         if result:
-            logger.print_info("check kernel opp table ok")
+            logger.info("check kernel opp table ok")
         else:
-            logger.print_error("kernel opp table is not match with check opp table!")
+            logger.error("kernel opp table is not match with check opp table!")
         return result
 
     def check_avaliable_cpufreq(self, overdrive):
@@ -528,10 +528,10 @@ class SysappIdac(CaseBase):
             if cpufreq_list == self.case_target_param[
                     'overdrive_cpufreq_check_list'][
                         overdrive.value]:
-                logger.print_info("check avaliable cpufreq pass")
+                logger.info("check avaliable cpufreq pass")
                 result = True
         else:
-            logger.print_error("check avaliable cpufreq fail")
+            logger.error("check avaliable cpufreq fail")
             result = False
         return result
 
@@ -565,9 +565,9 @@ class SysappIdac(CaseBase):
 
         uboot_vcore_uv = uboot_vcore * 1000
         uboot_vcpu_uv = uboot_vcpu * 1000
-        logger.print_info(f"uboot_vcore:{uboot_vcore_uv}, "
+        logger.info(f"uboot_vcore:{uboot_vcore_uv}, "
                           f"target:[{vcore_check_item[0]}, {vcore_check_item[1]}]")
-        logger.print_info(f"uboot_vcpu:{uboot_vcpu_uv}, "
+        logger.info(f"uboot_vcpu:{uboot_vcpu_uv}, "
                           f"target:[{vcpu_check_item[0]}, {vcpu_check_item[1]}]")
 
         if (self.case_target_param['overdrive_vcore_check_list'][
@@ -618,9 +618,9 @@ class SysappIdac(CaseBase):
 
         kernel_vcore_uv = kernel_vcore * 1000
         kernel_vcpu_uv = kernel_vcpu * 1000
-        logger.print_info(f"kernel_vcore:{kernel_vcore_uv}, freq:{vcore_check_item[0]} "
+        logger.info(f"kernel_vcore:{kernel_vcore_uv}, freq:{vcore_check_item[0]} "
                           f"target:[{vcore_check_item[1]}, {vcore_check_item[2]}]")
-        logger.print_info(f"kernel_vcpu:{kernel_vcpu_uv}, freq:{vcpu_check_item[0]} "
+        logger.info(f"kernel_vcpu:{kernel_vcpu_uv}, freq:{vcpu_check_item[0]} "
                           f"target:[{vcpu_check_item[1]}, {vcpu_check_item[2]}]")
 
         if (vcore_check_item[1] <= kernel_vcore_uv <= vcore_check_item[2] and
@@ -671,9 +671,9 @@ class SysappIdac(CaseBase):
 
         # 2. 获取封装类型，确定使用的cpu的overdrive-电压映射表，频率-电压映射表；执行mount操作
         self.case_test_param['package_type'] = self.get_package_type()
-        logger.print_warning(f"dev package type is {self.case_test_param['package_type'].name}")
+        logger.warning(f"dev package type is {self.case_test_param['package_type'].name}")
         if self.case_test_param['package_type'] == SysappPackageType.PACKAGE_TYPE_MAX:
-            logger.print_error("Unknown package type!")
+            logger.error("Unknown package type!")
             result = False
             return result
 
@@ -708,24 +708,24 @@ class SysappIdac(CaseBase):
     def _idac_check_uboot(self, overdrive):
         result = False
         ret = False
-        logger.print_warning(f"reboot to set overdrive to {overdrive.name}")
+        logger.warning(f"reboot to set overdrive to {overdrive.name}")
         result = SysappRebootOpts.reboot_to_uboot(self.uart)
         if not result:
             return result, ret
         cmd_set_overdrive = f"setenv overdrive {overdrive.value};saveenv"
         self.uart.write(cmd_set_overdrive)
-        logger.print_info("reset to uboot for testing ...")
+        logger.info("reset to uboot for testing ...")
         result = SysappRebootOpts.reboot_to_uboot(self.uart)
         if not result:
             return result, ret
 
         # 5. 读取寄存器值，判断读取的电压寄存器是否和case保存的table匹配，如果不匹配，
         # 记录LD测试失败，进行下一次的NOD测试。
-        logger.print_warning(f"{overdrive.name}: check uboot voltage")
+        logger.warning(f"{overdrive.name}: check uboot voltage")
         ret = self.check_uboot_voltage(overdrive)
 
         # 6. 执行reset，进到kernel
-        logger.print_info("reset to kernel for testing ...")
+        logger.info("reset to kernel for testing ...")
         result = SysappRebootOpts.reboot_to_kernel(self.uart)
         return result, ret
 
@@ -733,20 +733,20 @@ class SysappIdac(CaseBase):
         result = False
         ret = False
         # 7. 获取支持的cpu频率，对比统计的列表看是否一致，如果不一致，记录LD测试失败，进行下一次的NOD测试
-        logger.print_warning(f"{overdrive.name}: check kernel avaliable cpufreq")
+        logger.warning(f"{overdrive.name}: check kernel avaliable cpufreq")
         ret = self.check_avaliable_cpufreq(overdrive)
         if not ret:
-            logger.print_error(f"{overdrive.name} check avaliable cpufreq fail")
+            logger.error(f"{overdrive.name} check avaliable cpufreq fail")
             #continue
             return result, ret
 
         # 8. 依次设置到各个支持的频率档位，并读取电压寄存器值，先全部读取完毕再观察对应频率读取到的寄存器值
         #    是否和统计列表中的一致，如果不一致，记录LD测试失败，进行下一次的NOD测试
         if self.case_test_param['package_type'] == SysappPackageType.PACKAGE_TYPE_QFN128:
-            logger.print_warning(f'{overdrive.name} dvfs_off: check kernel'
+            logger.warning(f'{overdrive.name} dvfs_off: check kernel'
                                  ' voltage at different cpufreq')
         else:
-            logger.print_warning(f'{overdrive.name}: check kernel voltage '
+            logger.warning(f'{overdrive.name}: check kernel voltage '
                                  'at different cpufreq')
         self.set_userspace_governor()
         for cpufreq in self.case_target_param['overdrive_cpufreq_check_list'][
@@ -755,13 +755,13 @@ class SysappIdac(CaseBase):
             self.set_cpufreq(cpufreq_khz)
             ret = self.check_kernel_voltage(overdrive, cpufreq)
             if not ret:
-                logger.print_error(f"{overdrive.name} check voltage fail at "
+                logger.error(f"{overdrive.name} check voltage fail at "
                                    f"cpufreq:{cpufreq}, "
                                    f"dvfs:{self.case_test_param['dvfs_on']}")
                 break
 
         if self.case_test_param['package_type'] == SysappPackageType.PACKAGE_TYPE_QFN128:
-            logger.print_warning(f'{overdrive.name} dvfs_on: check kernel '
+            logger.warning(f'{overdrive.name} dvfs_on: check kernel '
                                  'voltage at different cpufreq')
             self.enable_qfn_dvfs()
             self.case_test_param['dvfs_on'] = True
@@ -772,7 +772,7 @@ class SysappIdac(CaseBase):
                 self.set_cpufreq(cpufreq_khz)
                 ret = self.check_kernel_voltage(overdrive, cpufreq)
                 if not ret:
-                    logger.print_error(f"{overdrive.name} check voltage fail at "
+                    logger.error(f"{overdrive.name} check voltage fail at "
                                        f"cpufreq:{cpufreq}, "
                                        f"dvfs:{self.case_test_param['dvfs_on']}")
                     break
@@ -780,7 +780,7 @@ class SysappIdac(CaseBase):
             result = True
         return result, ret
 
-    @logger.print_line_info
+    @sysapp_print.print_line_info
     def idac_test(self):
         """run idac test flow
         Args:
@@ -804,7 +804,7 @@ class SysappIdac(CaseBase):
                     return result
 
                 if not ret_overdrive[overdrive.value]:
-                    logger.print_error(f"{overdrive.name} check uboot voltage fail")
+                    logger.error(f"{overdrive.name} check uboot voltage fail")
                     continue
 
                 result, ret_overdrive[overdrive.value] = self._idac_check_kernel(overdrive)
@@ -817,13 +817,13 @@ class SysappIdac(CaseBase):
                     break
 
         if result:
-            logger.print_warning("idac test pass!")
+            logger.warning("idac test pass!")
         else:
-            logger.print_error("idac test fail!")
+            logger.error("idac test fail!")
 
         return result
 
-    @logger.print_line_info
+    @sysapp_print.print_line_info
     def runcase(self):
         """test function body
         Args:
@@ -840,7 +840,7 @@ class SysappIdac(CaseBase):
 
         return error_code
 
-    @logger.print_line_info
+    @sysapp_print.print_line_info
     @staticmethod
     def system_help():
         """help info
@@ -849,5 +849,5 @@ class SysappIdac(CaseBase):
         Returns:
             None
         """
-        logger.print_warning("check idac voltage ctrl")
-        logger.print_warning("cmd: idac")
+        logger.warning("check idac voltage ctrl")
+        logger.warning("cmd: idac")

@@ -38,11 +38,11 @@ class SysappDevSocket(SysappDevBase):
         try:
             self._dev_info['conn'] = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self._dev_info['conn'].connect((self.host, self.port))
-            logger.print_info(f"Socket {self.name} Connect")
+            logger.info(f"Socket {self.name} Connect")
             self._dev_info['running'] = True
             return True
         except Exception as e:
-            logger.print_info(
+            logger.info(
                 f"Failed to connect to {self.host}:{self.port}. Error: {e}"
             )
             return False
@@ -57,7 +57,7 @@ class SysappDevSocket(SysappDevBase):
         self._dev_info['running'] = False
         if self._dev_info['conn']:
             self._dev_info['conn'].close()
-            logger.print_info(f"Socket {self.name} disconnect")
+            logger.info(f"Socket {self.name} disconnect")
         return True
 
     def write(self, data) -> bool:
@@ -75,12 +75,12 @@ class SysappDevSocket(SysappDevBase):
             self._dev_info['conn'].sendall(data.encode("utf-8") + b"\n")
             return True
         else:
-            logger.print_info("Socket not connect, cant't send.")
+            logger.info("Socket not connect, cant't send.")
             return False
 
     def read_from_device(self):
         """Start read device data."""
-        logger.print_info("start read socket data.")
+        logger.info("start read socket data.")
         while self._dev_info['conn']:
             data = self._dev_info['conn'].recv(self.rev_max_datalen)
             if data:

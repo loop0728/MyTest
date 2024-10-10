@@ -260,22 +260,22 @@ class api_test(CaseBase):
         ret = uart.write(cmd)
         if ret is False:
             # 使用logger打印信息
-            logger.print_error("Write test fail.")
+            logger.error("Write test fail.")
             # 更新错误码
             err_code = EC.FAIL
         # 读取设备数据
         ret, data = uart.read()
         if ret is False:
-            logger.print_error("Read test1 fail.")
+            logger.error("Read test1 fail.")
             err_code = EC.FAIL
         else:
-            logger.print_info(data)
+            logger.info
         # 返回错误码
         return err_code
 
     # case 帮助信息入口
     def runcase_help(self):
-        logger.print_info("API test")
+        logger.info("API test")
 ```
 
 如果存在chip或defconfig相关的设定，可以自行决定单独维护case_name_var.py文件。

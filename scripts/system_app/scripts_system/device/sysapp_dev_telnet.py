@@ -37,7 +37,7 @@ class SysappDevTelnet(SysappDevBase):
         username = "root"
         password = ""
         try:
-            # logger.print_info(f"telnet connect:{self.host}:{self.port}")
+            # logger.info(f"telnet connect:{self.host}:{self.port}")
             self._dev_info['conn'] = telnetlib.Telnet(self.host, self.port, self.timeout)
             timeout = 2            # login timeout
             try:
@@ -48,12 +48,12 @@ class SysappDevTelnet(SysappDevBase):
                 self._dev_info['conn'].read_until(b"Password:", timeout)
                 self._dev_info['conn'].write(password.encode("utf-8") + b"\n")
             except Exception:
-                logger.print_info("Telnet no need login.")
-            logger.print_info(f"Telnet connected to {self.host}:{self.port}")
+                logger.info("Telnet no need login.")
+            logger.info(f"Telnet connected to {self.host}:{self.port}")
             self._dev_info['running'] = True
             return True
         except Exception as e:
-            logger.print_error(
+            logger.error(
                 f"Telnet failed to connect to {self.host}:{self.port}. Error: {e}"
             )
             return False
@@ -70,7 +70,7 @@ class SysappDevTelnet(SysappDevBase):
         self.queue_clear(self._dev_info['tmp_data_queue'])
         if self._dev_info['conn']:
             self._dev_info['conn'].close()
-            logger.print_info(f"Connection to {self.host}:{self.port} closed.")
+            logger.info(f"Connection to {self.host}:{self.port} closed.")
         return True
 
     def read_from_device(self):

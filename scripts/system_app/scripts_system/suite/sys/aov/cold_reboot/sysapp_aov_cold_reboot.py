@@ -3,7 +3,7 @@
 
 """cold reboot test case for AOV scenarios"""
 
-from suite.common.sysapp_common_logger import logger
+from suite.common.sysapp_common_logger import logger, sysapp_print
 from suite.common.sysapp_common_case_base import SysappCaseBase as CaseBase
 from suite.common.sysapp_common_reboot_opts import SysappRebootOpts
 from suite.common.sysapp_common_error_codes import ErrorCodes
@@ -25,7 +25,7 @@ class SysappAovColdReboot(CaseBase):
         super().__init__(case_name, case_run_cnt, module_path_name)
         self.uart = Client(self.case_name, "uart", "uart")
 
-    @logger.print_line_info
+    @sysapp_print.print_line_info
     def runcase(self):
         """test function body
         Args:
@@ -42,7 +42,7 @@ class SysappAovColdReboot(CaseBase):
             error_code =  ErrorCodes.SUCCESS
         return error_code
 
-    @logger.print_line_info
+    @sysapp_print.print_line_info
     @staticmethod
     def system_help():
         """help info
@@ -51,4 +51,4 @@ class SysappAovColdReboot(CaseBase):
         Returns:
             None
         """
-        logger.print_warning("dev power off, then power on")
+        logger.warning("dev power off, then power on")

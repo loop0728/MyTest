@@ -4,7 +4,7 @@
 """Reboot ut test"""
 
 from sysapp_client import SysappClient as Client
-from suite.common.sysapp_common_logger import logger
+from suite.common.sysapp_common_logger import logger, sysapp_print
 from suite.common.sysapp_common_case_base import SysappCaseBase as CaseBase
 from suite.common.sysapp_common_reboot_opts import SysappRebootOpts
 from suite.common.sysapp_common_error_codes import ErrorCodes
@@ -38,21 +38,21 @@ class SysappUtRebootTest(CaseBase):
         if not result:
             return result
 
-        logger.print_info("reboot to uboot")
+        logger.info("reboot to uboot")
         result = SysappRebootOpts.reboot_to_uboot(self.uart)
         if not result:
             return result
         cmd_set_overdrive = "setenv overdrive 2;saveenv"
         self.uart.write(cmd_set_overdrive)
-        logger.print_info("reset to uboot for testing ...")
+        logger.info("reset to uboot for testing ...")
         result = SysappRebootOpts.reboot_to_uboot(self.uart)
         if not result:
             return result
-        logger.print_info("reset to kernel for testing ...")
+        logger.info("reset to kernel for testing ...")
         result = SysappRebootOpts.reboot_to_kernel(self.uart)
         if not result:
             return result
-        logger.print_info("reboot to kernel for testing ...")
+        logger.info("reboot to kernel for testing ...")
         result = SysappRebootOpts.reboot_to_kernel(self.uart)
 
         return result
@@ -85,19 +85,19 @@ class SysappUtRebootTest(CaseBase):
             if result:
                 result = SysappRebootOpts.reboot_to_kernel(self.uart)
             else:
-                logger.print_error("uboot set str_crc env fail")
+                logger.error("uboot set str_crc env fail")
         else:
-            logger.print_error("the device is not at uboot")
+            logger.error("the device is not at uboot")
             result = False
 
         if result:
-            logger.print_info("set_default_bootargs success")
+            logger.info("set_default_bootargs success")
         else:
-            logger.print_error("set_default_bootargs fail")
+            logger.error("set_default_bootargs fail")
         return result
 
 
-    @logger.print_line_info
+    @sysapp_print.print_line_info
     def runcase(self):
         """
         Test function body.
@@ -114,7 +114,7 @@ class SysappUtRebootTest(CaseBase):
 
         return error_code
 
-    @logger.print_line_info
+    @sysapp_print.print_line_info
     @staticmethod
     def system_help():
         """
@@ -124,5 +124,5 @@ class SysappUtRebootTest(CaseBase):
         Returns:
             None:
         """
-        logger.print_warning("test reboot")
-        logger.print_warning("cmd: RebootTest")
+        logger.warning("test reboot")
+        logger.warning("cmd: RebootTest")

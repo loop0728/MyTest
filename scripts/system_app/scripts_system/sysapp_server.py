@@ -163,7 +163,7 @@ class SysappServer:
         res_msg_list = []
         if isinstance(msg, bytes):
             # tmprequest = re.split(self._delimiter, msg.decode("utf-8", errors="replace"))
-            # logger.print_info(f"thread_callfun Received no strip: {tmprequest}")
+            # logger.info(f"thread_callfun Received no strip: {tmprequest}")
             msg = msg.decode("utf-8", errors="replace").strip(self._delimiter)
             res_msg_list = re.split(self._delimiter, msg)
         return res_msg_list
@@ -211,13 +211,13 @@ class SysappServer:
         Returns:
             bool: result
         """
-        # logger.print_warning("regiser_device")
+        # logger.warning("regiser_device")
         result = False
         device_type = msg["device_type"]
         device_name = msg["device_name"]
         if device_name not in self._dm.devices:
             if device_type == "telnet":
-                logger.print_info(f"{device_type}: {device_name}: {PLATFORM_BOARD_IP}")
+                logger.info(f"{device_type}: {device_name}: {PLATFORM_BOARD_IP}")
                 port = 23
                 telnet_log = "./out/" + device_name + ".log"
                 telnet_device = SysappDevTelnet(device_name, PLATFORM_BOARD_IP, port, telnet_log)
@@ -226,11 +226,11 @@ class SysappServer:
                 self._dm.update_case_name(self._case_name)
                 result = True
             elif device_type == "uart":
-                logger.print_warning("Please user default handle.")
+                logger.warning("Please user default handle.")
             else:
-                logger.print_error(f"device type: {device_type} not exist.")
+                logger.error(f"device type: {device_type} not exist.")
         else:
-            logger.print_warning(f"device name: {device_name} existed.")
+            logger.warning(f"device name: {device_name} existed.")
         self.response_msg_to_client(client, result)
         return result
 
@@ -248,7 +248,7 @@ class SysappServer:
         Args:
             client (class): socket handle
         """
-        # logger.print_info("client close!!!!")
+        # logger.info("client close!!!!")
         device_name = msg["device_name"]
         self.response_msg_to_client(client, True)
         client.close()
@@ -300,7 +300,7 @@ class SysappServer:
             try:
                 # Accepted connection
                 client, addr = self._server_socket.accept()
-                logger.print_info(f"[INFO] Accepted connection from {addr[0]}:{addr[1]}")
+                logger.info(f"[INFO] Accepted connection from {addr[0]}:{addr[1]}")
                 # Determine whether the first message is a server exit.
                 request = client.recv(self.server_param['rev_max_datalen'])
                 request_msg_list = self.parasing_data(request)
@@ -316,7 +316,7 @@ class SysappServer:
                 # add cilent to thread pool
                 thread_pool.submit(self.thread_callfun, client)
             except socket.error as e:
-                logger.print_error(f"Socket error: {e}")
+                logger.error(f"Socket error: {e}")
                 continue
         return 0
 
@@ -325,7 +325,7 @@ class SysappServer:
         ss_host = "localhost"
         ss_port = PLATFORM_NET_CONNECT_PORT
 
-        logger.print_info("Server start.")
+        logger.info("Server start.")
         # open uart
         self.device_init()
         self._server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -338,7 +338,7 @@ class SysappServer:
 
     def server_stop(self):
         """Stop server."""
-        logger.print_info("Server stop.")
+        logger.info("Server stop.")
         # close server socket
         self._server_socket.close()
         # close uart

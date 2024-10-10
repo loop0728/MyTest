@@ -14,15 +14,15 @@ def exit_server(wait_timeout=5, delimiter='mstar'):
     Returns:
         bool: True or False
     """
-    logger.print_info("Exit server.")
+    logger.info("Exit server.")
     host = 'localhost'
     port = PLATFORM_NET_CONNECT_PORT
     try:
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client_socket.connect((host, port))
-        logger.print_info(f'Connect to server {host}:{port}')
+        logger.info(f'Connect to server {host}:{port}')
     except Exception as e:
-        logger.print_warning(f'maybe sever is offline:error[{e}]')
+        logger.warning(f'maybe sever is offline:error[{e}]')
         raise
 
     old_timeout = client_socket.gettimeout()
@@ -38,7 +38,7 @@ def exit_server(wait_timeout=5, delimiter='mstar'):
         else:
             result = False
     except Exception as e:
-        logger.print_warning(f"Exception e:{e}")
+        logger.warning(f"Exception e:{e}")
         client_socket.settimeout(old_timeout)
         return False
     client_socket.settimeout(old_timeout)

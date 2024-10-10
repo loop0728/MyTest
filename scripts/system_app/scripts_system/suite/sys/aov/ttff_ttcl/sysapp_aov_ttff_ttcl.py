@@ -64,7 +64,7 @@ class SysappAovTtffTtcl(SysappCaseBase):
         # check uart
         res = self.uart.write(cmd)
         if res is False:
-            logger.print_error(f"{self.uart} is disconnected.")
+            logger.error(f"{self.uart} is disconnected.")
             return "Unknown"
         wait_keyword = "0"
         status, data = self.uart.read()
@@ -92,10 +92,10 @@ class SysappAovTtffTtcl(SysappCaseBase):
         result = 0
         cur_os = self.get_current_os()
         if cur_os == target_os:
-            logger.print_warning(f"[{self.case_name}] current os is match {target_os}")
+            logger.warning(f"[{self.case_name}] current os is match {target_os}")
             return 0
 
-        logger.print_warning(f"will switch to OS({target_os})!")
+        logger.warning(f"will switch to OS({target_os})!")
         if target_os == "dualos":
             cmd = "cd /customer/sample_code/bin/"
             self.uart.write(cmd)
@@ -105,7 +105,7 @@ class SysappAovTtffTtcl(SysappCaseBase):
                 if wait_keyword not in data:
                     return 255
             else:
-                logger.print_error(f"Read fail,no keyword: {wait_keyword}")
+                logger.error(f"Read fail,no keyword: {wait_keyword}")
                 return 255
             cmd = "./prog_aov_aov_demo -t"
             self.uart.write(cmd)
@@ -162,14 +162,14 @@ class SysappAovTtffTtcl(SysappCaseBase):
                 "utf-8", errors="replace"
             ).strip()
         if "diff" in ret_match_buffer and "VIF" in ret_match_buffer:
-            logger.print_info(f"ret_match_buffer:{ret_match_buffer}")
+            logger.info(f"ret_match_buffer:{ret_match_buffer}")
             pattern = re.compile(r"time:\s+(\d+),.*int*")
             match = pattern.search(ret_match_buffer)
             if match:
                 ttff_time_value = match.group(1)
                 if ttff_time_value != "int":
                     ttff_time_value = int(ttff_time_value)
-                logger.print_info(
+                logger.info(
                     f"TTFF Time value:{ttff_time_value}; target:{TTFF_TARGET}"
                 )
 
@@ -186,14 +186,14 @@ class SysappAovTtffTtcl(SysappCaseBase):
                 "utf-8", errors="replace"
             ).strip()
         if "diff" in ret_match_buffer and "ramdisk_execute_command" in ret_match_buffer:
-            logger.print_info(f"ret_match_buffer:{ret_match_buffer}")
+            logger.info(f"ret_match_buffer:{ret_match_buffer}")
             pattern = re.compile(r"time:\s+(\d+),.*ramdisk_execute_command\+")
             match = pattern.search(ret_match_buffer)
             if match:
                 ttcl_time_value = match.group(1)
                 if not isinstance(ttcl_time_value, int):
                     ttcl_time_value = int(ttcl_time_value)
-                logger.print_info(
+                logger.info(
                     f"TTCL Time value:{ttcl_time_value}; target:{TTCL_TARGET}"
                 )
 
@@ -201,12 +201,12 @@ class SysappAovTtffTtcl(SysappCaseBase):
                      f"TTCL_TARGET:{TTCL_TARGET};TTCL:{ttcl_time_value}")
         self.save_time_info(self.case_name, time_info)
         if ttff_time_value == 0 or ttff_time_value > TTFF_TARGET:
-            logger.print_warning(
+            logger.warning(
                 f"ttff time [{ttff_time_value}] is error target[{TTFF_TARGET}]!"
             )
             result = 255
         if ttcl_time_value == 0 or ttcl_time_value > TTCL_TARGET:
-            logger.print_warning(
+            logger.warning(
                 f"ttcl time [{ttcl_time_value}] is error, target[{TTCL_TARGET}]!"
             )
             result = 255
@@ -225,19 +225,19 @@ class SysappAovTtffTtcl(SysappCaseBase):
         """
         result = sys_common.goto_kernel(self.uart)
         if result is not True:
-            logger.print_warning(f"caseName[{self.case_name}] not in kernel!")
+            logger.warning(f"caseName[{self.case_name}] not in kernel!")
             return 0
         # step2 switch to dualOS
         result = self.switch_os("dualos")
         if result == 255:
-            logger.print_warning(f"caseName[{self.case_name}] run done!")
+            logger.warning(f"caseName[{self.case_name}] run done!")
             return 0
         # step3 cat booting time
         result = self.get_ttff_ttcl()
         # step4 switch to purelinux
         result = self.switch_os("purelinux")
         if result == 255:
-            logger.print_warning(f"caseName[{self.case_name}] run done!")
+            logger.warning(f"caseName[{self.case_name}] run done!")
             return 0
 
         self.uart.close()

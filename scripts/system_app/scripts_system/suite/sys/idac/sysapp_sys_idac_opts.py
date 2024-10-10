@@ -102,21 +102,21 @@ class SysappIdacOpts():
             result (bool): execute success, return True; else, return False
         """
         result = False
-        logger.print_info(f"server run {cmd}")
+        logger.info(f"server run {cmd}")
         try:
             ret = subprocess.run(cmd, universal_newlines=True, stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE, check=True)
-            logger.print_info(f"Command output: {ret.stdout}")
+            logger.info(f"Command output: {ret.stdout}")
         except subprocess.CalledProcessError as error:
-            logger.print_error('Command failed with return code:', error.returncode)
-            logger.print_error('Output:', error.output)
-            logger.print_error('Error:', error.stderr)
+            logger.error('Command failed with return code:', error.returncode)
+            logger.error('Output:', error.output)
+            logger.error('Error:', error.stderr)
 
         if ret.returncode == 0:
-            logger.print_info(f"run {cmd} ok")
+            logger.info(f"run {cmd} ok")
             result = True
         else:
-            logger.print_error(f"run {cmd} fail, errorcode: {ret.returncode}")
+            logger.error(f"run {cmd} fail, errorcode: {ret.returncode}")
             result = False
         return result
 

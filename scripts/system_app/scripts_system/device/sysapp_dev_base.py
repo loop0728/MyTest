@@ -94,7 +94,7 @@ class SysappDevBase(ABC):
                         break
                     curr_line += 1
         else:
-            logger.print_warning(f"{self.__class__.__name__} port is not open")
+            logger.warning(f"{self.__class__.__name__} port is not open")
         return result
 
     def read(self, wait_timeout=2) -> bytes:
@@ -108,13 +108,13 @@ class SysappDevBase(ABC):
             bytes: data
         """
         terminator = b""
-        # logger.print_warning(f"self.__class__.__name__ read.")
+        # logger.warning(f"self.__class__.__name__ read.")
         try:
             data = self._dev_info["tmp_data_queue"].get(timeout=wait_timeout - 0.5)
             data += terminator
             return data
         except queue.Empty:
-            logger.print_warning(
+            logger.warning(
                 f"{self.__class__.__name__} _tmp_data_queue is empty."
             )
             return b""
@@ -162,7 +162,7 @@ class SysappDevBase(ABC):
 
     def read_from_device(self):
         """Start read device data."""
-        logger.print_info("start read uart data.")
+        logger.info("start read uart data.")
         conn = self._dev_info['conn']
         while self._dev_info['running']:
             if conn and conn.is_open and conn.in_waiting > 0:
@@ -174,7 +174,7 @@ class SysappDevBase(ABC):
 
     def save_data_to_file(self):
         """Start save device data."""
-        logger.print_info(f"start save data to {self._dev_info['log_file']}.")
+        logger.info(f"start save data to {self._dev_info['log_file']}.")
         ensure_file_exists(self._dev_info["log_file"])  # ensure file exists
         while self._dev_info['running']:
             try:

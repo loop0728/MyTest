@@ -41,14 +41,14 @@ class SysappDevSerial(SysappDevBase):
                 self.port, self.baudrate, timeout=self.timeout
             )
             if self._dev_info['conn'].is_open:
-                logger.print_info(f"Connected to {self.port} baudrate {self.baudrate}")
+                logger.info(f"Connected to {self.port} baudrate {self.baudrate}")
                 self._dev_info['running'] = True
                 result = True
             else:
-                logger.print_warning(f"Failed to connect to {self.port}")
+                logger.warning(f"Failed to connect to {self.port}")
                 result = False
         except serial.SerialException as e:
-            logger.print_warning(f"Failed to connect to {self.port}: {e}")
+            logger.warning(f"Failed to connect to {self.port}: {e}")
             result = False
         return result
 
@@ -64,7 +64,7 @@ class SysappDevSerial(SysappDevBase):
         conn = self._dev_info['conn']
         if conn and conn.is_open:
             conn.close()
-            logger.print_info(f"Disconnected from {self.port}")
+            logger.info(f"Disconnected from {self.port}")
             if self._dev_info["read_thread"] and self._dev_info["read_thread"].is_alive():
                 self._dev_info["read_thread"].join()
             if self._dev_info["save_data_thread"] and self._dev_info["save_data_thread"].is_alive():

@@ -46,19 +46,19 @@ class SysappClient:
         try:
             self._client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self._client_socket.connect((ss_host, ss_port))
-            logger.print_info(f"client connect to server {ss_host}:{ss_port}")
+            logger.info(f"client connect to server {ss_host}:{ss_port}")
             self.is_open = True
         except Exception as e:
-            logger.print_error(f"maybe sever is offline:error[{e}]")
+            logger.error(f"maybe sever is offline:error[{e}]")
             raise
         result = self._prepare_msg()
         if result is False:
-            logger.print_error("Prepare msg send fail.")
+            logger.error("Prepare msg send fail.")
             raise ValueError("Prepare msg send fail.")
         if self.device_type != "uart":
             result = self._regiser_device(self.device_type, self.device_name)
             if result is False:
-                logger.print_error("Regiser device fail.")
+                logger.error("Regiser device fail.")
                 raise ValueError("Regiser device fail.")
 
     def _send_msg_to_server(self, msg):
@@ -93,7 +93,7 @@ class SysappClient:
         """
         res_msg_list = []
         # tmprequest = re.split(self.delimiter, msg)
-        # logger.print_info(f"thread_callfun Received no strip: {tmprequest}\n")
+        # logger.info(f"thread_callfun Received no strip: {tmprequest}\n")
         msg = msg.strip(self.delimiter)
         res_msg_list = re.split(self.delimiter, msg)
         return res_msg_list
@@ -125,7 +125,7 @@ class SysappClient:
                     param = json.loads(item)
                     # print(f'param: {param}')
                 except json.JSONDecodeError as e:
-                    logger.print_error(f"JSON Error Resolution: {e}")
+                    logger.error(f"JSON Error Resolution: {e}")
                     return False, data
                 result = bool(param["status"] == "recv_ok")
                 if "data" in param.keys():
@@ -134,7 +134,7 @@ class SysappClient:
                     print("data is not in param")
             # print(f'data is {data}')
         except Exception as e:
-            logger.print_warning(f"Exception e:{e}")
+            logger.warning(f"Exception e:{e}")
             self._client_socket.settimeout(old_timeout)
             return False, data
         self._client_socket.settimeout(old_timeout)
@@ -229,11 +229,11 @@ class SysappClient:
                 all_data += data
                 line -= 1  # line - 1
             except Exception as e:
-                logger.print_warning(f"Exception e:{e}")
+                logger.warning(f"Exception e:{e}")
                 result = False
                 all_data += ""
                 break
-        # logger.print_info(f"Client: {all_data}")
+        # logger.info(f"Client: {all_data}")
         self._client_socket.settimeout(old_timeout)
         return result, all_data
 

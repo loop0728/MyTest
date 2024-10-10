@@ -1,57 +1,32 @@
-"""
-@author: ocean.lin
-@create on: 2022.09.05
-"""
+"""sysapp logger."""
 
-# __all__ = ['logger']
-
-from typing import Union
-from datetime import datetime
-import time
 import logging
 import inspect
+from colorlog import ColoredFormatter
 
-#pylint: disable=C0103
+LOG_LEVEL = logging.DEBUG
 
-# from logging.handlers import RotatingFileHandler
-MessageType = Union[str, Exception, datetime]
+formatter = ColoredFormatter(
+    "%(log_color)s[%(asctime)s] [%(filename)s] [line:%(lineno)s] [%(levelname)s] %(message)s",
+    datefmt='%Y.%m.%d %H:%M:%S',
+    log_colors={
+        'DEBUG':    'cyan',
+        'INFO':     'green',
+        'WARNING':  'yellow',
+        'ERROR':    'red',
+        'CRITICAL': 'red',
+    }
+)
 
-
-class Colors:
-    """Custom Colors."""
-
-    HEADER = "\033[95m"
-    OKBLUE = "\033[94m"
-    OKGREEN = "\033[92m"
-    WARNING = "\033[93m"
-    FAIL = "\033[91m"
-    ENDC = "\033[0m"
-    BOLD = "\033[1m"
-    UNDERLINE = "\033[4m"
-
-    def get_color(self):
-        """Get color Asic."""
-        pass
+logger = logging.getLogger('debug_logger')
+ch = logging.StreamHandler()
+ch.setFormatter(formatter)
+logger.addHandler(ch)
+logger.setLevel(LOG_LEVEL)
 
 
-class Logger:
-    """Custom Printing."""
-
-    formatter = logging.Formatter("%(asctime)s %(name)-12s %(levelname)-8s %(message)s")
-
-    def __init__(self):
-        """Custom Printing."""
-        self.logger = logging.getLogger(__name__)
-        ch = logging.StreamHandler()
-        ch.setLevel(logging.DEBUG)
-        ch.setFormatter(self.formatter)
-        # 创建一个handler，用于写入日志文件，并设置回滚模式
-        # fh = RotatingFileHandler('test.log', maxBytes=1024*1024, backupCount=5)
-        # fh.setLevel(logging.DEBUG)
-        # fh.setFormatter(self.formatter)
-        self.logger.addHandler(ch)
-        # self.logger.addHandler(fh)
-        self.logger.setLevel(logging.INFO)
+class SysappPrint:
+    """Other print info."""
 
     def print_line_info(self, func):
         """Print line info."""
@@ -61,97 +36,26 @@ class Logger:
             filename = frame.f_code.co_filename
             function_name = frame.f_code.co_name
             line_number = frame.f_lineno
-            self.print_info(
+            print(
                 f"File: {filename}, Function: {function_name}, Line: {line_number}"
             )
             return func(*args, **kwargs)
 
         return wrapper
 
-    def info(self, message: MessageType, task_name: str = None):
-        """
-        info日志
-        :param message: 信息
-        :param task_name: 任务名称
-        """
-        if task_name is not None:
-            message = f"[{task_name}]: {message}"
-        self.logger.info(message)
+    def print_definition_info(self, func):
+        """Print line info of defdefinition."""
 
-    def warning(self, message: MessageType, task_name: str = None):
-        """
-        warning日志
-        :param message: 信息
-        :param task_name: 任务名称
-        """
-        if task_name is not None:
-            message = f"[{task_name}]: {message}"
-        self.logger.warning(message)
+        def wrapper(*args, **kwargs):
+            filename = inspect.getfile(func)
+            line_number = func.__code__.co_firstlineno
+            function_name = func.__name__
 
-    def error(self, message: MessageType, task_name: str = None):
-        """
-        error日志
-        :param message: 信息
-        :param task_name: 任务名称
-        """
-        if task_name is not None:
-            message = f"[{task_name}]: {message}"
-        self.logger.error(message)
+            print(
+                f"Defined in: {filename}, Function: {function_name}, Line: {line_number}"
+            )
+            return func(*args, **kwargs)
 
-    def exception(self, message: MessageType):
-        """
-        exception日志
-        :param message: 信息
-        """
-        self.logger.exception(message)
+        return wrapper
 
-    @staticmethod
-    def print_info(message: MessageType, task_name: str = None):
-        """
-        info日志
-        :param message: 信息
-        :param task_name: 任务名称
-        """
-        if task_name is not None:
-            message = f"[{task_name}]: {message}"
-        message = (
-            time.strftime("[%Y.%m.%d %H:%M:%S] ", time.localtime(time.time())) + message
-        )
-        print(message)
-
-    @staticmethod
-    def print_warning(message: MessageType, task_name: str = None):
-        """
-        warning日志
-        :param message: 信息
-        :param task_name: 任务名称
-        """
-        if task_name is not None:
-            message = f"[{task_name}]: {message}"
-        message = (
-            Colors.WARNING
-            + time.strftime("[%Y.%m.%d %H:%M:%S] ", time.localtime(time.time()))
-            + message
-            + Colors.ENDC
-        )
-        print(message)
-
-    @staticmethod
-    def print_error(message: MessageType, task_name: str = None):
-        """
-        error日志
-        :param message: 信息
-        :param task_name: 任务名称
-        """
-        if task_name is not None:
-            message = f"[{task_name}]: {message}"
-        message = (
-            Colors.FAIL
-            + time.strftime("[%Y.%m.%d %H:%M:%S] ", time.localtime(time.time()))
-            + message
-            + Colors.ENDC
-        )
-        print(message)
-
-
-logger = Logger()
+sysapp_print = SysappPrint()

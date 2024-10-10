@@ -35,7 +35,7 @@ class SysappAovOsSwitch(SysappCaseBase):
         # check uart
         res = self.uart.write(cmd)
         if res is False:
-            logger.print_error(f"{self.uart} is disconnected.")
+            logger.error(f"{self.uart} is disconnected.")
             return "Unknown"
         wait_keyword = "0"
         status, data = self.uart.read()
@@ -63,10 +63,10 @@ class SysappAovOsSwitch(SysappCaseBase):
         result = 0
         cur_os = self.get_current_os()
         if cur_os == target_os:
-            logger.print_warning(f"[{self.case_name}] current os is match {target_os}")
+            logger.warning(f"[{self.case_name}] current os is match {target_os}")
             return 0
 
-        logger.print_warning(f"will switch to OS({target_os})!")
+        logger.warning(f"will switch to OS({target_os})!")
         if target_os == "dualos":
             cmd = "cd /customer/sample_code/bin/"
             self.uart.write(cmd)
@@ -76,7 +76,7 @@ class SysappAovOsSwitch(SysappCaseBase):
                 if wait_keyword not in data:
                     return 255
             else:
-                logger.print_error(f"Read fail,no keyword: {wait_keyword}")
+                logger.error(f"Read fail,no keyword: {wait_keyword}")
                 return 255
             cmd = "./prog_aov_aov_demo -t"
             self.uart.write(cmd)
@@ -123,17 +123,17 @@ class SysappAovOsSwitch(SysappCaseBase):
         # step1 go to kernel
         result = sys_common.goto_kernel(self.uart)
         if result is not True:
-            logger.print_warning(f"caseName[{self.case_name}] not in kernel!")
+            logger.warning(f"caseName[{self.case_name}] not in kernel!")
             return 255
         # step2 switch to dualOS
         result = self.switch_os("dualos")
         if result == 255:
-            logger.print_warning(f"caseName[{self.case_name}] run done!")
+            logger.warning(f"caseName[{self.case_name}] run done!")
             return 255
         # step3 switch to purelinux
         result = self.switch_os("purelinux")
         if result == 255:
-            logger.print_warning(f"caseName[{self.case_name}] run done!")
+            logger.warning(f"caseName[{self.case_name}] run done!")
             return 255
         return 0
 

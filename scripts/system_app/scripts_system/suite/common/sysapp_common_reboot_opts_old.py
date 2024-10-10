@@ -57,7 +57,7 @@ class SysappRebootOptsOld():
                 time.sleep(1)
 
         if self.board_cur_state == BootStage.E_BOOTSTAGE_UNKNOWN.name:
-            logger.print_error("dev is not at kernel or at uboot")
+            logger.error("dev is not at kernel or at uboot")
         return result
 
     def check_uboot_phase(self):
@@ -71,9 +71,9 @@ class SysappRebootOptsOld():
         result = self._get_cur_boot_state()
         if result != 0:
             return result
-        logger.print_info(f'cur_state: {self.board_cur_state}')
+        logger.info(f'cur_state: {self.board_cur_state}')
         if self.board_cur_state != BootStage.E_BOOTSTAGE_UBOOT.name:
-            logger.print_warning(f"dev is not at uboot now, cur_state:{self.board_cur_state}")
+            logger.warning(f"dev is not at uboot now, cur_state:{self.board_cur_state}")
             result = 255
         return result
 
@@ -89,7 +89,7 @@ class SysappRebootOptsOld():
         if result != 0:
             return result
         if self.board_cur_state != BootStage.E_BOOTSTAGE_KERNEL.name:
-            logger.print_warning(f"dev is not at kernel now, cur_state:{self.board_cur_state}")
+            logger.warning(f"dev is not at kernel now, cur_state:{self.board_cur_state}")
             result = 255
         return result
 
@@ -112,24 +112,24 @@ class SysappRebootOptsOld():
                 if "Auto-Negotiation" in line:
                     break
             else:
-                logger.print_error("read line fail")
+                logger.error("read line fail")
                 result = 255
                 return result
 
         # enter to uboot
         while True:
             if try_time >= self.enter_uboot_try_cnt:
-                logger.print_error("enter to uboot timeout")
+                logger.error("enter to uboot timeout")
                 result = 255
                 break
             self.device.write('')
             self.board_cur_state = self.device.get_board_cur_state()[1]
             if self.board_cur_state == BootStage.E_BOOTSTAGE_UBOOT.name:
-                logger.print_info("enter to uboot success")
+                logger.info("enter to uboot success")
                 result = 0
                 break
             if self.board_cur_state == BootStage.E_BOOTSTAGE_KERNEL.name:
-                logger.print_error("enter to uboot fail")
+                logger.error("enter to uboot fail")
                 result = 255
                 break
             try_time += 1
@@ -148,12 +148,12 @@ class SysappRebootOptsOld():
         # enter to kernel
         while True:
             if try_time >= self.reboot_timeout:
-                logger.print_error("enter to kernel timeout")
+                logger.error("enter to kernel timeout")
                 result = 255
                 break
             self.board_cur_state = self.device.get_board_cur_state()[1]
             if self.board_cur_state == BootStage.E_BOOTSTAGE_KERNEL.name:
-                logger.print_info("enter to kernel success")
+                logger.info("enter to kernel success")
                 result = 0
                 break
             try_time += 1
@@ -168,7 +168,7 @@ class SysappRebootOptsOld():
             result (int): if device go to uboot success, return 0; else, return 255
         """
         result = 255
-        logger.print_info('begin to run kernel_to_uboot')
+        logger.info('begin to run kernel_to_uboot')
         result = self.check_kernel_phase()
         if result != 0:
             return result
@@ -188,7 +188,7 @@ class SysappRebootOptsOld():
             result (int): if device go to kernel success, return 0; else, return 255
         """
         result = 255
-        logger.print_info('begin to run uboot_to_kernel')
+        logger.info('begin to run uboot_to_kernel')
         result = self.check_uboot_phase()
         if result != 0:
             return result
@@ -207,7 +207,7 @@ class SysappRebootOptsOld():
             result (int): if device go to kernel success, return 0; else, return 255
         """
         result = 255
-        logger.print_info('begin to run kernel_to_kernel')
+        logger.info('begin to run kernel_to_kernel')
         result = self.check_kernel_phase()
         if result != 0:
             return result
@@ -227,7 +227,7 @@ class SysappRebootOptsOld():
             result (int): if device go to uboot success, return 0; else, return 255
         """
         result = 255
-        logger.print_info('begin to run uboot_to_uboot')
+        logger.info('begin to run uboot_to_uboot')
         result = self.check_uboot_phase()
         if result != 0:
             return result
@@ -249,13 +249,13 @@ class SysappRebootOptsOld():
         relay_name = platform.PLATFORM_RELAY
         relay_no = platform.PLATFORM_RELAY_PORT
         rs232_contrl_handle = SysappDevRelay(relay=relay_no, port=relay_name)
-        logger.print_info(f"init rs232_contrl_handle {relay_name}:{relay_no}")
+        logger.info(f"init rs232_contrl_handle {relay_name}:{relay_no}")
         rs232_contrl_handle.connect()
         rs232_contrl_handle.power_off()
         time.sleep(2)
         rs232_contrl_handle.power_on()
         rs232_contrl_handle.disconnect()
-        logger.print_info("closed rs232_contrl_handle.")
+        logger.info("closed rs232_contrl_handle.")
 
     def cold_reboot_to_uboot(self) -> bool:
         """ cold reboot device to uboot
@@ -270,9 +270,9 @@ class SysappRebootOptsOld():
 
         result = self._enter_to_uboot()
         if result == 0:
-            logger.print_warning("cold reboot to uboot success!")
+            logger.warning("cold reboot to uboot success!")
         else:
-            logger.print_error("cold reboot to uboot fail!")
+            logger.error("cold reboot to uboot fail!")
         return result
 
     def cold_reboot_to_kernel(self) -> bool:
@@ -288,9 +288,9 @@ class SysappRebootOptsOld():
 
         result = self._enter_to_kernel()
         if result == 0:
-            logger.print_warning("cold reboot to kernel success!")
+            logger.warning("cold reboot to kernel success!")
         else:
-            logger.print_error("cold reboot to kernel fail!")
+            logger.error("cold reboot to kernel fail!")
         return result
 
     def check_kernel_env(self):
@@ -336,7 +336,7 @@ class SysappRebootOptsOld():
                     break
                 val += line
             else:
-                logger.print_error(f"read line fail, {line}")
+                logger.error(f"read line fail, {line}")
                 result = 255
                 break
         #print("+++++++++++++++++++++++++++++++++++++")
@@ -346,7 +346,7 @@ class SysappRebootOptsOld():
         if result == 0:
             index = val.find('=')
             val = val[index+1:]
-            logger.print_info(f"the value of {key} is: {val}")
+            logger.info(f"the value of {key} is: {val}")
 
         return result, val
 
@@ -381,7 +381,7 @@ class SysappRebootOptsOld():
         if result != 0:
             return result
 
-        logger.print_warning(f"set {key} to {val}")
+        logger.warning(f"set {key} to {val}")
         cmd_setenv = f"setenv {key} '{val}';saveenv"
         self.device.write(cmd_setenv)
         return result
@@ -410,11 +410,11 @@ class SysappRebootOptsOld():
                 if "0" == line:
                     break
             else:
-                logger.print_error(f"read line fail, {line}")
+                logger.error(f"read line fail, {line}")
                 result = False
                 break
         if result:
-            logger.print_info(f"{tool_path} is exist")
+            logger.info(f"{tool_path} is exist")
         return result, tool_path
 
     def kernel_get_bootenv(self, key):
@@ -454,7 +454,7 @@ class SysappRebootOptsOld():
 
         ret, fw_tool_path = self._is_fw_tool_exist("fw_setenv")
         if ret:
-            logger.print_info(f"update the value of {key}: {val}")
+            logger.info(f"update the value of {key}: {val}")
             cmd_setenv = f"{fw_tool_path} {key} '{val}';echo $?"
             self.device.write(cmd_setenv)
             result = 0

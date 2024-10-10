@@ -19,7 +19,7 @@ class ThreadWaitLock():
             time.sleep(1)
             cnt += 1
         if cnt >= waittime:
-            logger.print_warning(f"poll {self.name} not return!")
+            logger.warning(f"poll {self.name} not return!")
             return False
         return True
 

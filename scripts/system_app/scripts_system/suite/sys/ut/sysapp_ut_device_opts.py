@@ -4,7 +4,7 @@
 """Device ut test"""
 
 from sysapp_client import SysappClient as Client
-from suite.common.sysapp_common_logger import logger
+from suite.common.sysapp_common_logger import logger, sysapp_print
 from suite.common.sysapp_common_case_base import SysappCaseBase as CaseBase
 from suite.common.sysapp_common_reboot_opts import SysappRebootOpts
 from suite.common.sysapp_common_device_opts import (SysappDeviceOpts,
@@ -44,44 +44,44 @@ class SysappUtDeviceTest(CaseBase):
         if not result:
             return result
 
-        logger.print_info("test get package type at uboot phase ...")
+        logger.info("test get package type at uboot phase ...")
         package_type = SysappDeviceOpts.get_package_type(self.uart)
-        logger.print_warning(f"The package type is {package_type.name}")
+        logger.warning(f"The package type is {package_type.name}")
 
-        logger.print_info("test write register at uboot phase ...")
+        logger.info("test write register at uboot phase ...")
         bootstrap_type = SysappDeviceOpts.get_bootstrap_type(self.uart)
-        logger.print_warning(f"The bootstrap type is {bootstrap_type.name}")
+        logger.warning(f"The bootstrap type is {bootstrap_type.name}")
 
-        logger.print_info("test get partitions at uboot phase ...")
+        logger.info("test get partitions at uboot phase ...")
         result, partition_list = SysappDeviceOpts.get_mtdparts(self.uart)
         if result:
-            logger.print_warning(f"get partitons: {partition_list}")
+            logger.warning(f"get partitons: {partition_list}")
         else:
-            logger.print_error("get partitons fail at uboot phase")
+            logger.error("get partitons fail at uboot phase")
 
-        logger.print_info("test get package type at kernel phase ...")
-        logger.print_info("reboot to kernel")
+        logger.info("test get package type at kernel phase ...")
+        logger.info("reboot to kernel")
         result = SysappRebootOpts.reboot_to_kernel(self.uart)
         if not result:
             return result
 
         package_type = SysappDeviceOpts.get_package_type(self.uart)
-        logger.print_warning(f"The package type is {package_type.name}")
+        logger.warning(f"The package type is {package_type.name}")
 
-        logger.print_info("test write register at kernel phase ...")
+        logger.info("test write register at kernel phase ...")
         bootstrap_type = SysappDeviceOpts.get_bootstrap_type(self.uart)
-        logger.print_warning(f"The bootstrap type is {bootstrap_type.name}")
+        logger.warning(f"The bootstrap type is {bootstrap_type.name}")
 
-        logger.print_info("test get partitions at kernel phase ...")
+        logger.info("test get partitions at kernel phase ...")
         result, partition_list = SysappDeviceOpts.get_mtdparts(self.uart)
         if result:
-            logger.print_warning(f"get partitons: {partition_list}")
+            logger.warning(f"get partitons: {partition_list}")
         else:
-            logger.print_error("get partitons fail at kernel phase")
+            logger.error("get partitons fail at kernel phase")
 
         return result
 
-    @logger.print_line_info
+    @sysapp_print.print_line_info
     def runcase(self):
         """
         Test function body.
@@ -97,7 +97,7 @@ class SysappUtDeviceTest(CaseBase):
 
         return error_code
 
-    @logger.print_line_info
+    @sysapp_print.print_line_info
     @staticmethod
     def system_help():
         """
@@ -107,5 +107,5 @@ class SysappUtDeviceTest(CaseBase):
         Returns:
             None:
         """
-        logger.print_warning("test device opts")
-        logger.print_warning("cmd: DeveiceOptsTest")
+        logger.warning("test device opts")
+        logger.warning("cmd: DeveiceOptsTest")

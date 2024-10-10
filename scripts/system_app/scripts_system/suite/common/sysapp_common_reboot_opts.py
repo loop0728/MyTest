@@ -28,7 +28,7 @@ class SysappRebootOpts():
     __board_cur_state = BootStage.E_BOOTSTAGE_UNKNOWN.name
 
     @classmethod
-    def _get_cur_boot_state(cls, device:object):
+    def _get_cur_boot_state(cls, device: object):
         """
         Get current status of the device.
         Args:
@@ -52,11 +52,11 @@ class SysappRebootOpts():
                 time.sleep(1)
 
         if cls.__board_cur_state == BootStage.E_BOOTSTAGE_UNKNOWN.name:
-            logger.print_error("dev is not at kernel or at uboot")
+            logger.error("dev is not at kernel or at uboot")
         return result
 
     @classmethod
-    def _enter_to_uboot(cls, device:object):
+    def _enter_to_uboot(cls, device: object):
         """
         Enter to uboot.
         Args:
@@ -76,24 +76,24 @@ class SysappRebootOpts():
                 if "Auto-Negotiation" in line:
                     break
             else:
-                logger.print_error("read line fail")
+                logger.error("read line fail")
                 result = False
                 return result
 
         # enter to uboot
         while True:
             if try_time >= cls.__enter_uboot_try_cnt:
-                logger.print_error("enter to uboot timeout")
+                logger.error("enter to uboot timeout")
                 result = False
                 break
             device.write('')
             cls.__board_cur_state = device.get_board_cur_state()[1]
             if cls.__board_cur_state == BootStage.E_BOOTSTAGE_UBOOT.name:
-                logger.print_info("enter to uboot success")
+                logger.info("enter to uboot success")
                 result = True
                 break
             if cls.__board_cur_state == BootStage.E_BOOTSTAGE_KERNEL.name:
-                logger.print_error(f"enter to uboot fail, current state:{cls.__board_cur_state}")
+                logger.error(f"enter to uboot fail, current state:{cls.__board_cur_state}")
                 result = False
                 break
             try_time += 1
@@ -101,7 +101,7 @@ class SysappRebootOpts():
         return result
 
     @classmethod
-    def _enter_to_kernel(cls, device:object):
+    def _enter_to_kernel(cls, device: object):
         """
         Enter to kernel.
         Args:
@@ -114,12 +114,12 @@ class SysappRebootOpts():
         # enter to kernel
         while True:
             if try_time >= cls.__reboot_timeout:
-                logger.print_error("enter to kernel timeout")
+                logger.error("enter to kernel timeout")
                 result = False
                 break
             cls.__board_cur_state = device.get_board_cur_state()[1]
             if cls.__board_cur_state == BootStage.E_BOOTSTAGE_KERNEL.name:
-                logger.print_info("enter to kernel success")
+                logger.info("enter to kernel success")
                 result = True
                 break
             try_time += 1
@@ -127,7 +127,7 @@ class SysappRebootOpts():
         return result
 
     @classmethod
-    def _kernel_to_uboot(cls, device:object):
+    def _kernel_to_uboot(cls, device: object):
         """
         Reboot the device from kernel to uboot.
         Args:
@@ -136,7 +136,7 @@ class SysappRebootOpts():
             result (bool): If the device go to uboot success, return True; Else, return False.
         """
         result = False
-        logger.print_info('begin to run _kernel_to_uboot')
+        logger.info('begin to run _kernel_to_uboot')
         device.write('reboot -f')
         #time.sleep(2)
         device.clear_board_cur_state()
@@ -145,7 +145,7 @@ class SysappRebootOpts():
         return result
 
     @classmethod
-    def _uboot_to_kernel(cls, device:object):
+    def _uboot_to_kernel(cls, device: object):
         """
         Reboot the device from uboot to kernel.
         Args:
@@ -154,7 +154,7 @@ class SysappRebootOpts():
             result (bool): If the device go to kernel success, return True; Else, return False.
         """
         result = False
-        logger.print_info('begin to run _uboot_to_kernel')
+        logger.info('begin to run _uboot_to_kernel')
         device.write('reset')
         device.clear_board_cur_state()
 
@@ -162,7 +162,7 @@ class SysappRebootOpts():
         return result
 
     @classmethod
-    def _kernel_to_kernel(cls, device:object):
+    def _kernel_to_kernel(cls, device: object):
         """
         Reboot the device from kernel to kernel.
         Args:
@@ -171,7 +171,7 @@ class SysappRebootOpts():
             result (bool): If the device go to kernel success, return True; Else, return False.
         """
         result = False
-        logger.print_info('begin to run _kernel_to_kernel')
+        logger.info('begin to run _kernel_to_kernel')
         device.write('reboot -f')
         #time.sleep(2)
         device.clear_board_cur_state()
@@ -180,7 +180,7 @@ class SysappRebootOpts():
         return result
 
     @classmethod
-    def _uboot_to_uboot(cls, device:object):
+    def _uboot_to_uboot(cls, device: object):
         """
         Reboot the device from uboot to uboot.
         Args:
@@ -189,7 +189,7 @@ class SysappRebootOpts():
             result (bool): If the device go to uboot success, return True; Else, return False.
         """
         result = False
-        logger.print_info('begin to run _uboot_to_uboot')
+        logger.info('begin to run _uboot_to_uboot')
         device.write('reset')
         device.clear_board_cur_state()
 
@@ -208,16 +208,16 @@ class SysappRebootOpts():
         relay_name = platform.PLATFORM_RELAY
         relay_no = platform.PLATFORM_RELAY_PORT
         rs232_contrl_handle = SysappDevRelay(relay=relay_no, port=relay_name)
-        logger.print_info(f"init rs232_contrl_handle {relay_name}:{relay_no}")
+        logger.info(f"init rs232_contrl_handle {relay_name}:{relay_no}")
         rs232_contrl_handle.connect()
         rs232_contrl_handle.power_off()
         time.sleep(2)
         rs232_contrl_handle.power_on()
         rs232_contrl_handle.disconnect()
-        logger.print_info("closed rs232_contrl_handle.")
+        logger.info("closed rs232_contrl_handle.")
 
     @classmethod
-    def _get_key_value(cls, device:object, key):
+    def _get_key_value(cls, device: object, key):
         """
         Get the value of key.
         Args:
@@ -247,19 +247,19 @@ class SysappRebootOpts():
                     break
                 val += line
             else:
-                logger.print_error(f"read line fail, {line}")
+                logger.error(f"read line fail, {line}")
                 result = False
                 break
 
         if result:
             index = val.find('=')
             val = val[index+1:]
-            logger.print_info(f"the value of {key} is: {val}")
+            logger.info(f"the value of {key} is: {val}")
 
         return result, val
 
     @classmethod
-    def _uboot_get_bootenv(cls, device:object, key):
+    def _uboot_get_bootenv(cls, device: object, key):
         """
         Get bootenv at uboot phase.
         Args:
@@ -278,7 +278,7 @@ class SysappRebootOpts():
         return (result, val)
 
     @classmethod
-    def _uboot_set_bootenv(cls, device:object, key, val):
+    def _uboot_set_bootenv(cls, device: object, key, val):
         """
         Set bootenv at uboot phase.
         Args:
@@ -289,13 +289,13 @@ class SysappRebootOpts():
             result (bool): If set env success, return True; Else, return False.
         """
         result = False
-        logger.print_warning(f"set {key} to {val}")
+        logger.warning(f"set {key} to {val}")
         cmd_setenv = f"setenv {key} '{val}';saveenv"
         result = device.write(cmd_setenv)
         return result
 
     @classmethod
-    def _is_fw_tool_exist(cls, device:object, tool_name) -> bool:
+    def _is_fw_tool_exist(cls, device: object, tool_name) -> bool:
         """
         Check if fw_tools exist.
         Args:
@@ -321,15 +321,15 @@ class SysappRebootOpts():
                 if "0" == line:
                     break
             else:
-                logger.print_error(f"read line fail, {line}")
+                logger.error(f"read line fail, {line}")
                 result = False
                 break
         if result:
-            logger.print_info(f"{tool_path} is exist")
+            logger.info(f"{tool_path} is exist")
         return result, tool_path
 
     @classmethod
-    def _kernel_get_bootenv(cls, device:object, key):
+    def _kernel_get_bootenv(cls, device: object, key):
         """
         Get bootenv at kernel phase.
         Args:
@@ -354,7 +354,7 @@ class SysappRebootOpts():
         return result, val
 
     @classmethod
-    def _kernel_set_bootenv(cls, device:object, key, val):
+    def _kernel_set_bootenv(cls, device: object, key, val):
         """
         Set bootenv at kernel phase.
         Args:
@@ -368,7 +368,7 @@ class SysappRebootOpts():
         fw_tool_path = ""
         ret, fw_tool_path = cls._is_fw_tool_exist(device, "fw_setenv")
         if ret:
-            logger.print_info(f"update the value of {key}: {val}")
+            logger.info(f"update the value of {key}: {val}")
             cmd_setenv = f"{fw_tool_path} {key} '{val}';echo $?"
             result = device.write(cmd_setenv)
         return result
@@ -402,7 +402,7 @@ class SysappRebootOpts():
         return result
 
     @classmethod
-    def init_kernel_env(cls, device:object):
+    def init_kernel_env(cls, device: object):
         """
         Check current status of the device. If the device is not at kernel, then reboot to
         kernel if possible.
@@ -420,7 +420,7 @@ class SysappRebootOpts():
         return result
 
     @classmethod
-    def init_uboot_env(cls, device:object):
+    def init_uboot_env(cls, device: object):
         """
         Check current status of the device. If the device is not at uboot, then reboot to
         uboot if possible.
@@ -438,7 +438,7 @@ class SysappRebootOpts():
         return result
 
     @classmethod
-    def reboot_to_kernel(cls, device:object):
+    def reboot_to_kernel(cls, device: object):
         """
         Reboot the device from current booting state to kernel
         Args:
@@ -457,7 +457,7 @@ class SysappRebootOpts():
         return result
 
     @classmethod
-    def reboot_to_uboot(cls, device:object):
+    def reboot_to_uboot(cls, device: object):
         """
         Reboot the device from current booting state to uboot
         Args:
@@ -476,7 +476,7 @@ class SysappRebootOpts():
         return result
 
     @classmethod
-    def cold_reboot_to_kernel(cls, device:object) -> bool:
+    def cold_reboot_to_kernel(cls, device: object) -> bool:
         """
         Cold reboot the device to kernel.
         Args:
@@ -490,13 +490,13 @@ class SysappRebootOpts():
 
         result = cls._enter_to_kernel(device)
         if result:
-            logger.print_warning("cold reboot to kernel success!")
+            logger.warning("cold reboot to kernel success!")
         else:
-            logger.print_error("cold reboot to kernel fail!")
+            logger.error("cold reboot to kernel fail!")
         return result
 
     @classmethod
-    def cold_reboot_to_uboot(cls, device:object) -> bool:
+    def cold_reboot_to_uboot(cls, device: object) -> bool:
         """
         Cold reboot the device to uboot.
         Args:
@@ -510,13 +510,13 @@ class SysappRebootOpts():
 
         result = cls._enter_to_uboot(device)
         if result:
-            logger.print_warning("cold reboot to uboot success!")
+            logger.warning("cold reboot to uboot success!")
         else:
-            logger.print_error("cold reboot to uboot fail!")
+            logger.error("cold reboot to uboot fail!")
         return result
 
     @classmethod
-    def get_bootenv(cls, device:object, key):
+    def get_bootenv(cls, device: object, key):
         """
         Get bootenv.
         Args:
@@ -540,7 +540,7 @@ class SysappRebootOpts():
         return result, val
 
     @classmethod
-    def set_bootenv(cls, device:object, key, val):
+    def set_bootenv(cls, device: object, key, val):
         """
         Set bootenv.
         Args:
@@ -561,7 +561,7 @@ class SysappRebootOpts():
         return result
 
     @classmethod
-    def check_bootenv(cls, device:object, key, check_value):
+    def check_bootenv(cls, device: object, key, check_value):
         """
         Check if the actual value of env key is equal to the target value.
         Args:

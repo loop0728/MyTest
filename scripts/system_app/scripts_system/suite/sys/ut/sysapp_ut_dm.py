@@ -37,7 +37,7 @@ class SysappUtDm(SysappCaseBase):
         """
         if os.path.exists(log_path):
             os.remove(log_path)
-            logger.print_info(f"{log_path} removed.")
+            logger.info(f"{log_path} removed.")
         sys_common.ensure_file_exists(log_path)
         test_cmd = "cat /mnt/scripts_system/suite/sys/ut/resource/test1.log"
         device.write(test_cmd)
@@ -53,13 +53,13 @@ class SysappUtDm(SysappCaseBase):
                 else:
                     break
             except Exception as e:
-                logger.print_info(f"read fail {e}")
+                logger.info(f"read fail {e}")
                 break
         result = sys_common.are_files_equal_line_by_line(log_path, resource_log)
         if result == 255:
-            logger.print_error(f"{test_cmd} fail.")
+            logger.error(f"{test_cmd} fail.")
         else:
-            logger.print_info(f"{test_cmd} pass.")
+            logger.info(f"{test_cmd} pass.")
         return result
 
     def runcase(self):
