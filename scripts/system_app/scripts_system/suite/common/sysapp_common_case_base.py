@@ -1,8 +1,9 @@
 """Common operations in cases"""
 from sysapp_platform import PLATFORM_DEBUG_MODE, LOG_PATH, PLATFORM_LOCAL_MOUNT_PATH
 from suite.common.sysapp_common_logger import logger, sysapp_print
-import suite.common.sysapp_common as sys_common
-
+from suite.common.sysapp_common_reboot_opts import SysappRebootOpts
+import suite.common.sysapp_common_burning_opts as sys_common_burning
+import suite.common.sysapp_common_utils as sys_common_utils
 
 class SysappCaseBase:
     """Case base class."""
@@ -49,13 +50,13 @@ class SysappCaseBase:
     def enter_debug_mode(self, device_handle: object):
         """If debug mode existed, run corresponding events."""
         if PLATFORM_DEBUG_MODE == "MemLeak":
-            result = sys_common.get_case_json_key_value(
+            result = sys_common_utils.get_case_json_key_value(
                 self.case_name, "is_support_debug_mode_memleak"
             )
             if result != "no_find_key" and int(result) == 1:
                 device_handle.client_memleak_script_run("init")
         if PLATFORM_DEBUG_MODE == "Asan":
-            result = sys_common.get_case_json_key_value(
+            result = sys_common_utils.get_case_json_key_value(
                 self.case_name, "is_support_debug_mode_asan"
             )
             if result != "no_find_key" and int(result) == 1:
@@ -65,7 +66,7 @@ class SysappCaseBase:
         """If debug mode existed, run corresponding events."""
         ret = 0
         if PLATFORM_DEBUG_MODE == "MemLeak":
-            result = sys_common.get_case_json_key_value(
+            result = sys_common_utils.get_case_json_key_value(
                 self.case_name, "is_support_debug_mode_memleak"
             )
             if result != "no_find_key" and int(result) == 1:
@@ -77,13 +78,13 @@ class SysappCaseBase:
         """Run case end, recovery environment."""
         result = 255
         if exception_type == "network_exception":
-            result = sys_common.reboot_board(device_handle, "soft_reboot")
+            result = SysappRebootOpts.reboot_to_kernel(device_handle)
 
         elif exception_type == "board_system_exception":
-            result = sys_common.reboot_board(device_handle, "hw_reboot")
+            result = SysappRebootOpts.cold_reboot_to_kernel(device_handle)
 
         elif exception_type == "board_image_exception":
-            result = sys_common.retry_burning_partition(device_handle)
+            result = sys_common_burning.retry_burning_partition(device_handle)
 
         return result
 

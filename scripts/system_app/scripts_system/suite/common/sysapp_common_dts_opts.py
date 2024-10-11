@@ -3,4 +3,4 @@
 
 """dts operations interfaces"""
 
-from suite.common.sysapp_common_logger import logger
+#from suite.common.sysapp_common_logger import logger

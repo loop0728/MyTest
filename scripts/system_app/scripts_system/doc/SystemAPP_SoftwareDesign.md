@@ -147,7 +147,7 @@ sys_common.match_keyword(device, keyword)
 >
 > 2.场景中通用的操作请放入xxx_common.py中，如果文件不存在可自行创建。
 
-##### ErrorCodes
+##### SysappErrorCodes
 
 框架会根据return的错误码做不同操作，参考下表：
 
@@ -162,7 +162,7 @@ sys_common.match_keyword(device, keyword)
 定义：
 
 ```python
-class ErrorCodes(Enum):
+class SysappErrorCodes(Enum):
     SUCCESS    = 0
     FAIL       = 1
     REBOOT     = 2
@@ -174,7 +174,7 @@ class ErrorCodes(Enum):
 
 ```python
 # 导入ErrorCodes
-from Common.error_codes import ErrorCodes as EC
+from Common.error_codes import SysappErrorCodes as EC
 
 # 在需要使用的位置使用
 EC.SUCCESS
@@ -239,7 +239,7 @@ from Common.case_base import CaseBase
 # 导入设备类，用于创建设备
 from client import Client
 # 导入错误码，避免返回不支持的错误码
-from Common.error_codes import ErrorCodes as EC
+from Common.error_codes import SysappErrorCodes as EC
 
 # 创建与setup.sh中module_path_name同名的类并继承CaseBase类
 class api_test(CaseBase):
@@ -269,7 +269,7 @@ class api_test(CaseBase):
             logger.error("Read test1 fail.")
             err_code = EC.FAIL
         else:
-            logger.info
+            logger.info(data)
         # 返回错误码
         return err_code
 

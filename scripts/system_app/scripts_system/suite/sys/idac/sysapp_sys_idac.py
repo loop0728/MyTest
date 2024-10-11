@@ -4,19 +4,19 @@
 """IDAC test scenarios"""
 
 import os
-from sysapp_sys_idac_opts import SysappIdacOpts as IdacOpts
-from cases.platform.sys.idac.idac_var import (SysappOverdriveType,
-                                              SysappPackageType,
-                                              SysappDvfsState,
-                                              IFORD_IDAC_VOLT_CORE_TABLE,
+from cases.platform.sys.idac.idac_var import (IFORD_IDAC_VOLT_CORE_TABLE,
                                               IFORD_IDAC_VOLT_CPU_TABLE,
                                               IFORD_IDAC_QFN_DVFS_VCORE_TABLE)
+from suite.common.sysapp_common_types import (SysappOverdriveType,
+                                              SysappPackageType,
+                                              SysappDvfsState)
 from suite.common.sysapp_common_logger import logger, sysapp_print
 from suite.common.sysapp_common_case_base import SysappCaseBase as CaseBase
 from suite.common.sysapp_common_reboot_opts import SysappRebootOpts
 from suite.common.sysapp_common_register_opts import SysappRegisterOpts
-from suite.common.sysapp_common_error_codes import ErrorCodes
-import suite.common.sysapp_common as sys_common
+from suite.common.sysapp_common_net_opts import SysappNetOpts
+from suite.common.sysapp_common_error_codes import SysappErrorCodes
+from suite.sys.idac.sysapp_sys_idac_opts import SysappIdacOpts as IdacOpts
 from sysapp_client import SysappClient as Client
 
 class SysappIdac(CaseBase):
@@ -249,20 +249,17 @@ class SysappIdac(CaseBase):
             result (bool): execute success, return True; else, return False
         """
         result = False
-        result = self._check_emac_ko_insmod_status()
-        if not result:
-            result = self._insmod_emac_ko("sstar_emac")
-            if not result:
-                return result
+
         logger.warning("set board ip and mount server path ...")
-        sys_common.set_board_kernel_ip(self.uart)
-        status = sys_common.mount_to_server(self.uart, path)
-        if status:
+        result = SysappNetOpts.setup_network(self.uart)
+        if result:
+            result = SysappNetOpts.mount_server_path_to_board(self.uart, path)
+
+        if result:
             logger.info(f"mount {path} success")
-            result = True
         else:
             logger.error(f"mount {path} fail")
-            result = False
+
         return result
 
     def _delete_dump_files(self):
@@ -297,7 +294,7 @@ class SysappIdac(CaseBase):
             if isinstance(line, bytes):
                 line = line.decode('utf-8', errors='replace')
             line = line.strip()
-            if "0" == line:
+            if line == "0":
                 logger.info("rm old dump file ok")
                 result = True
         else:
@@ -324,7 +321,7 @@ class SysappIdac(CaseBase):
             if isinstance(line, bytes):
                 line = line.decode('utf-8', errors='replace')
             line = line.strip()
-            if "0" == line:
+            if line == "0":
                 logger.info("dump devicetree ok")
                 result = True
             else:
@@ -829,14 +826,14 @@ class SysappIdac(CaseBase):
         Args:
             None
         Returns:
-            error_code (ErrorCodes): result of test
+            error_code (SysappErrorCodes): result of test
         """
-        error_code = ErrorCodes.FAIL
+        error_code = SysappErrorCodes.FAIL
         result = False
         result = self.idac_test()
 
         if result:
-            error_code = ErrorCodes.SUCCESS
+            error_code = SysappErrorCodes.SUCCESS
 
         return error_code
 

@@ -8,7 +8,7 @@ import subprocess
 from cases.platform.sys.idac.idac_var import IFORD_IDAC_VOLT_CPU_TABLE
 from cases.platform.sys.idac.idac_var import IFORD_IPL_OVERDRIVE_CPUFREQ_MAP
 from suite.common.sysapp_common_logger import logger
-import suite.common.sysapp_common as sys_common
+from suite.common.sysapp_common_register_opts import SysappRegisterOpts
 
 
 class SysappIdacOpts():
@@ -36,12 +36,12 @@ class SysappIdacOpts():
         sign = 1
         unit = 10
         offset = 0
-        bit0 = sys_common.get_bit_value(str_hex, 0)
-        bit1 = sys_common.get_bit_value(str_hex, 1)
-        bit2 = sys_common.get_bit_value(str_hex, 2)
-        bit3 = sys_common.get_bit_value(str_hex, 3)
-        bit4 = sys_common.get_bit_value(str_hex, 4)
-        bit5 = sys_common.get_bit_value(str_hex, 5)
+        bit0 = SysappRegisterOpts.get_bit_value(str_hex, 0)
+        bit1 = SysappRegisterOpts.get_bit_value(str_hex, 1)
+        bit2 = SysappRegisterOpts.get_bit_value(str_hex, 2)
+        bit3 = SysappRegisterOpts.get_bit_value(str_hex, 3)
+        bit4 = SysappRegisterOpts.get_bit_value(str_hex, 4)
+        bit5 = SysappRegisterOpts.get_bit_value(str_hex, 5)
         value = (bit3 << 3) + (bit2 << 2) + (bit1 << 1) + bit0
 
         if bit4 == 0:
@@ -108,9 +108,9 @@ class SysappIdacOpts():
                                  stderr=subprocess.PIPE, check=True)
             logger.info(f"Command output: {ret.stdout}")
         except subprocess.CalledProcessError as error:
-            logger.error('Command failed with return code:', error.returncode)
-            logger.error('Output:', error.output)
-            logger.error('Error:', error.stderr)
+            logger.error(f'Command failed with return code: {error.returncode}')
+            logger.error(f'Output: {error.output}')
+            logger.error(f'Error: {error.stderr}')
 
         if ret.returncode == 0:
             logger.info(f"run {cmd} ok")

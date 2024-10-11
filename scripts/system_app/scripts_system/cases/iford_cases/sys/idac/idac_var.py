@@ -3,41 +3,6 @@
 
 """Providing variables for str case."""
 
-from enum import Enum
-
-class SysappOverdriveType(Enum):
-    """A class representing overdrive type of chip"""
-    OVERDRIVE_TYPE_LD = 0
-    OVERDRIVE_TYPE_NOD = 1
-    OVERDRIVE_TYPE_OD = 2
-    OVERDRIVE_TYPE_MAX = 3
-
-class SysappPackageType(Enum):
-    """A class representing package type of chip"""
-    PACKAGE_TYPE_QFN128 = 0
-    PACKAGE_TYPE_BGA11 = 1
-    PACKAGE_TYPE_BGA12 = 2
-    PACKAGE_TYPE_MAX = 3
-
-class SysappCornerIcType(Enum):
-    """A class representing corner ic type"""
-    CORNER_IC_TYPE_SLOW = 0
-    CORNER_IC_TYPE_FAST = 1
-    CORNER_IC_TYPE_MAX = 2
-
-class SysappIdacPowerType(Enum):
-    """A class representing power type of chip"""
-    IDAC_POWER_TYPE_CORE = 0
-    IDAC_POWER_TYPE_CPU = 1
-    IDAC_POWER_TYPE_MAX = 2
-
-class SysappDvfsState(Enum):
-    """A class representing dvfs setting of chip"""
-    DVFS_STATE_OFF = 0
-    DVFS_STATE_ON = 1
-    DVFS_STATE_MAX = 2
-
-
 IFORD_IDAC_QFN_DVFS_VCORE_TABLE = [
     # dvfs off
     [

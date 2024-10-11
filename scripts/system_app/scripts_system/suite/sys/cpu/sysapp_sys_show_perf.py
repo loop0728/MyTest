@@ -2,10 +2,11 @@
 import time
 import threading
 from suite.common.sysapp_common_logger import logger
+from suite.common.sysapp_common_reboot_opts import SysappRebootOpts
+from suite.common.sysapp_common_net_opts import SysappNetOpts
+import suite.common.sysapp_common_utils as sys_common_utils
 from suite.common.sysapp_common_case_base import SysappCaseBase as CaseBase
-import suite.common.sysapp_common as sys_common
 from sysapp_client import SysappClient as Client
-import sysapp_platform as platform
 
 class SysappMixerThread(threading.Thread):
     """ thread which can auto run mixer one by one """
@@ -121,7 +122,7 @@ class SysappShowPerf(CaseBase):
 
             cmd = "./prog_preload_linux -t"
             wait_keyword = "press c to change mode"
-            result, data = sys_common.write_and_match_keyword(self.uart, cmd, wait_keyword)
+            result, data = sys_common_utils.write_and_match_keyword(self.uart, cmd, wait_keyword)
             if result is False:
                 return 255
 
@@ -133,9 +134,9 @@ class SysappShowPerf(CaseBase):
 
     def runcase(self):
         result = 0
-        mount_path = f"{platform.PLATFORM_MOUNT_PATH}/{self.subpath}"
+        #mount_path = f"{platform.PLATFORM_MOUNT_PATH}/{self.subpath}"
         # step1 判断是否在kernel下
-        result = sys_common.goto_kernel(self.uart)
+        result = SysappRebootOpts.init_kernel_env(self.uart)
         if result is not True:
             logger.warning(f"caseName[{self.case_name}] not in kernel!")
             return 255
@@ -147,11 +148,13 @@ class SysappShowPerf(CaseBase):
                 return 255
         # step3 挂载网络
         logger.warning("config network")
-        self.check_insmod_ko("sstar_emac")
-        sys_common.set_board_kernel_ip(self.uart)
+        # self.check_insmod_ko("sstar_emac")
+        # sys_common.set_board_kernel_ip(self.uart)
+        SysappNetOpts.setup_network(self.uart)
+
         # step4 mount nfs
         logger.warning(f"mount[{self.subpath}]")
-        sys_common.mount_to_server(self.uart, f"{self.subpath}")
+        SysappNetOpts.mount_server_path_to_board(self.uart, f"{self.subpath}")
         # step5 串口运行mixer pipeline
         if self.case_name != "show_perf_dualos":
             logger.warning("run mixer case")

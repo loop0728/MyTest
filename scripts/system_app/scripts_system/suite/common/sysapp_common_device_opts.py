@@ -4,24 +4,10 @@
 """device operations interfaces"""
 
 import re
-from enum import Enum
+from suite.common.sysapp_common_types import SysappPackageType, SysappBootstrapType
 from suite.common.sysapp_common_logger import logger
 from suite.common.sysapp_common_register_opts import SysappRegisterOpts
 from suite.common.sysapp_common_reboot_opts import SysappRebootOpts
-
-class SysappPackageType(Enum):
-    """A class representing package type of chip"""
-    PACKAGE_TYPE_QFN128 = 0
-    PACKAGE_TYPE_BGA11 = 1
-    PACKAGE_TYPE_BGA12 = 2
-    PACKAGE_TYPE_MAX = 3
-
-class SysappBootstrapType(Enum):
-    """A class representing bootstrap type of device"""
-    BOOTSTRAP_TYPE_NOR = 0
-    BOOTSTRAP_TYPE_NAND = 1
-    BOOTSTRAP_TYPE_EMMC = 2
-    BOOTSTRAP_TYPE_MAX = 3
 
 class SysappDeviceOpts():
     """
@@ -92,7 +78,7 @@ class SysappDeviceOpts():
             device (): device handle
         Returns:
             tuple:
-            - result (bool): If get mtdparts success, return True; Else, return False. 
+            - result (bool): If get mtdparts success, return True; Else, return False.
             - partition_list (list of tuple): return the partition list of device.
                 index (str): index of partition;
                 name (str): name of partition;
@@ -140,7 +126,7 @@ class SysappDeviceOpts():
             device (): device handle
         Returns:
             tuple:
-            - result (bool): If get mtdparts success, return True; Else, return False. 
+            - result (bool): If get mtdparts success, return True; Else, return False.
             - partition_list (list of tuple): return the partition list of device.
                 index (str): index of partition;
                 name (str): name of partition;
@@ -160,7 +146,7 @@ class SysappDeviceOpts():
                 if isinstance(line, bytes):
                     line = line.decode('utf-8', errors='replace')
                 line = line.strip()
-                if "0" == line:
+                if line == "0":
                     result = True
                     break
 
@@ -188,7 +174,7 @@ class SysappDeviceOpts():
             device (): device handle
         Returns:
             tuple:
-            - result (bool): If get mtdparts success, return True; Else, return False. 
+            - result (bool): If get mtdparts success, return True; Else, return False.
             - partition_list (list of tuple): return the partition list of device.
                 index (str): index of partition;
                 name (str): name of partition;

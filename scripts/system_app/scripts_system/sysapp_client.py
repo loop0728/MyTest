@@ -72,8 +72,12 @@ class SysappClient:
             bool: result
         """
         result = False
-        msg = json.dumps(msg)
-        full_msg = f"{msg}{self.delimiter}"
+        msg_dump = json.dumps(msg)
+        full_msg = f"{msg_dump}{self.delimiter}"
+
+        # if msg['cmd'] == "write" and msg['data'] == 'reset':
+        #     logger.error(f"_send_msg_to_server: full_msg[{full_msg}]")
+
         try:
             self._client_socket.sendall(full_msg.encode("utf-8"))
             result = True
@@ -113,10 +117,16 @@ class SysappClient:
         old_timeout = self._client_socket.gettimeout()
         self._client_socket.settimeout(wait_timeout)  # timeout (S)
         try:
+            # if msg["cmd"] == "write" and msg["data"] == "reset":
+            #     logger.warning(f"_send_msg_to_server, {msg}")
             self._send_msg_to_server(msg)
             # print(f"_send_msg_to_server done, {msg}")
+
             response = self._client_socket.recv(self.rev_max_datalen)
             # print(f"response:{response}")
+            # if msg["cmd"] == "write" and msg["data"] == "reset":
+            #     logger.warning(f"response:{response}")
+
             if isinstance(response, bytes):
                 response = response.decode("utf-8", errors="replace")
             response_msg_list = self._parasing_data(response)
@@ -175,7 +185,7 @@ class SysappClient:
         result, _ = self._send_to_server_and_check_response(msg)
         return result
 
-    def write(self, data) -> bool:
+    def write(self, data, wait_timeout=5) -> bool:
         """
         Write data to device.
 
@@ -191,7 +201,7 @@ class SysappClient:
             "data": data,
             "device_name": self.device_name,
         }
-        result, _ = self._send_to_server_and_check_response(msg)
+        result, _ = self._send_to_server_and_check_response(msg, wait_timeout)
         return result
 
     def read(self, line=1, wait_timeout=5):

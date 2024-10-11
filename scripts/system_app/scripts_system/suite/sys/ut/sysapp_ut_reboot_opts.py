@@ -7,7 +7,7 @@ from sysapp_client import SysappClient as Client
 from suite.common.sysapp_common_logger import logger, sysapp_print
 from suite.common.sysapp_common_case_base import SysappCaseBase as CaseBase
 from suite.common.sysapp_common_reboot_opts import SysappRebootOpts
-from suite.common.sysapp_common_error_codes import ErrorCodes
+from suite.common.sysapp_common_error_codes import SysappErrorCodes
 
 class SysappUtRebootTest(CaseBase):
     """
@@ -104,13 +104,13 @@ class SysappUtRebootTest(CaseBase):
         Args:
             None:
         Returns:
-            error_code (ErrorCodes): Result of test.
+            error_code (SysappErrorCodes): Result of test.
         """
-        error_code = ErrorCodes.FAIL
-        #result = self.reboot_test()
-        result = self.set_default_bootargs()
+        error_code = SysappErrorCodes.FAIL
+        result = self.reboot_test()
+        #result = self.set_default_bootargs()
         if result:
-            error_code = ErrorCodes.SUCCESS
+            error_code = SysappErrorCodes.SUCCESS
 
         return error_code
 

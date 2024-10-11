@@ -12,11 +12,11 @@ from cases.platform.sys.aov.str_var import (STR_TARGET, STR_KMSG,
 from suite.common.sysapp_common_logger import logger, sysapp_print
 from suite.common.sysapp_common_case_base import SysappCaseBase as CaseBase
 from suite.common.sysapp_common_reboot_opts import SysappRebootOpts
-from suite.common.sysapp_common_error_codes import ErrorCodes
+from suite.common.sysapp_common_error_codes import SysappErrorCodes
 from suite.sys.aov.common.sysapp_aov_common import SysappAovCommon
 from sysapp_client import SysappClient as Client
 
-class StrStage(Enum):
+class SysappStrStage(Enum):
     """
     A class representing str stage"""
     E_STAGE_SUSPEND_ENTRY = 1
@@ -152,7 +152,7 @@ class SysappAovStr(CaseBase):
         Parse kmsg line.
         Args:
             line (str): kmsg line
-            check_stage (StrStage): test stage
+            check_stage (SysappStrStage): test stage
             retry_cnt (int): current retry time
         Returns:
             result (bool): result of parsing stage, True: parse next line; False: go to next step
@@ -160,13 +160,13 @@ class SysappAovStr(CaseBase):
         result = False
         stage_time = ''
         stage_phase = ''
-        if check_stage == StrStage.E_STAGE_SUSPEND_ENTRY:
+        if check_stage == SysappStrStage.E_STAGE_SUSPEND_ENTRY:
             stage_time = 'suspend_enter_time'
             stage_phase = 'str_suspend_entry'
-        elif check_stage == StrStage.E_STAGE_SUSPEND_EXIT:
+        elif check_stage == SysappStrStage.E_STAGE_SUSPEND_EXIT:
             stage_time = 'suspend_exit_time'
             stage_phase = 'str_suspend_exit'
-        elif check_stage == StrStage.E_STAGE_APP_RESUME:
+        elif check_stage == SysappStrStage.E_STAGE_APP_RESUME:
             stage_time = 'app_resume_time'
             stage_phase = 'str_app_resume'
             result = True
@@ -182,7 +182,7 @@ class SysappAovStr(CaseBase):
                                      f"{self.case_test_param[stage_time]}")
                 result = True
 
-        if check_stage == StrStage.E_STAGE_APP_RESUME:
+        if check_stage == SysappStrStage.E_STAGE_APP_RESUME:
             result = False
         return result
 
@@ -217,12 +217,16 @@ class SysappAovStr(CaseBase):
                 line = line.strip()
 
                 # check suspend entry
-                result = self._parse_str_stage(line, StrStage.E_STAGE_SUSPEND_ENTRY, retry_cnt)
+                result = self._parse_str_stage(line,
+                                               SysappStrStage.E_STAGE_SUSPEND_ENTRY,
+                                               retry_cnt)
                 if result:
                     continue
 
                 # check suspend exit
-                result = self._parse_str_stage(line, StrStage.E_STAGE_SUSPEND_EXIT, retry_cnt)
+                result = self._parse_str_stage(line,
+                                               SysappStrStage.E_STAGE_SUSPEND_EXIT,
+                                               retry_cnt)
                 if result:
                     continue
 
@@ -231,7 +235,7 @@ class SysappAovStr(CaseBase):
                     self.case_test_param['app_resume_time'] = 0
 
                 # check app resume
-                self._parse_str_stage(line, StrStage.E_STAGE_APP_RESUME, retry_cnt)
+                self._parse_str_stage(line, SysappStrStage.E_STAGE_APP_RESUME, retry_cnt)
 
                 # wait single str flow complete
                 if (self.case_test_param['suspend_enter_time'] != 0
@@ -412,10 +416,10 @@ class SysappAovStr(CaseBase):
         Args:
             None:
         Returns:
-            error_code (ErrorCodes): Result of test.
+            error_code (SysappErrorCodes): Result of test.
         """
         result = False
-        error_code = ErrorCodes.FAIL
+        error_code = SysappErrorCodes.FAIL
 
         # reboot first to clear board status, for temporary testing
         result = self.reboot_dev()
@@ -441,10 +445,10 @@ class SysappAovStr(CaseBase):
 
         if result:
             logger.warning("str test pass!")
-            error_code = ErrorCodes.SUCCESS
+            error_code = SysappErrorCodes.SUCCESS
         else:
             logger.error("str test fail!")
-            error_code = ErrorCodes.FAIL
+            error_code = SysappErrorCodes.FAIL
 
         return error_code
 

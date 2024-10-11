@@ -5,8 +5,8 @@
 
 import time
 from suite.common.sysapp_common_logger import logger
+from suite.common.sysapp_common_types import SysappBootStage
 import sysapp_platform as platform
-from device.sysapp_dev_base import BootStage
 from device.sysapp_dev_relay import SysappDevRelay
 
 class SysappRebootOpts():
@@ -25,7 +25,7 @@ class SysappRebootOpts():
     __reboot_timeout = 30
     __enter_uboot_try_cnt = 30
     __get_state_try_cnt = 20
-    __board_cur_state = BootStage.E_BOOTSTAGE_UNKNOWN.name
+    __board_cur_state = SysappBootStage.E_BOOTSTAGE_UNKNOWN.name
 
     @classmethod
     def _get_cur_boot_state(cls, device: object):
@@ -39,19 +39,19 @@ class SysappRebootOpts():
         result = False
         device.write('')
         cls.__board_cur_state = device.get_board_cur_state()[1]
-        if cls.__board_cur_state != BootStage.E_BOOTSTAGE_UNKNOWN.name:
+        if cls.__board_cur_state != SysappBootStage.E_BOOTSTAGE_UNKNOWN.name:
             result = True
         else:
             i = 1
             while i < cls.__get_state_try_cnt:
                 device.write('')
                 cls.__board_cur_state = device.get_board_cur_state()[1]
-                if cls.__board_cur_state != BootStage.E_BOOTSTAGE_UNKNOWN.name:
+                if cls.__board_cur_state != SysappBootStage.E_BOOTSTAGE_UNKNOWN.name:
                     result = True
                     break
                 time.sleep(1)
 
-        if cls.__board_cur_state == BootStage.E_BOOTSTAGE_UNKNOWN.name:
+        if cls.__board_cur_state == SysappBootStage.E_BOOTSTAGE_UNKNOWN.name:
             logger.error("dev is not at kernel or at uboot")
         return result
 
@@ -67,18 +67,18 @@ class SysappRebootOpts():
         result = False
         try_time = 0
         # wait uboot keyword
-        while True:
-            status, line = device.read()
-            if status:
-                if isinstance(line, bytes):
-                    line = line.decode('utf-8', errors='replace')
-                line = line.strip()
-                if "Auto-Negotiation" in line:
-                    break
-            else:
-                logger.error("read line fail")
-                result = False
-                return result
+        # while True:
+        #     status, line = device.read()
+        #     if status:
+        #         if isinstance(line, bytes):
+        #             line = line.decode('utf-8', errors='replace')
+        #         line = line.strip()
+        #         if "Auto-Negotiation" in line:
+        #             break
+        #     else:
+        #         logger.error("read line fail")
+        #         result = False
+        #         return result
 
         # enter to uboot
         while True:
@@ -88,16 +88,16 @@ class SysappRebootOpts():
                 break
             device.write('')
             cls.__board_cur_state = device.get_board_cur_state()[1]
-            if cls.__board_cur_state == BootStage.E_BOOTSTAGE_UBOOT.name:
+            if cls.__board_cur_state == SysappBootStage.E_BOOTSTAGE_UBOOT.name:
                 logger.info("enter to uboot success")
                 result = True
                 break
-            if cls.__board_cur_state == BootStage.E_BOOTSTAGE_KERNEL.name:
+            if cls.__board_cur_state == SysappBootStage.E_BOOTSTAGE_KERNEL.name:
                 logger.error(f"enter to uboot fail, current state:{cls.__board_cur_state}")
                 result = False
                 break
             try_time += 1
-            time.sleep(0.1)
+            #time.sleep(0.1)
         return result
 
     @classmethod
@@ -118,7 +118,7 @@ class SysappRebootOpts():
                 result = False
                 break
             cls.__board_cur_state = device.get_board_cur_state()[1]
-            if cls.__board_cur_state == BootStage.E_BOOTSTAGE_KERNEL.name:
+            if cls.__board_cur_state == SysappBootStage.E_BOOTSTAGE_KERNEL.name:
                 logger.info("enter to kernel success")
                 result = True
                 break
@@ -154,8 +154,19 @@ class SysappRebootOpts():
             result (bool): If the device go to kernel success, return True; Else, return False.
         """
         result = False
+        try_cnt = 0
         logger.info('begin to run _uboot_to_kernel')
-        device.write('reset')
+        while try_cnt < 5:
+            result = device.write('reset')
+            if result:
+                break
+            try_cnt += 1
+            time.sleep(1)
+
+        if not result:
+            logger.error("send reset cmd timeout")
+            return result
+
         device.clear_board_cur_state()
 
         result = cls._enter_to_kernel(device)
@@ -189,15 +200,27 @@ class SysappRebootOpts():
             result (bool): If the device go to uboot success, return True; Else, return False.
         """
         result = False
+        try_cnt = 0
         logger.info('begin to run _uboot_to_uboot')
-        device.write('reset')
+        while try_cnt < 5:
+            logger.warning(f"[try_cnt:{try_cnt+1}/5] send reset cmd")
+            result = device.write('reset')
+            if result:
+                break
+            try_cnt += 1
+            time.sleep(1)
+
+        if not result:
+            logger.error("send reset cmd timeout")
+            return result
+
         device.clear_board_cur_state()
 
         result = cls._enter_to_uboot(device)
         return result
 
     @staticmethod
-    def _cold_reboot():
+    def cold_reboot():
         """
         Power off the device and then power on.
         Args:
@@ -239,9 +262,7 @@ class SysappRebootOpts():
                 if "not defined" in line:
                     result = False
                     break
-                #if self.__uboot_prompt in line or self.__kernel_prompt in line:
                 if cls.__uboot_prompt == line.strip() or cls.__kernel_prompt == line.strip():
-                    #if len(val) > 0:
                     if val:
                         result = True
                     break
@@ -318,7 +339,7 @@ class SysappRebootOpts():
                 if tool_name in line:
                     result = True
                     tool_path = line.strip()
-                if "0" == line:
+                if line == "0":
                     break
             else:
                 logger.error(f"read line fail, {line}")
@@ -383,7 +404,7 @@ class SysappRebootOpts():
            result (bool): If the device is at kernel, return True; Else, return False.
         """
         result = False
-        if cls.__board_cur_state == BootStage.E_BOOTSTAGE_KERNEL.name:
+        if cls.__board_cur_state == SysappBootStage.E_BOOTSTAGE_KERNEL.name:
             result = True
         return result
 
@@ -397,7 +418,7 @@ class SysappRebootOpts():
            result (bool): If the device is at uboot, return True; Else, return False.
         """
         result = False
-        if cls.__board_cur_state == BootStage.E_BOOTSTAGE_UBOOT.name:
+        if cls.__board_cur_state == SysappBootStage.E_BOOTSTAGE_UBOOT.name:
             result = True
         return result
 
@@ -414,7 +435,7 @@ class SysappRebootOpts():
         result = False
         result = cls._get_cur_boot_state(device)
         if result:
-            if cls.__board_cur_state == BootStage.E_BOOTSTAGE_UBOOT.name:
+            if cls.__board_cur_state == SysappBootStage.E_BOOTSTAGE_UBOOT.name:
                 result = cls._uboot_to_kernel(device)
 
         return result
@@ -432,7 +453,7 @@ class SysappRebootOpts():
         result = False
         result = cls._get_cur_boot_state(device)
         if result:
-            if cls.__board_cur_state == BootStage.E_BOOTSTAGE_KERNEL.name:
+            if cls.__board_cur_state == SysappBootStage.E_BOOTSTAGE_KERNEL.name:
                 result = cls._kernel_to_uboot(device)
 
         return result
@@ -449,9 +470,9 @@ class SysappRebootOpts():
         result = False
         result = cls._get_cur_boot_state(device)
         if result:
-            if cls.__board_cur_state == BootStage.E_BOOTSTAGE_UBOOT.name:
+            if cls.__board_cur_state == SysappBootStage.E_BOOTSTAGE_UBOOT.name:
                 result = cls._uboot_to_kernel(device)
-            elif cls.__board_cur_state == BootStage.E_BOOTSTAGE_KERNEL.name:
+            elif cls.__board_cur_state == SysappBootStage.E_BOOTSTAGE_KERNEL.name:
                 result = cls._kernel_to_kernel(device)
 
         return result
@@ -468,9 +489,9 @@ class SysappRebootOpts():
         result = False
         result = cls._get_cur_boot_state(device)
         if result:
-            if cls.__board_cur_state == BootStage.E_BOOTSTAGE_UBOOT.name:
+            if cls.__board_cur_state == SysappBootStage.E_BOOTSTAGE_UBOOT.name:
                 result = cls._uboot_to_uboot(device)
-            elif cls.__board_cur_state == BootStage.E_BOOTSTAGE_KERNEL.name:
+            elif cls.__board_cur_state == SysappBootStage.E_BOOTSTAGE_KERNEL.name:
                 result = cls._kernel_to_uboot(device)
 
         return result
@@ -485,7 +506,7 @@ class SysappRebootOpts():
             result (bool): If the device boots to kernel success, return True; Else, return False.
         """
         result = False
-        cls._cold_reboot()
+        cls.cold_reboot()
         device.clear_board_cur_state()
 
         result = cls._enter_to_kernel(device)
@@ -505,7 +526,7 @@ class SysappRebootOpts():
             result (bool): If the device boots to uboot success, return True; Else, return False.
         """
         result = False
-        cls._cold_reboot()
+        cls.cold_reboot()
         device.clear_board_cur_state()
 
         result = cls._enter_to_uboot(device)
@@ -532,9 +553,9 @@ class SysappRebootOpts():
         val = ""
         result = cls._get_cur_boot_state(device)
         if result:
-            if cls.__board_cur_state == BootStage.E_BOOTSTAGE_UBOOT.name:
+            if cls.__board_cur_state == SysappBootStage.E_BOOTSTAGE_UBOOT.name:
                 result, val = cls._uboot_get_bootenv(device, key)
-            elif cls.__board_cur_state == BootStage.E_BOOTSTAGE_KERNEL.name:
+            elif cls.__board_cur_state == SysappBootStage.E_BOOTSTAGE_KERNEL.name:
                 result, val = cls._kernel_get_bootenv(device, key)
 
         return result, val
@@ -553,9 +574,9 @@ class SysappRebootOpts():
         result = False
         result = cls._get_cur_boot_state(device)
         if result:
-            if cls.__board_cur_state == BootStage.E_BOOTSTAGE_UBOOT.name:
+            if cls.__board_cur_state == SysappBootStage.E_BOOTSTAGE_UBOOT.name:
                 result = cls._uboot_set_bootenv(device, key, val)
-            elif cls.__board_cur_state == BootStage.E_BOOTSTAGE_KERNEL.name:
+            elif cls.__board_cur_state == SysappBootStage.E_BOOTSTAGE_KERNEL.name:
                 result = cls._kernel_set_bootenv(device, key, val)
 
         return result

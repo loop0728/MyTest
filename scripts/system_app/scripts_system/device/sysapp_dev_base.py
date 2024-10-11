@@ -4,24 +4,12 @@
 # -*- coding: utf-8 -*-
 
 from abc import ABC, abstractmethod
-from enum import Enum
 import queue
 from datetime import datetime
 import threading
 from suite.common.sysapp_common_logger import logger
-from suite.common.sysapp_common import ensure_file_exists
-
-
-# pylint: disable=C0103
-class BootStage(Enum):
-    """
-    Boot Stage Enum.
-    """
-
-    E_BOOTSTAGE_UBOOT = 1
-    E_BOOTSTAGE_KERNEL = 2
-    E_BOOTSTAGE_UNKNOWN = 3
-
+from suite.common.sysapp_common_types import SysappBootStage
+from suite.common.sysapp_common_utils import ensure_file_exists
 
 class SysappDevBase(ABC):
     """
@@ -40,7 +28,7 @@ class SysappDevBase(ABC):
         self.case_name = ""
         self.uboot_prompt = "SigmaStar #"
         self.kernel_prompt = "/ #"
-        self.bootstage = BootStage.E_BOOTSTAGE_UNKNOWN
+        self.bootstage = SysappBootStage.E_BOOTSTAGE_UNKNOWN
 
         self._dev_info = {
             'running': False,
@@ -84,11 +72,15 @@ class SysappDevBase(ABC):
                 self._dev_info["conn"].write(data.encode("utf-8") + b"\n")
                 data = data.strip()
                 curr_data = ""
-                while curr_line < 10:  # wait 10 lines
+                while curr_line < 100:  # wait 10 lines
                     data_new = (
                         self.read().decode("utf-8", errors="replace").strip(" \r\n")
                     )
                     curr_data += data_new
+
+                    # if data == "reset":
+                    #     logger.error(f"dev_base write, cur_line[{curr_line}]: data[{data}], curr_data[{curr_data}]")
+
                     if data in curr_data or "?" in curr_data:
                         result = True
                         break
@@ -185,9 +177,9 @@ class SysappDevBase(ABC):
                     .strip()
                 )
                 if self.uboot_prompt in item:
-                    self.bootstage = BootStage.E_BOOTSTAGE_UBOOT
+                    self.bootstage = SysappBootStage.E_BOOTSTAGE_UBOOT
                 if self.kernel_prompt in item:
-                    self.bootstage = BootStage.E_BOOTSTAGE_KERNEL
+                    self.bootstage = SysappBootStage.E_BOOTSTAGE_KERNEL
                 now = datetime.now()
                 formatted_time = now.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
                 with open(self._dev_info["log_file"], "a+", encoding="utf-8") as file:
@@ -198,16 +190,16 @@ class SysappDevBase(ABC):
 
     def get_bootstage(self):
         """
-        Get bootstage.
+        Get current bootstage.
 
         Returns:
-            str: status
+            status (str): return bootstage name.
         """
         status = self.bootstage.name
         return status
 
     def clear_bootstage(self):
         """
-        Clear bootstage.
+        Clear SysappBootStage.
         """
-        self.bootstage = BootStage.E_BOOTSTAGE_UNKNOWN
+        self.bootstage = SysappBootStage.E_BOOTSTAGE_UNKNOWN

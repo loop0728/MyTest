@@ -2,8 +2,9 @@
 import time
 from suite.common.sysapp_common_logger import logger
 from suite.common.sysapp_common_case_base import SysappCaseBase
-from suite.common.sysapp_common_error_codes import ErrorCodes
-import suite.common.sysapp_common as sys_common
+from suite.common.sysapp_common_reboot_opts import SysappRebootOpts
+from suite.common.sysapp_common_error_codes import SysappErrorCodes
+import suite.common.sysapp_common_utils as sys_common_utils
 from sysapp_client import SysappClient
 
 
@@ -97,7 +98,7 @@ class SysappAovOsSwitch(SysappCaseBase):
 
             cmd = "./prog_preload_linux -t"
             wait_keyword = "press c to change mode"
-            result, data = sys_common.write_and_match_keyword(
+            result, data = sys_common_utils.write_and_match_keyword(
                 self.uart, cmd, wait_keyword
             )
             if result is False:
@@ -121,7 +122,7 @@ class SysappAovOsSwitch(SysappCaseBase):
         """
         result = 0
         # step1 go to kernel
-        result = sys_common.goto_kernel(self.uart)
+        result = SysappRebootOpts.init_kernel_env(self.uart)
         if result is not True:
             logger.warning(f"caseName[{self.case_name}] not in kernel!")
             return 255
@@ -142,12 +143,12 @@ class SysappAovOsSwitch(SysappCaseBase):
         Run case entry.
 
         Returns:
-            ErrorCodes: Error code
+            SysappErrorCodes: Error code
         """
-        error_code = ErrorCodes.FAIL
+        error_code = SysappErrorCodes.FAIL
         result = self.os_switch_test()
         print(f"result:{result} <-----------")
         if result == 0:
-            error_code =  ErrorCodes.SUCCESS
+            error_code =  SysappErrorCodes.SUCCESS
 
         return error_code

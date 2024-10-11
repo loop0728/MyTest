@@ -6,7 +6,7 @@
 from suite.common.sysapp_common_logger import logger, sysapp_print
 from suite.common.sysapp_common_case_base import SysappCaseBase as CaseBase
 from suite.common.sysapp_common_reboot_opts import SysappRebootOpts
-from suite.common.sysapp_common_error_codes import ErrorCodes
+from suite.common.sysapp_common_error_codes import SysappErrorCodes
 from sysapp_client import SysappClient as Client
 
 class SysappAovColdReboot(CaseBase):
@@ -31,15 +31,15 @@ class SysappAovColdReboot(CaseBase):
         Args:
             None
         Returns:
-            error_code (ErrorCodes): result of test
+            error_code (SysappErrorCodes): result of test
         """
-        error_code = ErrorCodes.FAIL
+        error_code = SysappErrorCodes.FAIL
         result = False
         result = SysappRebootOpts.cold_reboot_to_uboot(self.uart)
         result &= SysappRebootOpts.cold_reboot_to_kernel(self.uart)
 
         if result:
-            error_code =  ErrorCodes.SUCCESS
+            error_code = SysappErrorCodes.SUCCESS
         return error_code
 
     @sysapp_print.print_line_info

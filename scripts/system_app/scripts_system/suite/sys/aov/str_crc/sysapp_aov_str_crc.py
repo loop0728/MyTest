@@ -10,7 +10,7 @@ from cases.platform.sys.aov.str_crc_var import (STR_CRC_OK, STR_CRC_FAIL,
 from suite.common.sysapp_common_logger import logger, sysapp_print
 from suite.common.sysapp_common_case_base import SysappCaseBase as CaseBase
 from suite.common.sysapp_common_reboot_opts import SysappRebootOpts
-from suite.common.sysapp_common_error_codes import ErrorCodes
+from suite.common.sysapp_common_error_codes import SysappErrorCodes
 from sysapp_client import SysappClient as Client
 
 
@@ -188,9 +188,9 @@ class SysappAovStrCrc(CaseBase):
         Args:
             None:
         Returns:
-            error_code (Errorcodes): Result of test.
+            error_code (SysappErrorCodes): Result of test.
         """
-        error_code = ErrorCodes.FAIL
+        error_code = SysappErrorCodes.FAIL
         result = False
         result = self.set_crc_test_env()
 
@@ -201,9 +201,9 @@ class SysappAovStrCrc(CaseBase):
         result &= self.recovery_default_env()
 
         if result:
-            error_code = ErrorCodes.SUCCESS
+            error_code = SysappErrorCodes.SUCCESS
         else:
-            error_code = ErrorCodes.FAIL
+            error_code = SysappErrorCodes.FAIL
 
         return error_code
 

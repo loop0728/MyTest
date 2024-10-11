@@ -20,7 +20,7 @@ class SysappNetOpts():
     """
 
     @staticmethod
-    def _check_emac_ko_insmod_status(device: object):
+    def _check_ethmac_status(device: object):
         """
         Check if net ko insmod
         Args:
@@ -46,7 +46,7 @@ class SysappNetOpts():
         return result
 
     @classmethod
-    def _insmod_emac_ko(cls, device: object, koname):
+    def _insmod_ethmac_ko(cls, device: object, koname):
         """
         Insmod net ko.
         Args:
@@ -56,15 +56,15 @@ class SysappNetOpts():
             result (bool): if net ko insmods success, return True; else, return False
         """
         result = False
-        cmd_insmod_emac_ko = f"insmod /config/modules/5.10/{koname}.ko"
-        device.write(cmd_insmod_emac_ko)
-        result = cls._check_emac_ko_insmod_status(device)
+        cmd_insmod_ethmac_ko = f"insmod /config/modules/5.10/{koname}.ko"
+        device.write(cmd_insmod_ethmac_ko)
+        result = cls._check_ethmac_status(device)
         if not result:
             logger.error(f"insmod {koname} fail")
         return result
 
     @classmethod
-    def _rmmod_emac_ko(cls, device: object, koname):
+    def _rmmod_ethmac_ko(cls, device: object, koname):
         """
         Remove net ko.
         Args:
@@ -74,9 +74,9 @@ class SysappNetOpts():
             result (bool): if net ko removes success, return True; else, return False
         """
         result = False
-        cmd_rmmod_emac_ko = f"rmmod {koname}"
-        device.write(cmd_rmmod_emac_ko)
-        result = cls._check_emac_ko_insmod_status(device)
+        cmd_rmmod_ethmac_ko = f"rmmod {koname}"
+        device.write(cmd_rmmod_ethmac_ko)
+        result = cls._check_ethmac_status(device)
         if not result:
             logger.error(f"rmmod {koname} success")
         result = not result
@@ -111,7 +111,7 @@ class SysappNetOpts():
                 if isinstance(line, bytes):
                     line = line.decode('utf-8', errors='replace')
                 line = line.strip()
-                if "0" == line:
+                if line == "0":
                     result = True
                     break
                 for key in check_ifconfig_setting.keys():
@@ -149,7 +149,7 @@ class SysappNetOpts():
                 if isinstance(line, bytes):
                     line = line.decode('utf-8', errors='replace')
                 line = line.strip()
-                if "0" == line:
+                if line == "0":
                     result = True
                     break
                 if net_interface in line and "UG" in line:
@@ -202,10 +202,10 @@ class SysappNetOpts():
         if platform.PLATFORM_BOARD_MAC_TYPE == "gmac":
             net_koname = "sstar_gmac"
         # check if net ko has insmoded
-        result = cls._check_emac_ko_insmod_status(device)
+        result = cls._check_ethmac_status(device)
         if not result:
             # insmod net ko
-            result = cls._insmod_emac_ko(device, net_koname)
+            result = cls._insmod_ethmac_ko(device, net_koname)
             if not result:
                 return result
 
@@ -285,40 +285,49 @@ class SysappNetOpts():
             logger.error("the device is not at kernel or at uboot, read register fail")
         return result
 
-
-
     @staticmethod
-    def mount_to_server(device: object, sub_path="") -> bool:
+    def mount_server_path_to_board(device: object, sub_path="") -> bool:
         """
-        mount to server path
-
+        mount server path to board
         Args:
             device_handle (class): device
-
+            sub_path (str): server path
         Returns:
-            bool: result
+            result (bool): If mount success, return True; Else, return False.
         """
+        result = False
+        try_cnt = 0
         umount_cmd = "umount /mnt/"
         mount_cmd = (f"mount -t nfs -o nolock {platform.PLATFORM_MOUNT_IP}:"
-                     f"{platform.PLATFORM_MOUNT_PATH}/{sub_path} /mnt/")
-        check_cmd = "echo $?"
-        returnvalue = 255
-        returncode = 0
-        loopcnt = 0
+                     f"{platform.PLATFORM_MOUNT_PATH}/{sub_path} /mnt/;echo $?")
+
         device.write(umount_cmd)
         time.sleep(1)
-        while returnvalue == 255 and loopcnt <= 4:
-            if returncode != -1:
-                device.write(mount_cmd)
-            time.sleep(5)
-            device.write(check_cmd)
-            result, data = device.read()
-            try:
-                returncode = int(data)
-            except Exception as exce:
-                logger.info(f"{data} cause {exce}")
-                returncode = -1
-            if result is True and returncode == 0:
-                return True
-            loopcnt += 1
-        return False
+        while try_cnt < 5:
+            device.write(mount_cmd)
+            read_line_cnt = 0
+            while True:
+                status, line = device.read(1, 10)
+                if status:
+                    read_line_cnt += 1
+                    if isinstance(line, bytes):
+                        line = line.decode('utf-8', errors='replace')
+                    line = line.strip()
+                    if line == "0":
+                        result = True
+                        logger.warning("mount server path to /mnt success")
+                        break
+                    if "mount:" in line and "failed:" in line:
+                        result = False
+                        logger.warning(f"try_cnt:[{try_cnt+1}/5], {line}")
+                        break
+                else:
+                    logger.warning(f"try_cnt:[{try_cnt+1}/5], read line:{read_line_cnt} fail")
+                    break
+            if result:
+                break
+            try_cnt += 1
+
+        if not result:
+            logger.error("mount server path to /mnt fail")
+        return result

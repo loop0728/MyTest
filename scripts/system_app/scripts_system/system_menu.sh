@@ -116,12 +116,12 @@ RunCaseDebug()
     if [ $result -eq 0 ];then
         generate_json ${1} 0 ${3} ${4} ${5} ${execution_time}
         echo -e "${green_hl}[AUTO_TEST][Success][$3]${nc}"
-    elif [ $result -eq 255 ];then
-        generate_json ${1} 255 ${3} ${4} ${5} ${execution_time}
-        echo -e "${red_hl}[AUTO_TEST][Fail][$3]${nc}"
     elif [ $result -eq 127 ];then
         generate_json ${1} 127 ${3} ${4} ${5} ${execution_time}
         echo -e "${yellow_hl}[AUTO_TEST][UnTest][$3]${nc}"
+    else
+        generate_json ${1} 255 ${3} ${4} ${5} ${execution_time}
+        echo -e "${red_hl}[AUTO_TEST][Fail][$3]${nc}"
     fi
 
     #if [ $4 == 0x01 ] || [ $4 == 0x1 ] || [ $4 == 1 ] || [ $4 == 0X01 ] || [ $4 == 0X1 ];then

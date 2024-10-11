@@ -4,8 +4,8 @@
 
 from suite.common.sysapp_common_logger import logger
 from suite.common.sysapp_common_case_base import SysappCaseBase
-from suite.common.sysapp_common_error_codes import ErrorCodes as EC
-import suite.common.sysapp_common as sys_common
+from suite.common.sysapp_common_error_codes import SysappErrorCodes as EC
+from suite.common.sysapp_common_reboot_opts import SysappRebootOpts
 from sysapp_client import SysappClient
 
 
@@ -34,8 +34,8 @@ class SysappUtCommon(SysappCaseBase):
         Returns:
             bool: result
         """
-        result = sys_common.goto_uboot(self.uart)
-        if result is True:
+        result = SysappRebootOpts.reboot_to_uboot(self.uart)
+        if result:
             logger.info("Please see the ./out/uart.log")
         else:
             logger.info("Go to uboot fail.Please check env.")
@@ -48,8 +48,8 @@ class SysappUtCommon(SysappCaseBase):
         Returns:
             bool: result
         """
-        result = sys_common.goto_kernel(self.uart)
-        if result is True:
+        result = SysappRebootOpts.reboot_to_kernel(self.uart)
+        if result:
             logger.info("Please see the ./out/uart.log")
         else:
             logger.info("Go to kernel fail.Please check env.")
@@ -63,16 +63,16 @@ class SysappUtCommon(SysappCaseBase):
             int: Error code
         """
         err_code = EC.SUCCESS
-        ret = self.goto_kernel_test()
-        if ret is False:
+        ret = SysappRebootOpts.init_kernel_env(self.uart)
+        if not ret:
             logger.error("Go to kernel test fail.")
             err_code = EC.FAIL
         ret = self.goto_uboot_test()
-        if ret is False:
+        if not ret:
             logger.error("Go to Uboot test fail.")
             err_code = EC.FAIL
         ret = self.goto_kernel_test()
-        if ret is False:
+        if not ret:
             logger.error("Go to kernel test fail.")
             err_code = EC.FAIL
         return err_code

@@ -1,7 +1,7 @@
 """Entry point for executing cases."""
 import sys
 from suite.common.sysapp_common_logger import logger
-from suite.common.sysapp_common_error_codes import ErrorCodes, event_handlers
+from suite.common.sysapp_common_error_codes import SysappErrorCodes, event_handlers
 from suite.common.sysapp_common_case_base import SysappCaseBase
 
 
@@ -35,7 +35,7 @@ class SysappRunUserCase:
         Returns:
             bool: result
         """
-        result = ErrorCodes.FAIL
+        result = SysappErrorCodes.FAIL
         calss_obj = ""
         module_path = "/".join(self.script_path.split("/")[:-1])
         module_name = self.script_path.split("/")[-1].split(".")[0]
@@ -84,7 +84,7 @@ class SysappRunUserCase:
         except Exception as e:
             logger.error(e)
         self.print_run_result(result)
-        if result != ErrorCodes.SUCCESS:
+        if result != SysappErrorCodes.SUCCESS:
             self.exception_handling(result)
         return result.value
 
@@ -98,7 +98,7 @@ class SysappRunUserCase:
         Returns:
             bool: result
         """
-        if result != ErrorCodes.SUCCESS:
+        if result != SysappErrorCodes.SUCCESS:
             logger.error(
                 f"[AutoTest][{self.case_name}][fail][{result}][run_cnt:{self.case_run_cnt}]"
             )

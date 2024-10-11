@@ -173,6 +173,10 @@ class SysappServer:
         device_name = msg["device_name"]
         data_to_write = msg["data"]
         result = self._dm.devices[device_name].write(data_to_write)
+
+        # if data_to_write == "reset":
+        #     logger.error(f"server_write: result is {result}, data: {data_to_write}")
+
         self.response_msg_to_client(client, result)
 
     def read(self, client, msg):

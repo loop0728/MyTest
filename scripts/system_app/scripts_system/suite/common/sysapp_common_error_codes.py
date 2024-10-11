@@ -2,24 +2,15 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-from enum import Enum
-import suite.common.sysapp_common as sys_common
-
-
-# pylint: disable=C0103
-class ErrorCodes(Enum):
-    """Error Codes Enum"""
-    SUCCESS = 0
-    FAIL = 1
-    REBOOT = 2
-    ESTAR = 3
-    TOLINUX = 4
-
+from suite.common.sysapp_common_types import SysappErrorCodes
+from suite.common.sysapp_common_reboot_opts import SysappRebootOpts
+import suite.common.sysapp_common_utils as sys_common_utils
+import suite.common.sysapp_common_burning_opts as sys_common_burning
 
 event_handlers = {
-    ErrorCodes.SUCCESS    : sys_common.nothing,
-    ErrorCodes.FAIL       : sys_common.nothing,
-    ErrorCodes.REBOOT     : sys_common.cold_reboot,
-    ErrorCodes.ESTAR      : sys_common.burning_image,
-    ErrorCodes.TOLINUX    : sys_common.burning_image,
+    SysappErrorCodes.SUCCESS    : sys_common_utils.nothing,
+    SysappErrorCodes.FAIL       : sys_common_utils.nothing,
+    SysappErrorCodes.REBOOT     : SysappRebootOpts.cold_reboot,
+    SysappErrorCodes.ESTAR      : sys_common_burning.burning_image,
+    SysappErrorCodes.TOLINUX    : sys_common_burning.burning_image,
 }
