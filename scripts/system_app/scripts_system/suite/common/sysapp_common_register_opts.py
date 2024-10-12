@@ -5,7 +5,6 @@
 
 import re
 from suite.common.sysapp_common_logger import logger
-from suite.common.sysapp_common_reboot_opts import SysappRebootOpts
 
 class SysappRegisterOpts():
     """
@@ -35,9 +34,9 @@ class SysappRegisterOpts():
         is_register_value_ready = 0
         cmd_read_register = ""
 
-        if SysappRebootOpts.check_uboot_phase(device):
+        if device.check_uboot_phase():
             cmd_read_register = f"riu_r {bank} {offset}"
-        elif SysappRebootOpts.check_kernel_phase(device):
+        elif device.check_kernel_phase():
             cmd_read_register = f"/customer/riu_r {bank} {offset}"
         else:
             logger.error("the device is not at kernel or at uboot, read register fail")
@@ -90,9 +89,9 @@ class SysappRegisterOpts():
         str_reg_value = ""
         cmd_write_register = ""
 
-        if SysappRebootOpts.check_uboot_phase(device):
+        if device.check_uboot_phase():
             cmd_write_register = f"riu_w {bank} {offset} {value}"
-        elif SysappRebootOpts.check_kernel_phase(device):
+        elif device.check_kernel_phase():
             cmd_write_register = f"/customer/riu_w {bank} {offset} {value}"
         else:
             logger.error("the device is not at kernel or uboot, read register fail")

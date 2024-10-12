@@ -7,6 +7,7 @@ import json
 import re
 from sysapp_platform import PLATFORM_NET_CONNECT_PORT
 from suite.common.sysapp_common_logger import logger
+from suite.common.sysapp_common_types import SysappBootStage
 
 
 class SysappClient:
@@ -274,4 +275,34 @@ class SysappClient:
             "device_name": self.device_name,
         }
         result, _ = self._send_to_server_and_check_response(msg)
+        return result
+
+    def check_kernel_phase(self):
+        """
+        Check if the device is running in the kernel phase.
+        Args:
+            None:
+        Returns:
+           result (bool): If the device is at kernel, return True; Else, return False.
+        """
+        result, cur_state = self.get_board_cur_state()
+        if result:
+            if cur_state != SysappBootStage.E_BOOTSTAGE_KERNEL.name:
+                result = False
+
+        return result
+
+    def check_uboot_phase(self):
+        """
+        Check if the device is running in the uboot phase.
+        Args:
+            None:
+        Returns:
+           result (bool): If the device is at uboot, return True; Else, return False.
+        """
+        result, cur_state = self.get_board_cur_state()
+        if result:
+            if cur_state != SysappBootStage.E_BOOTSTAGE_UBOOT.name:
+                result = False
+
         return result

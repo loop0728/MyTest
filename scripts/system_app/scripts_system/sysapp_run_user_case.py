@@ -2,8 +2,7 @@
 import sys
 from suite.common.sysapp_common_logger import logger
 from suite.common.sysapp_common_types import SysappErrorCodes
-from suite.common.sysapp_common_error_codes import event_handlers
-from suite.common.sysapp_common_case_base import SysappCaseBase
+from suite.common.sysapp_common_error_codes import EVENT_HANDLERS
 
 
 class SysappRunUserCase:
@@ -123,7 +122,7 @@ class SysappRunUserCase:
         Returns:
             bool: result
         """
-        handler = event_handlers.get(err_code)
+        handler = EVENT_HANDLERS.get(err_code)
         if handler:
             handler()
         else:

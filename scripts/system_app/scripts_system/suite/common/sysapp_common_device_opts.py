@@ -7,7 +7,6 @@ import re
 from suite.common.sysapp_common_types import SysappPackageType, SysappBootstrapType
 from suite.common.sysapp_common_logger import logger
 from suite.common.sysapp_common_register_opts import SysappRegisterOpts
-from suite.common.sysapp_common_reboot_opts import SysappRebootOpts
 
 class SysappDeviceOpts():
     """
@@ -183,9 +182,9 @@ class SysappDeviceOpts():
         result = False
         partition_list = []
 
-        if SysappRebootOpts.check_uboot_phase(device):
+        if device.check_uboot_phase():
             result, partition_list = SysappDeviceOpts._uboot_get_mtdparts(device)
-        elif SysappRebootOpts.check_kernel_phase(device):
+        elif device.check_kernel_phase():
             result, partition_list = SysappDeviceOpts._kernel_get_mtdparts(device)
         else:
             logger.error("the device is not at kernel or at uboot, read register fail")

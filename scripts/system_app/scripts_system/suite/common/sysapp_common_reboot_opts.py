@@ -5,7 +5,6 @@
 
 import time
 from suite.common.sysapp_common_logger import logger
-from suite.common.sysapp_common_types import SysappBootStage
 import sysapp_platform as platform
 from device.sysapp_dev_relay import SysappDevRelay
 
@@ -15,7 +14,6 @@ class SysappRebootOpts():
     Attributes:
         __uboot_prompt (str): the prompt of uboot phase
         __kernel_prompt (str): the prompt of kernel phase
-        __board_cur_state (str): board current state.
         __reboot_timeout (int): reboot timeout setting
         __enter_uboot_try_cnt (int): the count of pressing enter to jump to uboot
         __get_state_try_cnt (int): the count of pressing enter to get current state of device
@@ -25,7 +23,6 @@ class SysappRebootOpts():
     __reboot_timeout = 30
     __enter_uboot_try_cnt = 30
     __get_state_try_cnt = 20
-    __board_cur_state = SysappBootStage.E_BOOTSTAGE_UNKNOWN.name
 
     @classmethod
     def _get_cur_boot_state(cls, device: object):
@@ -38,20 +35,18 @@ class SysappRebootOpts():
         """
         result = False
         device.write('')
-        cls.__board_cur_state = device.get_board_cur_state()[1]
-        if cls.__board_cur_state != SysappBootStage.E_BOOTSTAGE_UNKNOWN.name:
+        if device.check_uboot_phase() or device.check_kernel_phase():
             result = True
         else:
             i = 1
             while i < cls.__get_state_try_cnt:
                 device.write('')
-                cls.__board_cur_state = device.get_board_cur_state()[1]
-                if cls.__board_cur_state != SysappBootStage.E_BOOTSTAGE_UNKNOWN.name:
+                if device.check_uboot_phase() or device.check_kernel_phase():
                     result = True
                     break
                 time.sleep(1)
 
-        if cls.__board_cur_state == SysappBootStage.E_BOOTSTAGE_UNKNOWN.name:
+        if not result:
             logger.error("dev is not at kernel or at uboot")
         return result
 
@@ -66,7 +61,6 @@ class SysappRebootOpts():
         """
         result = False
         try_time = 0
-
         # enter to uboot
         while True:
             if try_time >= cls.__enter_uboot_try_cnt:
@@ -74,16 +68,16 @@ class SysappRebootOpts():
                 result = False
                 break
             device.write('')
-            cls.__board_cur_state = device.get_board_cur_state()[1]
-            if cls.__board_cur_state == SysappBootStage.E_BOOTSTAGE_UBOOT.name:
+            if device.check_uboot_phase():
                 logger.info("enter to uboot success")
                 result = True
                 break
-            if cls.__board_cur_state == SysappBootStage.E_BOOTSTAGE_KERNEL.name:
-                logger.error(f"enter to uboot fail, current state:{cls.__board_cur_state}")
+            if device.check_kernel_phase():
+                logger.error("enter to uboot fail, run in kernel phase now")
                 result = False
                 break
             try_time += 1
+            time.sleep(0.1)
 
         return result
 
@@ -104,8 +98,7 @@ class SysappRebootOpts():
                 logger.error("enter to kernel timeout")
                 result = False
                 break
-            cls.__board_cur_state = device.get_board_cur_state()[1]
-            if cls.__board_cur_state == SysappBootStage.E_BOOTSTAGE_KERNEL.name:
+            if device.check_kernel_phase():
                 logger.info("enter to kernel success")
                 result = True
                 break
@@ -204,6 +197,35 @@ class SysappRebootOpts():
         device.clear_board_cur_state()
 
         result = cls._enter_to_uboot(device)
+        return result
+
+    @classmethod
+    def _run_uboot_cmd_to_kernel(cls, device: object, cmd):
+        """
+        Execute uboot command and enter to kernel from uboot.
+        Args:
+            device (object): Client instance.
+            cmd (str): uboot command
+        Returns:
+            result (bool): If the device go to kernel success, return True; Else, return False.
+        """
+        result = False
+        try_cnt = 0
+        logger.info('begin to run _run_uboot_cmd_to_kernel')
+        while try_cnt < 5:
+            result = device.write(cmd)
+            if result:
+                break
+            try_cnt += 1
+            time.sleep(1)
+
+        if not result:
+            logger.error(f"send {cmd} timeout")
+            return result
+
+        device.clear_board_cur_state()
+
+        result = cls._enter_to_kernel(device)
         return result
 
     @staticmethod
@@ -382,40 +404,6 @@ class SysappRebootOpts():
         return result
 
     @classmethod
-    def check_kernel_phase(cls, device: object):
-        """
-        Check if the device is running in the kernel phase.
-        Args:
-            None:
-        Returns:
-           result (bool): If the device is at kernel, return True; Else, return False.
-        """
-        result = False
-        result = cls._get_cur_boot_state(device)
-        if result:
-            if cls.__board_cur_state != SysappBootStage.E_BOOTSTAGE_KERNEL.name:
-                result = False
-
-        return result
-
-    @classmethod
-    def check_uboot_phase(cls, device: object):
-        """
-        Check if the device is running in the uboot phase.
-        Args:
-            None:
-        Returns:
-           result (bool): If the device is at uboot, return True; Else, return False.
-        """
-        result = False
-        result = cls._get_cur_boot_state(device)
-        if result:
-            if cls.__board_cur_state != SysappBootStage.E_BOOTSTAGE_UBOOT.name:
-                result = False
-
-        return result
-
-    @classmethod
     def init_kernel_env(cls, device: object):
         """
         Check current status of the device. If the device is not at kernel, then reboot to
@@ -427,9 +415,8 @@ class SysappRebootOpts():
         """
         result = False
         result = cls._get_cur_boot_state(device)
-        if result:
-            if cls.__board_cur_state == SysappBootStage.E_BOOTSTAGE_UBOOT.name:
-                result = cls._uboot_to_kernel(device)
+        if result and device.check_uboot_phase():
+            result = cls._uboot_to_kernel(device)
 
         return result
 
@@ -445,9 +432,8 @@ class SysappRebootOpts():
         """
         result = False
         result = cls._get_cur_boot_state(device)
-        if result:
-            if cls.__board_cur_state == SysappBootStage.E_BOOTSTAGE_KERNEL.name:
-                result = cls._kernel_to_uboot(device)
+        if result and device.check_kernel_phase():
+            result = cls._kernel_to_uboot(device)
 
         return result
 
@@ -463,9 +449,9 @@ class SysappRebootOpts():
         result = False
         result = cls._get_cur_boot_state(device)
         if result:
-            if cls.__board_cur_state == SysappBootStage.E_BOOTSTAGE_UBOOT.name:
+            if device.check_uboot_phase():
                 result = cls._uboot_to_kernel(device)
-            elif cls.__board_cur_state == SysappBootStage.E_BOOTSTAGE_KERNEL.name:
+            elif device.check_kernel_phase():
                 result = cls._kernel_to_kernel(device)
 
         return result
@@ -482,10 +468,27 @@ class SysappRebootOpts():
         result = False
         result = cls._get_cur_boot_state(device)
         if result:
-            if cls.__board_cur_state == SysappBootStage.E_BOOTSTAGE_UBOOT.name:
+            if device.check_uboot_phase():
                 result = cls._uboot_to_uboot(device)
-            elif cls.__board_cur_state == SysappBootStage.E_BOOTSTAGE_KERNEL.name:
+            elif device.check_kernel_phase():
                 result = cls._kernel_to_uboot(device)
+
+        return result
+
+    @classmethod
+    def run_bootcmd(cls, device: object):
+        """
+        Run bootcmd in uboot phase to enter to kernel.
+        Args:
+            device (object): Client instance.
+        Returns:
+            result (bool): If enter to kernel success, return True; Else, return False
+        """
+        result = False
+        result = cls._get_cur_boot_state(device)
+        if result:
+            if device.check_uboot_phase():
+                result = cls._run_uboot_cmd_to_kernel(device, "run bootcmd")
 
         return result
 
@@ -546,9 +549,9 @@ class SysappRebootOpts():
         val = ""
         result = cls._get_cur_boot_state(device)
         if result:
-            if cls.__board_cur_state == SysappBootStage.E_BOOTSTAGE_UBOOT.name:
+            if device.check_uboot_phase():
                 result, val = cls._uboot_get_bootenv(device, key)
-            elif cls.__board_cur_state == SysappBootStage.E_BOOTSTAGE_KERNEL.name:
+            elif device.check_kernel_phase():
                 result, val = cls._kernel_get_bootenv(device, key)
 
         return result, val
@@ -567,9 +570,9 @@ class SysappRebootOpts():
         result = False
         result = cls._get_cur_boot_state(device)
         if result:
-            if cls.__board_cur_state == SysappBootStage.E_BOOTSTAGE_UBOOT.name:
+            if device.check_uboot_phase():
                 result = cls._uboot_set_bootenv(device, key, val)
-            elif cls.__board_cur_state == SysappBootStage.E_BOOTSTAGE_KERNEL.name:
+            elif device.check_kernel_phase():
                 result = cls._kernel_set_bootenv(device, key, val)
 
         return result

@@ -3,7 +3,7 @@ import time
 from suite.common.sysapp_common_logger import logger
 from suite.common.sysapp_common_reboot_opts import SysappRebootOpts
 from suite.common.sysapp_common_net_opts import SysappNetOpts
-import suite.common.sysapp_common_utils as sys_common_utils
+import suite.common.sysapp_common_utils as SysappUtils
 from suite.common.sysapp_common_case_base import SysappCaseBase as CaseBase
 from run_env.mixer_thread import SysappMixerThread
 from sysapp_client import SysappClient as Client
@@ -24,7 +24,7 @@ class SysappSysShowInterrupts(CaseBase):
             logger.warning(f"caseName[{self.case_name}] not in kernel!")
             return 255
         # step2 切换到purelinux
-        result = sys_common_utils.switch_os_aov(self.uart, "purelinux")
+        result = SysappUtils.switch_os_aov(self.uart, "purelinux")
         if result == 255:
             logger.warning(f"caseName[{self.case_name}] run done!")
             return 255

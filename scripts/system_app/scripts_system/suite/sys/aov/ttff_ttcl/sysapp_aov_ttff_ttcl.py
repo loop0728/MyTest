@@ -6,7 +6,7 @@ from suite.common.sysapp_common_logger import logger
 from suite.common.sysapp_common_case_base import SysappCaseBase
 from suite.common.sysapp_common_reboot_opts import SysappRebootOpts
 from suite.common.sysapp_common_types import SysappErrorCodes
-import suite.common.sysapp_common_utils as sys_common_utils
+import suite.common.sysapp_common_utils as SysappUtils
 from sysapp_client import SysappClient
 from cases.platform.sys.aov.ttff_ttcl_var import TTFF_TARGET, TTCL_TARGET
 
@@ -127,7 +127,7 @@ class SysappAovTtffTtcl(SysappCaseBase):
 
             cmd = "./prog_preload_linux dump /tmp -t"
             wait_keyword = "press c to change mode"
-            result, data = sys_common_utils.write_and_match_keyword(
+            result, data = SysappUtils.write_and_match_keyword(
                 self.uart, cmd, wait_keyword
             )
             if result is False:
@@ -152,7 +152,7 @@ class SysappAovTtffTtcl(SysappCaseBase):
 
         cmd = "cat /sys/class/sstar/msys/booting_time"
         wait_keyword = "VIF ch0 int 0"
-        result, ret_match_buffer = sys_common_utils.write_and_match_keyword(
+        result, ret_match_buffer = SysappUtils.write_and_match_keyword(
             self.uart, cmd, wait_keyword
         )
         if result is False:
@@ -176,7 +176,7 @@ class SysappAovTtffTtcl(SysappCaseBase):
 
         cmd = "cat /sys/class/sstar/msys/booting_time"
         wait_keyword = "ramdisk_execute_command"
-        result, ret_match_buffer = sys_common_utils.write_and_match_keyword(
+        result, ret_match_buffer = SysappUtils.write_and_match_keyword(
             self.uart, cmd, wait_keyword
         )
         if result is False:

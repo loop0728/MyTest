@@ -3,26 +3,26 @@ import os
 import time
 import threading
 from suite.common.sysapp_common_logger import logger
-from run_env.mixer.thread_waitlock import ThreadWaitLock
+from run_env.thread_waitlock import Sysapp_ThreadWaitLock
 
 class SysappMixerThread(threading.Thread):
     """ thread which can auto run mixer one by one """
     def __init__(self, telnet_handle):
         threading.Thread.__init__(self)
         self.telnet_handle = telnet_handle
-        self.waitlock = ThreadWaitLock("waitlock")
-        self.selfwaitlock = ThreadWaitLock("selfwaitlock")
+        self.waitlock = Sysapp_ThreadWaitLock("waitlock")
+        self.selfwaitlock = Sysapp_ThreadWaitLock("selfwaitlock")
         self.cleaned_lines = []
         self.current_casename = ""
         """ /stream/IT/I6DW/ and pipeline_iford need platform cover,
             iford_systemapp_interrupt_testcase need param to this
         """
         self.caselist_path = ("/stream/IT/I6DW/iford_systemapp_interrupt_testcase/"
-                              "out/Interrupts/caselist.txt")
+                              "out/caselist.txt")
         cmd = ("find /mnt/scripts/pipeline_iford/ -path */external "
                "-prune -o  -name \"*.json\" -not -path \"*dualos*\" -not"
                " -name \"*earlyinit*\" -print "
-               "> /mnt/out/Interrupts/caselist.txt")
+               "> /mnt/out/caselist.txt")
         self.telnet_handle.write(cmd)
         self.waitlock.lock()
         self.selfwaitlock.release()
@@ -84,7 +84,8 @@ class SysappMixerThread(threading.Thread):
         while casecnt >= 0:
             self.poll_waitlock()
             casename = self.get_current_casename()
-            telnet1_handle.write(cmd)
+            runcmd = cmd + " " + casename
+            telnet1_handle.write(runcmd)
             loopcnt = 0
             while loopcnt <= 30:
                 time.sleep(1)

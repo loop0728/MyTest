@@ -3,7 +3,7 @@ import time
 from suite.common.sysapp_common_logger import logger
 from suite.common.sysapp_common_reboot_opts import SysappRebootOpts
 from suite.common.sysapp_common_net_opts import SysappNetOpts
-import suite.common.sysapp_common_utils as sys_common_utils
+import suite.common.sysapp_common_utils as SysappUtils
 from suite.common.sysapp_common_case_base import SysappCaseBase as CaseBase
 from run_env.mixer_thread import SysappMixerThread as MixerThread
 from sysapp_client import SysappClient as Client
@@ -24,16 +24,16 @@ class SysappSysShowMemory(CaseBase):
             logger.warning(f"caseName[{self.case_name}] not in kernel!")
             return 255
         # step2 切换到dualos/purelinux
-        current_os = sys_common_utils.get_current_os(self.uart)
+        current_os = SysappUtils.get_current_os(self.uart)
         if self.case_name == "show_memory_dualos" and current_os == "purelinux":
-            result = sys_common_utils.switch_os_aov(self.uart, "dualos")
+            result = SysappUtils.switch_os_aov(self.uart, "dualos")
             if result == 255:
                 logger.warning(f"fail to switch dualos"
                                      " caseName[{self.case_name}] run done!")
                 return 255
             time.sleep(20)
         if self.case_name == "show_memory_purelinux" and current_os == "dualos":
-            result = sys_common_utils.switch_os_aov(self.uart, "purelinux")
+            result = SysappUtils.switch_os_aov(self.uart, "purelinux")
             if result == 255:
                 logger.warning(f"fail to switch linux"
                                      " caseName[{self.case_name}] run done!")
@@ -80,9 +80,9 @@ class SysappSysShowMemory(CaseBase):
         telnet0.close()
         self.uart.close()
         # step8 切换到purelinux
-        current_os = sys_common_utils.get_current_os(self.uart)
+        current_os = SysappUtils.get_current_os(self.uart)
         if current_os == "dualos":
-            result = sys_common_utils.switch_os_aov(self.uart, "purelinux")
+            result = SysappUtils.switch_os_aov(self.uart, "purelinux")
         if result == 255:
             logger.warning(f"caseName[{self.case_name}] run done!")
             return 255

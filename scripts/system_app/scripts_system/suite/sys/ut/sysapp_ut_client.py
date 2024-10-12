@@ -9,7 +9,7 @@ from sysapp_client import SysappClient
 from suite.common.sysapp_common_logger import logger
 from suite.common.sysapp_common_reboot_opts import SysappRebootOpts
 from suite.common.sysapp_common_net_opts import SysappNetOpts
-import suite.common.sysapp_common_utils as sys_common_utils
+import suite.common.sysapp_common_utils as SysappUtils
 from suite.common.sysapp_common_case_base import SysappCaseBase
 from suite.common.sysapp_common_types import SysappErrorCodes as EC
 
@@ -64,7 +64,7 @@ class SysappUtClient(SysappCaseBase):
         if os.path.exists(log_path):
             os.remove(log_path)
             logger.info(f"{log_path} removed.")
-        sys_common_utils.ensure_file_exists(log_path)
+        SysappUtils.ensure_file_exists(log_path)
         device.write(test_cmd)
         while True:
             result, data = device.read()
@@ -81,7 +81,7 @@ class SysappUtClient(SysappCaseBase):
             else:
                 logger.warning("Read time out.")
                 break
-        result = sys_common_utils.are_files_equal_line_by_line(log_path, resource_log)
+        result = SysappUtils.are_files_equal_line_by_line(log_path, resource_log)
         if result == 255:
             logger.error(f"{test_cmd} fail.")
             return result

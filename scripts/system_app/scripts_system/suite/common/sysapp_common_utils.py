@@ -8,6 +8,7 @@ import time
 import json
 from suite.common.sysapp_common_logger import logger, sysapp_print
 
+# pylint: disable=R0912,R1710
 
 def nothing():
     """Nothing"""
@@ -244,14 +245,14 @@ def are_files_equal_line_by_line(file1, file2) -> int:
     Returns:
         int: result
     """
-    with open(file1, "r", encoding="utf-8") as f1, open(
+    with open(file1, "r", encoding="utf-8") as test_file1, open(
             file2, "r", encoding="utf-8"
-    ) as f2:
-        for line1, line2 in zip(f1, f2):
+    ) as test_file2:
+        for line1, line2 in zip(test_file1, test_file2):
             if line1 != line2:
                 print(f"{line1} not equal {line2}")
                 return 255
-        if len(f1.readline()) == 0 and len(f2.readline()) == 0:
+        if test_file1.readline() == test_file2.readline():
             result = 0
         else:
             result = 255
@@ -272,8 +273,8 @@ def get_json_content(json_path) -> dict:
     json_content_dict = {}
     if os.path.exists(json_path):
         try:
-            with open(json_path, "r", encoding='utf-8') as f:
-                json_content = json.load(f)
+            with open(json_path, "r", encoding='utf-8') as json_file:
+                json_content = json.load(json_file)
                 json_content_dict = dict(json_content)
         except json.JSONDecodeError:
             return None

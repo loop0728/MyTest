@@ -10,4 +10,5 @@ AddCaseSystem 0x80 /ut "suite/sys/ut/sysapp_ut_reboot_opts.py" SysappUtRebootTes
 AddCaseSystem 0x80 /ut "suite/sys/ut/sysapp_ut_register_opts.py" SysappUtRegisterTest on
 AddCaseSystem 0x80 /ut "suite/sys/ut/sysapp_ut_device_opts.py" SysappUtDeviceTest on
 AddCaseSystem 0x80 /ut "suite/sys/ut/sysapp_ut_net_opts.py" SysappUtNetworkTest on
+AddCaseSystem 0x80 /ut "suite/sys/ut/sysapp_ut_burning_opts.py" SysappUtBurningTest on
 ############################## UT ##############################

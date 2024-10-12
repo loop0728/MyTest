@@ -72,15 +72,11 @@ class SysappDevBase(ABC):
                 self._dev_info["conn"].write(data.encode("utf-8") + b"\n")
                 data = data.strip()
                 curr_data = ""
-                while curr_line < 100:  # wait 10 lines
+                while curr_line < 100:  # wait 100 lines
                     data_new = (
                         self.read().decode("utf-8", errors="replace").strip(" \r\n")
                     )
                     curr_data += data_new
-
-                    # if data == "reset":
-                    #     logger.error(f"dev_base write, cur_line[{curr_line}]: data[{data}], curr_data[{curr_data}]")
-
                     if data in curr_data or "?" in curr_data:
                         result = True
                         break

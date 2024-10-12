@@ -54,6 +54,29 @@ class SysappUtRebootOpts(CaseBase):
             return result
         logger.info("reboot to kernel for testing ...")
         result = SysappRebootOpts.reboot_to_kernel(self.uart)
+        if not result:
+            return result
+        logger.info("run bootcmd to kernel for testing ...")
+        result = SysappRebootOpts.reboot_to_uboot(self.uart)
+        result &= SysappRebootOpts.run_bootcmd(self.uart)
+
+        return result
+
+    def run_bootcmd_test(self):
+        """
+        Run bootcmd test.
+        Args:
+            None:
+        Returns:
+            result (bool): Test success, return True; Else, return False.
+        """
+        result = False
+        result = SysappRebootOpts.init_uboot_env(self.uart)
+        if not result:
+            return result
+
+        logger.info("run bootcmd to kernel for testing ...")
+        result = SysappRebootOpts.run_bootcmd(self.uart)
 
         return result
 

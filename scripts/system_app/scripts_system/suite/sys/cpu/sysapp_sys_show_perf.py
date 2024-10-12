@@ -4,7 +4,7 @@ import threading
 from suite.common.sysapp_common_logger import logger
 from suite.common.sysapp_common_reboot_opts import SysappRebootOpts
 from suite.common.sysapp_common_net_opts import SysappNetOpts
-import suite.common.sysapp_common_utils as sys_common_utils
+import suite.common.sysapp_common_utils as SysappUtils
 from suite.common.sysapp_common_case_base import SysappCaseBase as CaseBase
 from sysapp_client import SysappClient as Client
 
@@ -122,7 +122,7 @@ class SysappSysShowPerf(CaseBase):
 
             cmd = "./prog_preload_linux -t"
             wait_keyword = "press c to change mode"
-            result, data = sys_common_utils.write_and_match_keyword(self.uart, cmd, wait_keyword)
+            result, data = SysappUtils.write_and_match_keyword(self.uart, cmd, wait_keyword)
             if result is False:
                 return 255
 

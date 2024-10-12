@@ -184,7 +184,7 @@ class SysappNetOpts():
         result = cls._check_kernel_ifconfig_setting(device, check_str)
 
         # check gatewayip
-        result |= cls._check_kernel_route_setting(device, platform.PLATFORM_MOUNT_GW)
+        result &= cls._check_kernel_route_setting(device, platform.PLATFORM_MOUNT_GW)
 
         return result
 
@@ -277,9 +277,9 @@ class SysappNetOpts():
             result (bool): If set board ip success, return True; Else, return False.
         """
         result = False
-        if SysappRebootOpts.check_uboot_phase(device):
+        if device.check_uboot_phase():
             result = cls._setup_uboot_network(device)
-        elif SysappRebootOpts.check_kernel_phase(device):
+        elif device.check_kernel_phase():
             result = cls._setup_kernel_network(device)
         else:
             logger.error("the device is not at kernel or at uboot, read register fail")

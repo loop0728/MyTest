@@ -5,8 +5,8 @@
 
 import re
 import subprocess
-from cases.platform.sys.idac.idac_var import IFORD_IDAC_VOLT_CPU_TABLE
-from cases.platform.sys.idac.idac_var import IFORD_IPL_OVERDRIVE_CPUFREQ_MAP
+from cases.platform.sys.idac.idac_var import (IFORD_IDAC_VOLT_CPU_TABLE,
+                                              IFORD_IPL_OVERDRIVE_CPUFREQ_MAP)
 from suite.common.sysapp_common_logger import logger
 from suite.common.sysapp_common_register_opts import SysappRegisterOpts
 
