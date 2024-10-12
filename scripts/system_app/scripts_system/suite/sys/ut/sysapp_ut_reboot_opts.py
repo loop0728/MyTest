@@ -7,9 +7,9 @@ from sysapp_client import SysappClient as Client
 from suite.common.sysapp_common_logger import logger, sysapp_print
 from suite.common.sysapp_common_case_base import SysappCaseBase as CaseBase
 from suite.common.sysapp_common_reboot_opts import SysappRebootOpts
-from suite.common.sysapp_common_error_codes import SysappErrorCodes
+from suite.common.sysapp_common_types import SysappErrorCodes
 
-class SysappUtRebootTest(CaseBase):
+class SysappUtRebootOpts(CaseBase):
     """
     A class representing reboot test flow.
     Attributes:

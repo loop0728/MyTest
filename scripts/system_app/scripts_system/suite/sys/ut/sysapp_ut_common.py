@@ -4,7 +4,7 @@
 
 from suite.common.sysapp_common_logger import logger
 from suite.common.sysapp_common_case_base import SysappCaseBase
-from suite.common.sysapp_common_error_codes import SysappErrorCodes as EC
+from suite.common.sysapp_common_types import SysappErrorCodes as EC
 from suite.common.sysapp_common_reboot_opts import SysappRebootOpts
 from sysapp_client import SysappClient
 

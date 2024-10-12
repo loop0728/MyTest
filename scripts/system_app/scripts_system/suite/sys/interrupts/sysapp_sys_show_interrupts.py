@@ -5,10 +5,10 @@ from suite.common.sysapp_common_reboot_opts import SysappRebootOpts
 from suite.common.sysapp_common_net_opts import SysappNetOpts
 import suite.common.sysapp_common_utils as sys_common_utils
 from suite.common.sysapp_common_case_base import SysappCaseBase as CaseBase
+from run_env.mixer_thread import SysappMixerThread
 from sysapp_client import SysappClient as Client
-from run_env.mixer.mixer_thread import SysappMixerThread
 
-class SysappShowInterrupts(CaseBase):
+class SysappSysShowInterrupts(CaseBase):
     """ case main thread """
     def __init__(self, case_name, case_run_cnt=1, module_path_name='./'):
         super().__init__(case_name, case_run_cnt, module_path_name)
@@ -51,7 +51,7 @@ class SysappShowInterrupts(CaseBase):
         logger.warning("connect telent && run case")
         telnet0 = Client(self.case_name, "telnet", "telnet0")
         cmd = (f"cd /mnt/scripts_system/Suite/Interrupts/resource/;"
-               f"./perf_interrupt.sh {self.case_name}")
+               "./perf_interrupt.sh")
         mixerthread.loop_run_command_sync(telnet0, cmd)
         telnet0.close()
         self.uart.close()

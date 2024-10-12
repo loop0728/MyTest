@@ -11,7 +11,7 @@ from suite.common.sysapp_common_reboot_opts import SysappRebootOpts
 from suite.common.sysapp_common_net_opts import SysappNetOpts
 import suite.common.sysapp_common_utils as sys_common_utils
 from suite.common.sysapp_common_case_base import SysappCaseBase
-from suite.common.sysapp_common_error_codes import SysappErrorCodes as EC
+from suite.common.sysapp_common_types import SysappErrorCodes as EC
 
 
 class SysappUtClient(SysappCaseBase):

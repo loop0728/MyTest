@@ -174,7 +174,7 @@ class SysappErrorCodes(Enum):
 
 ```python
 # 导入ErrorCodes
-from Common.error_codes import SysappErrorCodes as EC
+from Common.sysapp_common_types import SysappErrorCodes as EC
 
 # 在需要使用的位置使用
 EC.SUCCESS
@@ -239,7 +239,7 @@ from Common.case_base import CaseBase
 # 导入设备类，用于创建设备
 from client import Client
 # 导入错误码，避免返回不支持的错误码
-from Common.error_codes import SysappErrorCodes as EC
+from Common.sysapp_common_types import SysappErrorCodes as EC
 
 # 创建与setup.sh中module_path_name同名的类并继承CaseBase类
 class api_test(CaseBase):

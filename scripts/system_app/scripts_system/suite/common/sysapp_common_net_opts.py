@@ -277,9 +277,9 @@ class SysappNetOpts():
             result (bool): If set board ip success, return True; Else, return False.
         """
         result = False
-        if SysappRebootOpts.check_uboot_phase():
+        if SysappRebootOpts.check_uboot_phase(device):
             result = cls._setup_uboot_network(device)
-        elif SysappRebootOpts.check_kernel_phase():
+        elif SysappRebootOpts.check_kernel_phase(device):
             result = cls._setup_kernel_network(device)
         else:
             logger.error("the device is not at kernel or at uboot, read register fail")

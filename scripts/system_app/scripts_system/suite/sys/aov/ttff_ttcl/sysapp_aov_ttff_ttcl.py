@@ -5,7 +5,7 @@ import time
 from suite.common.sysapp_common_logger import logger
 from suite.common.sysapp_common_case_base import SysappCaseBase
 from suite.common.sysapp_common_reboot_opts import SysappRebootOpts
-from suite.common.sysapp_common_error_codes import SysappErrorCodes
+from suite.common.sysapp_common_types import SysappErrorCodes
 import suite.common.sysapp_common_utils as sys_common_utils
 from sysapp_client import SysappClient
 from cases.platform.sys.aov.ttff_ttcl_var import TTFF_TARGET, TTCL_TARGET
@@ -108,7 +108,7 @@ class SysappAovTtffTtcl(SysappCaseBase):
             else:
                 logger.error(f"Read fail,no keyword: {wait_keyword}")
                 return 255
-            cmd = "./prog_aov_aov_demo -t"
+            cmd = "./prog_aov_aov_demo -t -d"
             self.uart.write(cmd)
             time.sleep(10)
             cmd = "c"
@@ -125,7 +125,7 @@ class SysappAovTtffTtcl(SysappCaseBase):
                     result = 255
                     return result
 
-            cmd = "./prog_preload_linux -t"
+            cmd = "./prog_preload_linux dump /tmp -t"
             wait_keyword = "press c to change mode"
             result, data = sys_common_utils.write_and_match_keyword(
                 self.uart, cmd, wait_keyword

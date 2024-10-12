@@ -8,9 +8,9 @@ from suite.common.sysapp_common_logger import logger, sysapp_print
 from suite.common.sysapp_common_case_base import SysappCaseBase as CaseBase
 from suite.common.sysapp_common_reboot_opts import SysappRebootOpts
 from suite.common.sysapp_common_net_opts import SysappNetOpts
-from suite.common.sysapp_common_error_codes import SysappErrorCodes
+from suite.common.sysapp_common_types import SysappErrorCodes
 
-class SysappUtNetworkTest(CaseBase):
+class SysappUtNetOpts(CaseBase):
     """
     A class representing network test flow.
     Attributes:

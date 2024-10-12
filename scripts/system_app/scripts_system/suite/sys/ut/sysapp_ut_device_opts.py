@@ -9,9 +9,9 @@ from suite.common.sysapp_common_types import SysappPackageType, SysappBootstrapT
 from suite.common.sysapp_common_case_base import SysappCaseBase as CaseBase
 from suite.common.sysapp_common_reboot_opts import SysappRebootOpts
 from suite.common.sysapp_common_device_opts import SysappDeviceOpts
-from suite.common.sysapp_common_error_codes import SysappErrorCodes
+from suite.common.sysapp_common_types import SysappErrorCodes
 
-class SysappUtDeviceTest(CaseBase):
+class SysappUtDeviceOpts(CaseBase):
     """
     A class representing device test flow.
     Attributes:

@@ -15,11 +15,11 @@ from suite.common.sysapp_common_case_base import SysappCaseBase as CaseBase
 from suite.common.sysapp_common_reboot_opts import SysappRebootOpts
 from suite.common.sysapp_common_register_opts import SysappRegisterOpts
 from suite.common.sysapp_common_net_opts import SysappNetOpts
-from suite.common.sysapp_common_error_codes import SysappErrorCodes
+from suite.common.sysapp_common_types import SysappErrorCodes
 from suite.sys.idac.sysapp_sys_idac_opts import SysappIdacOpts as IdacOpts
 from sysapp_client import SysappClient as Client
 
-class SysappIdac(CaseBase):
+class SysappSysIdac(CaseBase):
     """A class representing IDAC test flow
     Attributes:
         uart (Device): device handle
@@ -186,7 +186,7 @@ class SysappIdac(CaseBase):
             ]
         """
         if package == SysappPackageType.PACKAGE_TYPE_QFN128:
-            if self.case_test_param['dvfs_on']:
+            if not self.case_test_param['dvfs_on']:
                 self.case_target_param['cpufreq_vcore_check_list'] = (
                     IFORD_IDAC_QFN_DVFS_VCORE_TABLE[SysappDvfsState.DVFS_STATE_OFF.value])
                 self.case_target_param['cpufreq_vcpu_check_list'] = (
@@ -623,6 +623,9 @@ class SysappIdac(CaseBase):
         if (vcore_check_item[1] <= kernel_vcore_uv <= vcore_check_item[2] and
                 vcpu_check_item[1] <= kernel_vcpu_uv <= vcpu_check_item[2]):
             result = True
+        else:
+            result = False
+
         return result
 
     def set_userspace_governor(self):
@@ -729,12 +732,13 @@ class SysappIdac(CaseBase):
     def _idac_check_kernel(self, overdrive):
         result = False
         ret = False
+        ret_dvfs_off = True
+        ret_dvfs_on = True
         # 7. 获取支持的cpu频率，对比统计的列表看是否一致，如果不一致，记录LD测试失败，进行下一次的NOD测试
         logger.warning(f"{overdrive.name}: check kernel avaliable cpufreq")
         ret = self.check_avaliable_cpufreq(overdrive)
         if not ret:
             logger.error(f"{overdrive.name} check avaliable cpufreq fail")
-            #continue
             return result, ret
 
         # 8. 依次设置到各个支持的频率档位，并读取电压寄存器值，先全部读取完毕再观察对应频率读取到的寄存器值
@@ -742,6 +746,8 @@ class SysappIdac(CaseBase):
         if self.case_test_param['package_type'] == SysappPackageType.PACKAGE_TYPE_QFN128:
             logger.warning(f'{overdrive.name} dvfs_off: check kernel'
                                  ' voltage at different cpufreq')
+            self.case_test_param['dvfs_on'] = False
+            self.get_kernel_cpufreq_voltage_check_list(self.case_test_param['package_type'])
         else:
             logger.warning(f'{overdrive.name}: check kernel voltage '
                                  'at different cpufreq')
@@ -750,8 +756,8 @@ class SysappIdac(CaseBase):
                 overdrive.value]:
             cpufreq_khz = int(cpufreq / 1000)
             self.set_cpufreq(cpufreq_khz)
-            ret = self.check_kernel_voltage(overdrive, cpufreq)
-            if not ret:
+            ret_dvfs_off = self.check_kernel_voltage(overdrive, cpufreq)
+            if not ret_dvfs_off:
                 logger.error(f"{overdrive.name} check voltage fail at "
                                    f"cpufreq:{cpufreq}, "
                                    f"dvfs:{self.case_test_param['dvfs_on']}")
@@ -767,12 +773,14 @@ class SysappIdac(CaseBase):
                     overdrive.value]:
                 cpufreq_khz = int(cpufreq / 1000)
                 self.set_cpufreq(cpufreq_khz)
-                ret = self.check_kernel_voltage(overdrive, cpufreq)
-                if not ret:
+                ret_dvfs_on = self.check_kernel_voltage(overdrive, cpufreq)
+                if not ret_dvfs_on:
                     logger.error(f"{overdrive.name} check voltage fail at "
                                        f"cpufreq:{cpufreq}, "
                                        f"dvfs:{self.case_test_param['dvfs_on']}")
                     break
+
+        ret = ret_dvfs_off & ret_dvfs_on
         if ret:
             result = True
         return result, ret

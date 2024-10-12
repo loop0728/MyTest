@@ -1,7 +1,8 @@
 """Entry point for executing cases."""
 import sys
 from suite.common.sysapp_common_logger import logger
-from suite.common.sysapp_common_error_codes import SysappErrorCodes, event_handlers
+from suite.common.sysapp_common_types import SysappErrorCodes
+from suite.common.sysapp_common_error_codes import event_handlers
 from suite.common.sysapp_common_case_base import SysappCaseBase
 
 
@@ -25,6 +26,18 @@ class SysappRunUserCase:
         logger.info(f"module_path_name: {self.script_path}")
         logger.info(f"case_name: {self.case_name}")
 
+    @staticmethod
+    def snake_to_pascal(snake_str):
+        """
+        snake_case to PascalCase
+        Args:
+            snake_str (str): snake_case
+        Returns:
+            str : PascalCase
+        """
+        components = snake_str.split('_')
+        return ''.join(x.capitalize() for x in components)
+
     def parase_case_run(self) -> int:
         """
         pass
@@ -45,15 +58,7 @@ class SysappRunUserCase:
 
         sys.path.append(module_path)
         module = __import__(module_name)
-        module_dict = module.__dict__
-        for name, obj in module_dict.items():
-            if (
-                isinstance(obj, type)
-                and issubclass(obj, SysappCaseBase)
-                and obj is not SysappCaseBase
-            ):
-                class_name = name
-                break
+        class_name = self.snake_to_pascal(module_name)
         calss_obj = getattr(module, class_name)  # get mode class
         if (
                 self.case_name != "NULL"

@@ -27,7 +27,7 @@ class SysappMixerThread(threading.Thread):
         time.sleep(5)
         self.telnet_handle.close()
 
-class SysappShowPerf(CaseBase):
+class SysappSysShowPerf(CaseBase):
     """ case main thread """
     def __init__(self, case_name, case_run_cnt=1, module_path_name='./'):
         super().__init__(case_name, case_run_cnt, module_path_name)
@@ -134,7 +134,6 @@ class SysappShowPerf(CaseBase):
 
     def runcase(self):
         result = 0
-        #mount_path = f"{platform.PLATFORM_MOUNT_PATH}/{self.subpath}"
         # step1 判断是否在kernel下
         result = SysappRebootOpts.init_kernel_env(self.uart)
         if result is not True:

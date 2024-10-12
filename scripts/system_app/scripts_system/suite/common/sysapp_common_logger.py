@@ -5,7 +5,7 @@ import inspect
 from colorlog import ColoredFormatter
 
 LOG_LEVEL = logging.DEBUG
-
+# pylint: disable=C0103
 formatter = ColoredFormatter(
     "%(log_color)s[%(asctime)s] [%(filename)s] [line:%(lineno)s] [%(levelname)s] %(message)s",
     datefmt='%Y.%m.%d %H:%M:%S',
@@ -28,7 +28,8 @@ logger.setLevel(LOG_LEVEL)
 class SysappPrint:
     """Other print info."""
 
-    def print_line_info(self, func):
+    @staticmethod
+    def print_line_info(func):
         """Print line info."""
 
         def wrapper(*args, **kwargs):
@@ -43,7 +44,8 @@ class SysappPrint:
 
         return wrapper
 
-    def print_definition_info(self, func):
+    @staticmethod
+    def print_definition_info(func):
         """Print line info of defdefinition."""
 
         def wrapper(*args, **kwargs):

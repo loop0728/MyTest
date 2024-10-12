@@ -66,19 +66,6 @@ class SysappRebootOpts():
         """
         result = False
         try_time = 0
-        # wait uboot keyword
-        # while True:
-        #     status, line = device.read()
-        #     if status:
-        #         if isinstance(line, bytes):
-        #             line = line.decode('utf-8', errors='replace')
-        #         line = line.strip()
-        #         if "Auto-Negotiation" in line:
-        #             break
-        #     else:
-        #         logger.error("read line fail")
-        #         result = False
-        #         return result
 
         # enter to uboot
         while True:
@@ -97,7 +84,7 @@ class SysappRebootOpts():
                 result = False
                 break
             try_time += 1
-            #time.sleep(0.1)
+
         return result
 
     @classmethod
@@ -395,7 +382,7 @@ class SysappRebootOpts():
         return result
 
     @classmethod
-    def check_kernel_phase(cls):
+    def check_kernel_phase(cls, device: object):
         """
         Check if the device is running in the kernel phase.
         Args:
@@ -404,12 +391,15 @@ class SysappRebootOpts():
            result (bool): If the device is at kernel, return True; Else, return False.
         """
         result = False
-        if cls.__board_cur_state == SysappBootStage.E_BOOTSTAGE_KERNEL.name:
-            result = True
+        result = cls._get_cur_boot_state(device)
+        if result:
+            if cls.__board_cur_state != SysappBootStage.E_BOOTSTAGE_KERNEL.name:
+                result = False
+
         return result
 
     @classmethod
-    def check_uboot_phase(cls):
+    def check_uboot_phase(cls, device: object):
         """
         Check if the device is running in the uboot phase.
         Args:
@@ -418,8 +408,11 @@ class SysappRebootOpts():
            result (bool): If the device is at uboot, return True; Else, return False.
         """
         result = False
-        if cls.__board_cur_state == SysappBootStage.E_BOOTSTAGE_UBOOT.name:
-            result = True
+        result = cls._get_cur_boot_state(device)
+        if result:
+            if cls.__board_cur_state != SysappBootStage.E_BOOTSTAGE_UBOOT.name:
+                result = False
+
         return result
 
     @classmethod

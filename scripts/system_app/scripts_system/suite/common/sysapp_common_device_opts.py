@@ -183,9 +183,9 @@ class SysappDeviceOpts():
         result = False
         partition_list = []
 
-        if SysappRebootOpts.check_uboot_phase():
+        if SysappRebootOpts.check_uboot_phase(device):
             result, partition_list = SysappDeviceOpts._uboot_get_mtdparts(device)
-        elif SysappRebootOpts.check_kernel_phase():
+        elif SysappRebootOpts.check_kernel_phase(device):
             result, partition_list = SysappDeviceOpts._kernel_get_mtdparts(device)
         else:
             logger.error("the device is not at kernel or at uboot, read register fail")
