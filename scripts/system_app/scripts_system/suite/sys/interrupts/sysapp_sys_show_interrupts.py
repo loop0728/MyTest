@@ -1,9 +1,10 @@
 """ show_interrupts version 0.0.1 """
 import time
+import sysapp_platform as platform
 from suite.common.sysapp_common_logger import logger
 from suite.common.sysapp_common_reboot_opts import SysappRebootOpts
 from suite.common.sysapp_common_net_opts import SysappNetOpts
-import suite.common.sysapp_common_utils as SysappUtils
+from suite.sys.aov.common.sysapp_aov_common import SysappAovCommon
 from suite.common.sysapp_common_case_base import SysappCaseBase as CaseBase
 from run_env.mixer_thread import SysappMixerThread
 from sysapp_client import SysappClient as Client
@@ -13,7 +14,6 @@ class SysappSysShowInterrupts(CaseBase):
     def __init__(self, case_name, case_run_cnt=1, module_path_name='./'):
         super().__init__(case_name, case_run_cnt, module_path_name)
         self.uart = Client(self.case_name, "uart", "uart")
-        self.subpath = "iford_systemapp_interrupt_testcase"
 
     def runcase(self):
         result = 0
@@ -24,19 +24,16 @@ class SysappSysShowInterrupts(CaseBase):
             logger.warning(f"caseName[{self.case_name}] not in kernel!")
             return 255
         # step2 切换到purelinux
-        result = SysappUtils.switch_os_aov(self.uart, "purelinux")
+        result = SysappAovCommon.switch_os_aov(self.uart, "purelinux")
         if result == 255:
             logger.warning(f"caseName[{self.case_name}] run done!")
             return 255
         # step3 挂载网络
         logger.warning("config network")
-        # sys_common.check_insmod_ko(self.uart, "sstar_emac")
-        # sys_common.set_board_kernel_ip(self.uart)
         SysappNetOpts.setup_network(self.uart)
         # step4 mount nfs
-        logger.warning(f"mount[{self.subpath}]")
-        #sys_common.mount_to_server(self.uart, f"{self.subpath}")
-        SysappNetOpts.mount_server_path_to_board(self.uart, f"{self.subpath}")
+        logger.warning(f"mount[{platform.PLATFORM_MOUNT_PATH}]")
+        SysappNetOpts.mount_server_path_to_board(self.uart, "")
         # step5 串口运行mixer pipeline
         logger.warning("run mixer case")
         telnetmixer = Client(self.case_name, "telnet", "telnetmixer")
@@ -50,7 +47,7 @@ class SysappSysShowInterrupts(CaseBase):
         # step6 telnet cd 到mount目录，并运行show_interrupts.sh脚本
         logger.warning("connect telent && run case")
         telnet0 = Client(self.case_name, "telnet", "telnet0")
-        cmd = (f"cd /mnt/scripts_system/Suite/Interrupts/resource/;"
+        cmd = ("cd /mnt/scripts_system/suite/sys/interrupts/resource/;"
                "./perf_interrupt.sh")
         mixerthread.loop_run_command_sync(telnet0, cmd)
         telnet0.close()

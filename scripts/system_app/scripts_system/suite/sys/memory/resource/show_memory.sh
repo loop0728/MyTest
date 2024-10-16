@@ -8,7 +8,7 @@ if [ -z "$current_os" ]; then
     echo "current_os is null assign to purelinux"
     current_os="purelinux"
 fi
-echo "current_os:$current_os"
+echo "pass param current_os:$current_os"
 if [ "$casename" == ".json" ]; then
     echo "casename $casename is null"
     exit -1
@@ -18,6 +18,9 @@ elif [ "$casename" == "" ]; then
 else
     echo "casename: $casename"
 fi
+
+echo "check current ptree case"
+cat /misc/earlyinit_setting.json | grep "APP_0_0" -A 4
 
 resultpath=/mnt/out/Memory/$current_os/$casename
 

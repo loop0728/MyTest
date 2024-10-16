@@ -3,10 +3,9 @@
 
 """burning image ut test"""
 
-from sysapp_client import SysappClient as Client
 from suite.common.sysapp_common_logger import logger
 from suite.common.sysapp_common_case_base import SysappCaseBase as CaseBase
-from suite.common.sysapp_common_burning_opts import SysappBurning
+from suite.common.sysapp_common_burning_opts import SysappBurningOpts
 from suite.common.sysapp_common_types import SysappErrorCodes
 
 class SysappUtBurningOpts(CaseBase):
@@ -23,7 +22,6 @@ class SysappUtBurningOpts(CaseBase):
             module_path_name (str): moudle path.
         """
         super().__init__(case_name, case_run_cnt, module_path_name)
-        self.uart = Client(self.case_name, "uart", "uart")
 
     def runcase(self):
         """
@@ -35,8 +33,7 @@ class SysappUtBurningOpts(CaseBase):
         """
         error_code = SysappErrorCodes.FAIL
         logger.warning("Run burning image.")
-        burning_test = SysappBurning(self.uart)
-        result = burning_test.burning_image_for_tftp()
+        result = SysappBurningOpts.burning_image_for_tftp()
         if result:
             error_code = SysappErrorCodes.SUCCESS
 

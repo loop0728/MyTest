@@ -66,7 +66,7 @@ class SysappDevBase(ABC):
         """
         result = False
         curr_line = 0
-        self.queue_clear(self._dev_info["tmp_data_queue"])
+        self.queue_clear("tmp_data_queue")
         if self._dev_info["conn"]:
             if self.name != "uart" or self.name == "uart" and self._dev_info["conn"].is_open:
                 self._dev_info["conn"].write(data.encode("utf-8") + b"\n")
@@ -107,16 +107,16 @@ class SysappDevBase(ABC):
             )
             return b""
 
-    @staticmethod
-    def queue_clear(data_queue):
+    def queue_clear(self, data_queue):
         """
         Clean read data queue.
 
         Args:
             data_queue (queue): queue name
         """
-        while not data_queue.empty():
-            data_queue.get_nowait()
+        while not self._dev_info[data_queue].empty():
+            self._dev_info[data_queue].get_nowait()
+        return True
 
     def set_case_name(self, case_name):
         """
@@ -138,8 +138,8 @@ class SysappDevBase(ABC):
 
     def start_read_thread(self):
         """Start read."""
-        self.queue_clear(self._dev_info["data_queue"])
-        self.queue_clear(self._dev_info["tmp_data_queue"])
+        self.queue_clear("data_queue")
+        self.queue_clear("tmp_data_queue")
         read_thread = threading.Thread(target=self.read_from_device)
         read_thread.start()
 

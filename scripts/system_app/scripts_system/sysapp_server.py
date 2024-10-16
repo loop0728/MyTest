@@ -200,6 +200,12 @@ class SysappServer:
         self.response_msg_to_client(client, True)
         return result
 
+    def clear(self, client, msg):
+        """Clear device buffer."""
+        device_name = msg["device_name"]
+        result = self._dm.devices[device_name].queue_clear("tmp_data_queue")
+        self.response_msg_to_client(client, result)
+
     def regiser_device(self, client, msg) -> bool:
         """
         Regiser device to Device Manager.
@@ -320,12 +326,27 @@ class SysappServer:
                 continue
         return 0
 
+    @staticmethod
+    def check_env():
+        """Check env"""
+        result = True
+        if LOG_PATH == "":
+            logger.error("Please check sysapp_platform.py LOG_PATH")
+            result = False
+        if PLATFORM_UART == "":
+            logger.error("Please check sysapp_platform.py PLATFORM_UART")
+            result = False
+        return result
+
     def server_start(self):
         """Start server."""
         ss_host = "localhost"
         ss_port = PLATFORM_NET_CONNECT_PORT
 
         logger.info("Server start.")
+        result = self.check_env()
+        if result is False:
+            return
         # open uart
         self.device_init()
         self._server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

@@ -194,6 +194,7 @@ AddMenuStep()
             return
         fi
         eval menu___sep__${2}_prev=__sep__
+        eval menu___sep__${2}_name=${2}
     else
         eval sub_menu_check=\${menu_${__path_val}__sep__${2}_prev}
         if [ -n "${sub_menu_check}" ]; then
@@ -201,6 +202,7 @@ AddMenuStep()
             return
         fi
         eval menu_${__path_val}__sep__${2}_prev=${__path_val}
+        eval menu_${__path_val}__sep__${2}_name=${2}
     fi
     eval menu_${__path_val}_${menu_count}=${2}
     let menu_${__path_val}_count=menu_${__path_val}_count+1
@@ -467,10 +469,11 @@ ShowMenu()
             #Go back to the previous menu.
             eval current_menu_out_cb=\${menu_${current_menu}_out_cb}
             eval current_menu_out_para=\"\${menu_${current_menu}_out_para}\"
+            eval current_menu_io=\${menu_${current_menu}_name}
             eval current_menu=\${menu_${current_menu}_prev}
             eval prev_menu=\${menu_${current_menu}_prev}
             if [ -n "${current_menu_out_cb}" ]; then
-                eval ${current_menu_out_cb} ${current_menu//__sep__/\/} ${next_menu_io} \"${current_menu_out_para}\"
+                eval ${current_menu_out_cb} ${current_menu_stage} ${current_menu//__sep__/\/} ${current_menu_io} \"${current_menu_out_para}\"
             fi
             continue
         fi
@@ -516,7 +519,7 @@ ShowMenu()
         eval next_menu_count=\${menu_${next_menu}_count}
         eval next_menu_in_cb=\${menu_${next_menu}_in_cb}
         if [ -z "${next_menu_count}" ]; then
-            #Next one is end.
+            #Next one is a case and do running case.
             eval case_name=\${menu_${current_menu}_${choice}}
             eval case_stage=\${case_stage_${current_menu}_${case_name}}
             if [ -n "${case_stage}" ]; then
@@ -550,9 +553,15 @@ ShowMenu()
                 fi
             fi
             continue
-        elif [ ${b_show_help} -eq 1 ]; then
+        fi
+
+        #Next one is a menu and no need to dump menu help here.
+        if [ ${b_show_help} -eq 1 ]; then
             continue
-        elif [ -n "${next_menu_in_cb}" ]; then
+        fi
+
+        eval next_menu_in_cb=\${menu_${next_menu}_in_cb}
+        if [ -n "${next_menu_in_cb}" ]; then
             #Do something when enter_menu the menu.
             eval next_menu_io=\${menu_${current_menu}_${choice}}
             eval ${next_menu_in_cb} ${current_menu//__sep__/\/} ${next_menu_io} \"\${menu_${next_menu}_in_para}\"

@@ -5,21 +5,16 @@
 
 from suite.common.sysapp_common_logger import logger
 from suite.common.sysapp_common_reboot_opts import SysappRebootOpts
+from sysapp_client import SysappClient as Client
 import sysapp_platform as platform
 
-class SysappBurning():
+class SysappBurningOpts():
     """ Burning image """
-    def __init__(self, uart):
-        """ Burning image.
-        Args:
-           uart: device uart handle
-        """
-        self.uart = uart
-        self.reboot_opts = SysappRebootOpts()
-        self.uboot_prompt = 'SigmaStar #'
-        self.kernel_prompt = '/ #'
+    __uboot_prompt  = 'SigmaStar #'
+    __kernel_prompt = '/ #'
 
-    def check_uboot_env(self):
+    @classmethod
+    def check_uboot_env(cls, device: object):
         """
         Check uboot env for burning image.
 
@@ -28,10 +23,10 @@ class SysappBurning():
         """
         pri = "pri"
         pri_data = ""
-        self.uart.write(pri)
+        device.write(pri)
         while True:
-            ret, data = self.uart.read()
-            if ret is True and self.uboot_prompt in data:
+            ret, data = device.read()
+            if ret is True and cls.__uboot_prompt in data:
                 break
             if ret is False:
                 logger.error("Uboot prientenv failed.")
@@ -52,9 +47,9 @@ class SysappBurning():
         host_is_not_alive = "is not alive"
         try_cnt = 3
         while try_cnt:
-            self.uart.write(ping_server_cmd)
+            device.write(ping_server_cmd)
             while True:
-                ret, data = self.uart.read(wait_timeout=30)
+                ret, data = device.read(wait_timeout=30)
                 if ret is True and host_is_alive in data:
                     logger.info("Setenv success in uboot.")
                     return True
@@ -68,7 +63,8 @@ class SysappBurning():
                     break
         return False
 
-    def setenv_in_uboot(self):
+    @classmethod
+    def setenv_in_uboot(cls, device: object):
         """
         Set env in uboot.
 
@@ -81,30 +77,32 @@ class SysappBurning():
         set_ip = f"set -f ipaddr {platform.PLATFORM_BOARD_IP};"
         set_serverip = f"set -f serverip {platform.PLATFORM_SERVER_IP};"
         saveenv = "saveenv"
-        self.uart.write(set_ethaddr)
-        self.uart.write(set_gw)
-        self.uart.write(set_ip)
-        self.uart.write(set_serverip)
-        self.uart.write(saveenv)
-        result = self.check_uboot_env()
+        device.write(set_ethaddr)
+        device.write(set_gw)
+        device.write(set_ip)
+        device.write(set_serverip)
+        device.write(saveenv)
+        result = cls.check_uboot_env(device)
         return result
 
-    def burning_image_for_tftp(self):
+    @classmethod
+    def burning_image_for_tftp(cls, device=''):
         """
         Burning image.
-        Args:
 
         Return:
             int: result
         """
         result = False
+        if device == '':
+            device = Client("Burning_image", "uart", "uart")
         # step1 go uboot
-        ret = self.reboot_opts.cold_reboot_to_uboot(self.uart)
+        ret = SysappRebootOpts.cold_reboot_to_uboot(device)
         if ret is False:
             logger.error("Reboot to uboot fail.")
             return result
         # step2 set uboot net
-        ret = self.setenv_in_uboot()
+        ret = cls.setenv_in_uboot(device)
         if ret is False:
             logger.error("Failed in uboot setenv.")
             return result
@@ -112,11 +110,11 @@ class SysappBurning():
         image_path = platform.PLATFORM_IMAGE_PATH
         # step4 estar
         estar_cmd = f"estar {image_path}"
-        self.uart.write(estar_cmd)
+        device.write(estar_cmd)
         # step5 result judgment
         while True:
-            ret, data = self.uart.read(wait_timeout=10)
-            if ret is True and self.kernel_prompt in data:
+            ret, data = device.read(wait_timeout=10)
+            if ret is True and cls.__kernel_prompt in data:
                 logger.info("Estar success.")
                 result = True
                 break
@@ -127,6 +125,7 @@ class SysappBurning():
 
         return result
 
-    def burning_uboot_for_isp_tool(self):
+    @staticmethod
+    def burning_uboot_for_isp_tool():
         """Burning uboot."""
         pass

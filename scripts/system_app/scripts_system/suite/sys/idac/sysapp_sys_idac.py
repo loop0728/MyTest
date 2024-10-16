@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 
 """IDAC test scenarios"""
-
-import os
 from cases.platform.sys.idac.idac_var import (IFORD_IDAC_VOLT_CORE_TABLE,
                                               IFORD_IDAC_VOLT_CPU_TABLE,
                                               IFORD_IDAC_QFN_DVFS_VCORE_TABLE)
@@ -14,7 +12,9 @@ from suite.common.sysapp_common_logger import logger, sysapp_print
 from suite.common.sysapp_common_case_base import SysappCaseBase as CaseBase
 from suite.common.sysapp_common_reboot_opts import SysappRebootOpts
 from suite.common.sysapp_common_register_opts import SysappRegisterOpts
+from suite.common.sysapp_common_device_opts import SysappDeviceOpts
 from suite.common.sysapp_common_net_opts import SysappNetOpts
+from suite.common.sysapp_common_dts_opts import SysappDtsOpts
 from suite.common.sysapp_common_types import SysappErrorCodes
 from suite.sys.idac.sysapp_sys_idac_opts import SysappIdacOpts as IdacOpts
 from sysapp_client import SysappClient as Client
@@ -23,6 +23,8 @@ class SysappSysIdac(CaseBase):
     """A class representing IDAC test flow
     Attributes:
         uart (Device): device handle
+        case_res_path (str): case resource file path on mount server
+        local_mount_path (str): case resource mount path on host
         case_target_param (dict): targets parameters
         case_cmd_param (dict): test commands
         case_test_param (dict): internal parameters for test
@@ -36,6 +38,8 @@ class SysappSysIdac(CaseBase):
         """
         super().__init__(case_name, case_run_cnt, module_path_name)
         self.uart = Client(self.case_name, "uart", "uart")
+        self.case_res_path += "/resources"
+        self.local_mount_path += "/resources"
         self.case_target_param = {
             'base_vcore_check': 900,    # get from hw & IPL macro define(IDAC_BASE_VOLT)
             'base_vcpu_check': 900,
@@ -46,7 +50,6 @@ class SysappSysIdac(CaseBase):
             'cpufreq_vcpu_check_list': []       # for kernel cpu_power check
         }
         self.case_cmd_param = {
-            'cmd_uboot_reset': 'reset',
             'cmd_cpufreq_available': ('cat /sys/devices/system/cpu/cpufreq/policy0/'
                                       'scaling_available_frequencies'),
             'cmd_governor': '/sys/devices/system/cpu/cpufreq/policy0/scaling_available_governors',
@@ -55,7 +58,6 @@ class SysappSysIdac(CaseBase):
             'cmd_qfn_dvfs': '/sys/devices/system/voltage/core_power/voltage_current'
         }
         self.case_test_param = {
-            'dtc_tool': 'dtc',
             'dump_dts_name': 'fdt.dts',
             'dvfs_on': False,
             'SysappPackageType': SysappPackageType.PACKAGE_TYPE_MAX,
@@ -64,27 +66,6 @@ class SysappSysIdac(CaseBase):
             'kernel_base_vcpu': 0,
             'kernel_opp_table': []
         }
-
-    # get dev package type
-    @sysapp_print.print_line_info
-    def get_package_type(self):
-        """get the package type of chip
-        Args:
-            None:
-        Returns:
-            (SysappPackageType): return the package type of chip
-        """
-        result = False
-        result, str_reg_value = SysappRegisterOpts.read_register(self.uart, "101e", "48")
-        if result:
-            bit4 = SysappRegisterOpts.get_bit_value(str_reg_value, 4)
-            bit5 = SysappRegisterOpts.get_bit_value(str_reg_value, 5)
-            if bit4 == 0 and bit5 == 0:
-                return SysappPackageType.PACKAGE_TYPE_QFN128
-            if bit4 == 0 and bit5 == 1:
-                return SysappPackageType.PACKAGE_TYPE_BGA12
-            return SysappPackageType.PACKAGE_TYPE_BGA11
-        return SysappPackageType.PACKAGE_TYPE_MAX
 
     def get_vcore_offset(self):
         """read register of core_power offset
@@ -202,49 +183,10 @@ class SysappSysIdac(CaseBase):
             self.case_target_param['cpufreq_vcpu_check_list'] = (
                 IFORD_IDAC_VOLT_CPU_TABLE[package.value])
 
-    def _check_emac_ko_insmod_status(self):
-        """check if net ko insmod
-        Args:
-            None:
-        Returns:
-            result (bool): if net ko has insmoded, return True; else, return False.
-        """
-        result = False
-        net_interface = "eth0"
-        cmd_check_insmod_status = f"ifconfig -a | grep {net_interface};echo $?"
-        self.uart.write(cmd_check_insmod_status)
-        status, line = self.uart.read(1, 30)
-        if status:
-            if isinstance(line, bytes):
-                line = line.decode('utf-8', errors='replace')
-            line = line.strip()
-            if net_interface in line:
-                logger.info("ko has insmoded already")
-                result = True
-        else:
-            logger.error(f"read line fail, {line}")
-            result = False
-        return result
-
-    def _insmod_emac_ko(self, koname):
-        """insmod net ko
-        Args:
-            koname (str): the name of net ko
-        Returns:
-            result (bool): if net ko insmods success, return True; else, return False
-        """
-        result = False
-        cmd_insmod_emac_ko = f"insmod /config/modules/5.10/{koname}.ko"
-        self.uart.write(cmd_insmod_emac_ko)
-        result = self._check_emac_ko_insmod_status()
-        if not result:
-            logger.error(f"insmod {koname} fail")
-        return result
-
-    def mount_server_path(self, path):
+    def mount_server_path(self):
         """check insmod emac ko, set board ip, mount server path to board
         Args:
-            path (str): the path of mount dir
+            None:
         Returns:
             result (bool): execute success, return True; else, return False
         """
@@ -253,109 +195,13 @@ class SysappSysIdac(CaseBase):
         logger.warning("set board ip and mount server path ...")
         result = SysappNetOpts.setup_network(self.uart)
         if result:
-            result = SysappNetOpts.mount_server_path_to_board(self.uart, path)
+            result = SysappNetOpts.mount_server_path_to_board(self.uart)
 
         if result:
-            logger.info(f"mount {path} success")
+            logger.info("mount server path success")
         else:
-            logger.error(f"mount {path} fail")
+            logger.error("mount server path fail")
 
-        return result
-
-    def _delete_dump_files(self):
-        """delete old dumped files
-        Args:
-            None
-        Returns:
-            result (bool): execute success, return True; else, return False
-        """
-        result = False
-        # check dump file exist
-        cmd_stat_dump_file = "stat /mnt/base"
-        self.uart.write(cmd_stat_dump_file)
-        status, line = self.uart.read()
-        if status:
-            if isinstance(line, bytes):
-                line = line.decode('utf-8', errors='replace')
-            line = line.strip()
-            if "No such file or directory" in line:
-                logger.info("dump file is not exist, no need to delete")
-                result = True
-                return result
-        else:
-            logger.error("stat dump file fail")
-            result = False
-            return result
-
-        cmd_rm_dump_file = "rm /mnt/base -r;echo $?"
-        self.uart.write(cmd_rm_dump_file)
-        status, line = self.uart.read(1, 120)
-        if status:
-            if isinstance(line, bytes):
-                line = line.decode('utf-8', errors='replace')
-            line = line.strip()
-            if line == "0":
-                logger.info("rm old dump file ok")
-                result = True
-        else:
-            logger.error("rm old dump file fail")
-            result = False
-        logger.info(f"{line}")
-        return result
-
-    def _dump_devicetree(self):
-        """dump devicetree files
-        Args:
-            None
-        Returns:
-            result (bool): execute success, return True; else, return False
-        """
-        result = False
-        result = self._delete_dump_files()
-        if not result:
-            return result
-        cmd_dump_devicetree = "cp /sys/firmware/devicetree/base /mnt -r;echo $?"
-        self.uart.write(cmd_dump_devicetree)
-        status, line = self.uart.read(1, 120)
-        if status:
-            if isinstance(line, bytes):
-                line = line.decode('utf-8', errors='replace')
-            line = line.strip()
-            if line == "0":
-                logger.info("dump devicetree ok")
-                result = True
-            else:
-                logger.error("dump devicetree fail")
-                result = False
-        else:
-            logger.error(f"read line fail after cmd:{cmd_dump_devicetree}")
-            result = False
-        return result
-
-    def _convert_devicetree_to_dts(self, path):  # need ATP server support mount this dir
-        """convert dumped devicetree files to dts file
-        Args:
-            path (str): the path of dtc tool
-        Returns:
-            result (bool): execute success, return True; else, return False
-        """
-        result = False
-        tool = f"./{self.case_test_param['dtc_tool']}"
-        cmd_convert_dts = ([tool, '-I', 'fs', '-O', 'dts', 'base',
-                            '-o', self.case_test_param['dump_dts_name']])
-
-        # cd mount path
-        #old_dir = os.getcwd()
-        try:
-            os.chdir(path)
-            logger.info(f"Changed directory to {path}")
-        except OSError as error:
-            logger.error(f"Error changing directory: {error.strerror}")
-            return result
-
-        # convert to dts
-        #result = self._run_server_cmd(cmd_convert_dts)
-        result = IdacOpts.run_server_cmd(cmd_convert_dts)
         return result
 
     def _get_base_volt_from_dts(self, dts_file):
@@ -429,16 +275,11 @@ class SysappSysIdac(CaseBase):
         print(f"local_mount_path:{self.local_mount_path}")
         dts_path = f"{self.local_mount_path}/{self.case_test_param['dump_dts_name']}"
 
-        logger.warning("begin to dump devicetree ...")
-        result = self._dump_devicetree()
+        result = SysappDtsOpts.dump_dts_from_memory(self.uart,
+                                                    self.case_res_path,
+                                                    self.local_mount_path)
         if not result:
             return result
-
-        logger.warning("begin to convert devicetree blob to dts ...")
-        result = self._convert_devicetree_to_dts(self.local_mount_path)
-        if not result:
-            return result
-
 
         logger.warning("get kernel base voltage from dts ...")
         result = self._get_base_volt_from_dts(dts_path)
@@ -446,7 +287,6 @@ class SysappSysIdac(CaseBase):
             return result
 
         logger.warning("get kernel opp table from dts ...")
-        #self.case_test_param['kernel_opp_table'] = self._get_opp_table_from_dts(dts_path)
         self.case_test_param['kernel_opp_table'] = IdacOpts.get_opp_table_from_dts(dts_path)
         return result
 
@@ -540,28 +380,37 @@ class SysappSysIdac(CaseBase):
             result (bool): check success, return True; else, return False
         """
         result = False
-        uboot_vcore = 0
-        uboot_vcpu = 0
+        uboot_volt = {
+            'core_power': 0,
+            'cpu_power': 0
+        }
+        uboot_volt_offset = {
+            'core_power': 0,
+            'cpu_power': 0
+        }
         vcore_check_item = []
         vcpu_check_item = []
 
-        result, vcore_offset = self.get_vcore_offset()
+        result, uboot_volt_offset['core_power'] = self.get_vcore_offset()
         if not result:
             return result
-        result, vcpu_offset = self.get_vcpu_offset()
-        if not result:
-            return result
-        uboot_vcore = self.case_target_param['base_vcore_check'] + vcore_offset
+        if self.case_test_param['package_type'] != SysappPackageType.PACKAGE_TYPE_QFN128:
+            result, uboot_volt_offset['cpu_power'] = self.get_vcpu_offset()
+            if not result:
+                return result
+        uboot_volt['core_power'] = (self.case_target_param['base_vcore_check']
+                                    + uboot_volt_offset['core_power'])
         if self.case_test_param['package_type'] == SysappPackageType.PACKAGE_TYPE_QFN128:
-            uboot_vcpu = uboot_vcore
+            uboot_volt['cpu_power'] = uboot_volt['core_power']
         else:
-            uboot_vcpu = self.case_target_param['base_vcpu_check'] + vcpu_offset
+            uboot_volt['cpu_power'] = (self.case_target_param['base_vcpu_check']
+                                       + uboot_volt_offset['cpu_power'])
 
         vcore_check_item = self.case_target_param['overdrive_vcore_check_list'][overdrive.value]
         vcpu_check_item = self.case_target_param['overdrive_vcpu_check_list'][overdrive.value]
 
-        uboot_vcore_uv = uboot_vcore * 1000
-        uboot_vcpu_uv = uboot_vcpu * 1000
+        uboot_vcore_uv = uboot_volt['core_power'] * 1000
+        uboot_vcpu_uv = uboot_volt['cpu_power'] * 1000
         logger.info(f"uboot_vcore:{uboot_vcore_uv}, "
                           f"target:[{vcore_check_item[0]}, {vcore_check_item[1]}]")
         logger.info(f"uboot_vcpu:{uboot_vcpu_uv}, "
@@ -587,22 +436,31 @@ class SysappSysIdac(CaseBase):
             result (bool): check success, return True; else, return False
         """
         result = False
-        kernel_vcore = 0
-        kernel_vcpu = 0
+        kernel_volt = {
+            'core_power': 0,
+            'cpu_power': 0
+        }
+        kernel_volt_offset = {
+            'core_power': 0,
+            'cpu_power': 0
+        }
         vcore_check_item = []
         vcpu_check_item = []
 
-        result, vcore_offset = self.get_vcore_offset()
+        result, kernel_volt_offset['core_power'] = self.get_vcore_offset()
         if not result:
             return result
-        result, vcpu_offset = self.get_vcpu_offset()
-        if not result:
-            return result
-        kernel_vcore = self.case_target_param['base_vcore_check'] + vcore_offset
+        if self.case_test_param['package_type'] != SysappPackageType.PACKAGE_TYPE_QFN128:
+            result, kernel_volt_offset['cpu_power'] = self.get_vcpu_offset()
+            if not result:
+                return result
+        kernel_volt['core_power'] = (self.case_target_param['base_vcore_check']
+                                     + kernel_volt_offset['core_power'])
         if self.case_test_param['package_type'] == SysappPackageType.PACKAGE_TYPE_QFN128:
-            kernel_vcpu = kernel_vcore
+            kernel_volt['cpu_power'] = kernel_volt['core_power']
         else:
-            kernel_vcpu = self.case_target_param['base_vcpu_check'] + vcpu_offset
+            kernel_volt['cpu_power'] = (self.case_target_param['base_vcpu_check']
+                                        + kernel_volt_offset['cpu_power'])
 
         for item in self.case_target_param['cpufreq_vcore_check_list'][overdrive.value]:
             if item[0] == cpufreq:
@@ -613,8 +471,8 @@ class SysappSysIdac(CaseBase):
                 vcpu_check_item = item
                 break
 
-        kernel_vcore_uv = kernel_vcore * 1000
-        kernel_vcpu_uv = kernel_vcpu * 1000
+        kernel_vcore_uv = kernel_volt['core_power'] * 1000
+        kernel_vcpu_uv = kernel_volt['cpu_power'] * 1000
         logger.info(f"kernel_vcore:{kernel_vcore_uv}, freq:{vcore_check_item[0]} "
                           f"target:[{vcore_check_item[1]}, {vcore_check_item[2]}]")
         logger.info(f"kernel_vcpu:{kernel_vcpu_uv}, freq:{vcpu_check_item[0]} "
@@ -670,7 +528,7 @@ class SysappSysIdac(CaseBase):
             return result
 
         # 2. 获取封装类型，确定使用的cpu的overdrive-电压映射表，频率-电压映射表；执行mount操作
-        self.case_test_param['package_type'] = self.get_package_type()
+        self.case_test_param['package_type'] = SysappDeviceOpts.get_package_type(self.uart)
         logger.warning(f"dev package type is {self.case_test_param['package_type'].name}")
         if self.case_test_param['package_type'] == SysappPackageType.PACKAGE_TYPE_MAX:
             logger.error("Unknown package type!")
@@ -687,7 +545,7 @@ class SysappSysIdac(CaseBase):
         self.get_kernel_cpufreq_voltage_check_list(self.case_test_param['package_type'])
 
         # mount res path to the board
-        result = self.mount_server_path(self.case_res_path)
+        result = self.mount_server_path()
         if not result:
             return result
 

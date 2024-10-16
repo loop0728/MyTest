@@ -55,7 +55,7 @@ class SysappAovStrCrc(CaseBase):
         result = self.uart.write(self.cmd_str)
 
         while True:
-            status, line = self.uart.read(1, 15)
+            status, line = self.uart.read(wait_timeout=15)
             if status:
                 if isinstance(line, bytes):
                     line = line.decode('utf-8', errors='replace')

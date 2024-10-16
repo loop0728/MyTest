@@ -165,8 +165,8 @@ class SysappDeviceOpts():
                 break
         return result, partition_list
 
-    @staticmethod
-    def get_mtdparts(device: object):
+    @classmethod
+    def get_mtdparts(cls, device: object):
         """
         Get the partitions of device.
         Args:
@@ -183,9 +183,9 @@ class SysappDeviceOpts():
         partition_list = []
 
         if device.check_uboot_phase():
-            result, partition_list = SysappDeviceOpts._uboot_get_mtdparts(device)
+            result, partition_list = cls._uboot_get_mtdparts(device)
         elif device.check_kernel_phase():
-            result, partition_list = SysappDeviceOpts._kernel_get_mtdparts(device)
+            result, partition_list = cls._kernel_get_mtdparts(device)
         else:
             logger.error("the device is not at kernel or at uboot, read register fail")
         return result, partition_list

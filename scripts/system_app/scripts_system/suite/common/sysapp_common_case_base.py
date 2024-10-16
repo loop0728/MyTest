@@ -23,7 +23,7 @@ class SysappCaseBase:
         self.case_stage = case_stage
         self.uart_log_path = LOG_PATH
         self.module_path = "/".join(script_path.split("/")[:-1])
-        self.case_res_path = f"scripts_system/{self.module_path}/resources"
+        self.case_res_path = f"scripts_system/{self.module_path}"
         self.local_mount_path = f"{PLATFORM_LOCAL_MOUNT_PATH}/{self.case_res_path}"
 
     def is_stress(self):

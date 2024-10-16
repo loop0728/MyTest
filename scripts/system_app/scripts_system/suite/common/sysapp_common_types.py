@@ -5,7 +5,7 @@
 
 from enum import Enum
 
-# pylint: disable=C0103
+
 class SysappErrorCodes(Enum):
     """Error Codes Enum"""
     SUCCESS = 0

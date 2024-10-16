@@ -46,8 +46,6 @@ class SysappAovStr(CaseBase):
             'max_read_lines': 10240
         }
         self.case_cmd_param = {
-            'cmd_uboot_reset': 'reset',
-            'cmd_kernel_reboot': 'reboot',
             'cmd_aov_run': '/customer/sample_code/bin/prog_aov_aov_demo -t -d',
             'cmd_aov_test': 'a',
             'cmd_aov_quit': 'q',

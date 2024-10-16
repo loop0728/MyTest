@@ -5,12 +5,13 @@
 from suite.common.sysapp_common_types import SysappErrorCodes
 from suite.common.sysapp_common_reboot_opts import SysappRebootOpts
 import suite.common.sysapp_common_utils as SysappUtils
-#import suite.common.sysapp_common_burning_opts as sys_common_burning
+from suite.common.sysapp_common_burning_opts import SysappBurningOpts
+
 
 EVENT_HANDLERS = {
     SysappErrorCodes.SUCCESS    : SysappUtils.nothing,
     SysappErrorCodes.FAIL       : SysappUtils.nothing,
     SysappErrorCodes.REBOOT     : SysappRebootOpts.cold_reboot,
-    SysappErrorCodes.ESTAR      : SysappUtils.nothing,
+    SysappErrorCodes.ESTAR      : SysappBurningOpts.burning_image_for_tftp,
     SysappErrorCodes.TOLINUX    : SysappUtils.nothing,
 }

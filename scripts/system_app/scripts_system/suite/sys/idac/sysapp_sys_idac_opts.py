@@ -4,10 +4,8 @@
 """IDAC test scenarios"""
 
 import re
-import subprocess
 from cases.platform.sys.idac.idac_var import (IFORD_IDAC_VOLT_CPU_TABLE,
                                               IFORD_IPL_OVERDRIVE_CPUFREQ_MAP)
-from suite.common.sysapp_common_logger import logger
 from suite.common.sysapp_common_register_opts import SysappRegisterOpts
 
 
@@ -92,33 +90,6 @@ class SysappIdacOpts():
         for overdrive_vcpu_map in IFORD_IDAC_VOLT_CPU_TABLE[package.value][overdrive.value]:
             cpufreq_map.append(overdrive_vcpu_map[0])
         return cpufreq_map
-
-    @staticmethod
-    def run_server_cmd(cmd):
-        """run cmd on server
-        Args:
-            cmd (str): command string
-        Returns:
-            result (bool): execute success, return True; else, return False
-        """
-        result = False
-        logger.info(f"server run {cmd}")
-        try:
-            ret = subprocess.run(cmd, universal_newlines=True, stdout=subprocess.PIPE,
-                                 stderr=subprocess.PIPE, check=True)
-            logger.info(f"Command output: {ret.stdout}")
-        except subprocess.CalledProcessError as error:
-            logger.error(f'Command failed with return code: {error.returncode}')
-            logger.error(f'Output: {error.output}')
-            logger.error(f'Error: {error.stderr}')
-
-        if ret.returncode == 0:
-            logger.info(f"run {cmd} ok")
-            result = True
-        else:
-            logger.error(f"run {cmd} fail, errorcode: {ret.returncode}")
-            result = False
-        return result
 
     @staticmethod
     def get_opp_table_from_dts(dts_file):

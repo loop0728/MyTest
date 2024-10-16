@@ -179,12 +179,11 @@ class SysappClient:
     def write(self, data, wait_timeout=5) -> bool:
         """
         Write data to device.
-
         Args:
-            data (str): write data
-
+            data (str): Write data.
+            wait_timeout (int): Socket timeout.
         Returns:
-            bool: result
+            result (bool): If executes success, return True; Else, return False.
         """
         msg = {
             "case_name": self.case_name,
@@ -197,14 +196,14 @@ class SysappClient:
 
     def read(self, line=1, wait_timeout=5):
         """
-        Read data from device.
-
+        Read multi-line data from device.
         Args:
-            line (int): lines
-            wait_timeout (int): one line timeout
-
+            line (int): Read lines count.
+            wait_timeout (int): Socket timeout.
         Returns:
-            bool,str: result, data
+            tuple:
+                - result (bool): If executes success, return True; Else, return False.
+                - all_data (str): All read data.
         """
         old_timeout = self._client_socket.gettimeout()
         self._client_socket.settimeout(wait_timeout)  # timeout (S)
@@ -241,7 +240,6 @@ class SysappClient:
     def close(self) -> bool:
         """
         Close device.
-
         Returns:
             bool: result
         """
@@ -257,7 +255,15 @@ class SysappClient:
         return result
 
     def get_board_cur_state(self):
-        """Get board curr state"""
+        """
+        Get the current state of the board.
+        Args:
+            None:
+        Returns:
+            tuple:
+                - result (bool): If execute success, return True; Else, return False.
+                - status (str): The description string of device status.
+        """
         msg = {
             "case_name": self.case_name,
             "cmd": "get_board_cur_state",
@@ -268,10 +274,31 @@ class SysappClient:
         return result, status
 
     def clear_board_cur_state(self):
-        """Clear board curr state"""
+        """
+        Clear the current state of the board.
+        Args:
+            None:
+        Returns:
+            result (bool): If executes success, return True; Else, return False.
+        """
         msg = {
             "case_name": self.case_name,
             "cmd": "clear_board_cur_state",
+            "device_name": self.device_name,
+        }
+        result, _ = self._send_to_server_and_check_response(msg)
+        return result
+
+    def clear(self):
+        """
+        Clear device buffer.
+
+        Returns:
+            bool: result
+        """
+        msg = {
+            "case_name": self.case_name,
+            "cmd": "clear",
             "device_name": self.device_name,
         }
         result, _ = self._send_to_server_and_check_response(msg)

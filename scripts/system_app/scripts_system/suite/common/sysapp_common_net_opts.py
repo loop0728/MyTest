@@ -3,6 +3,7 @@
 
 """net operations interfaces"""
 
+import re
 import time
 import sysapp_platform as platform
 from suite.common.sysapp_common_logger import logger
@@ -32,7 +33,7 @@ class SysappNetOpts():
         net_interface = "eth0"
         cmd_check_insmod_status = f"ifconfig -a | grep {net_interface};echo $?"
         device.write(cmd_check_insmod_status)
-        status, line = device.read(1, 30)
+        status, line = device.read(wait_timeout=30)
         if status:
             if isinstance(line, bytes):
                 line = line.decode('utf-8', errors='replace')
@@ -298,8 +299,16 @@ class SysappNetOpts():
         result = False
         try_cnt = 0
         umount_cmd = "umount /mnt/"
-        mount_cmd = (f"mount -t nfs -o nolock {platform.PLATFORM_MOUNT_IP}:"
-                     f"{platform.PLATFORM_MOUNT_PATH}/{sub_path} /mnt/;echo $?")
+        if platform.PLATFORM_MOUNT_MODE == "cifs":
+            mount_cmd = (f"mount -t cifs //{platform.PLATFORM_MOUNT_IP}/"
+                         f"{platform.PLATFORM_MOUNT_PATH}/{sub_path} /mnt "
+                         f"-o username={platform.PLATFORM_MOUNT_USER},"
+                         f"password={platform.PLATFORM_MOUNT_USER_PASSWORD},"
+                         "sec=ntlm,iocharset=utf8,nounix,noserverino,vers=1.0,"
+                         "file_mode=0700;echo $?")
+        else:
+            mount_cmd = (f"mount -t nfs -o nolock {platform.PLATFORM_MOUNT_IP}:"
+                        f"{platform.PLATFORM_MOUNT_PATH}/{sub_path} /mnt/;echo $?")
 
         device.write(umount_cmd)
         time.sleep(1)
@@ -307,7 +316,7 @@ class SysappNetOpts():
             device.write(mount_cmd)
             read_line_cnt = 0
             while True:
-                status, line = device.read(1, 10)
+                status, line = device.read(wait_timeout=10)
                 if status:
                     read_line_cnt += 1
                     if isinstance(line, bytes):
@@ -315,7 +324,8 @@ class SysappNetOpts():
                     line = line.strip()
                     if line == "0":
                         result = True
-                        logger.warning("mount server path to /mnt success")
+                        logger.warning(f"try_cnt:[{try_cnt+1}/5], "
+                                       "mount server path to /mnt success")
                         break
                     if "mount:" in line and "failed:" in line:
                         result = False
@@ -330,4 +340,106 @@ class SysappNetOpts():
 
         if not result:
             logger.error("mount server path to /mnt fail")
+        return result
+
+    @staticmethod
+    def remove_dump_files(device: object, dst_path):
+        """delete old dumped files
+        Args:
+            device_handle (class): device
+            dst_path (str): mounted destination path
+        Returns:
+            result (bool): execute success, return True; else, return False
+        """
+        result = False
+        # check dump file exist
+        cmd_stat_dump_file = f"stat {dst_path}"
+        device.write(cmd_stat_dump_file)
+        status, line = device.read()
+        if status:
+            if isinstance(line, bytes):
+                line = line.decode('utf-8', errors='replace')
+            line = line.strip()
+            if "No such file or directory" in line:
+                logger.info("dump file is not exist, no need to delete")
+                result = True
+                return result
+        else:
+            logger.error("stat dump file fail")
+            result = False
+            return result
+
+        cmd_rm_dump_file = f"rm {dst_path} -r;echo $?"
+        device.write(cmd_rm_dump_file)
+        status, line = device.read(wait_timeout=120)
+        if status:
+            if isinstance(line, bytes):
+                line = line.decode('utf-8', errors='replace')
+            line = line.strip()
+            if line == "0":
+                logger.info("rm old dump file ok")
+                result = True
+        else:
+            logger.error("rm old dump file fail")
+            result = False
+        logger.info(f"{line}")
+        return result
+
+    @staticmethod
+    def _get_path_last_part(path):
+        """
+        Get the last part of the whole path
+        Args:
+            path (str): path name
+        Returns:
+            last_part_name (str): the last part of path after '/'
+        """
+        last_part_name = ''
+        path = re.sub(r'/+', '/', path)
+        if path.endswith('/'):
+            path = path[:-1]
+        last_index = path.rfind('/')
+        if last_index == -1:
+            last_part_name = path
+        else:
+            last_part_name = path[last_index+1:]
+
+        return last_part_name
+
+    @classmethod
+    def dump_files(cls, device: object, src_path, dump_path):
+        """
+        dump devicetree files
+        Args:
+            device_handle (class): device
+            src_path (str): source path to dump from
+            dump_path (str): destination relative path to dump to
+        Returns:
+            result (bool): execute success, return True; else, return False
+        """
+        result = False
+        path_last_part = cls._get_path_last_part(src_path)
+        if not path_last_part:
+            logger.error(f"dump src path:{src_path} is invalid")
+            return result
+        dst_path = f"/mnt/{dump_path}/{path_last_part}"
+        result = cls.remove_dump_files(device, dst_path)
+        if not result:
+            return result
+        cmd_dump_file = f"cp {src_path} /mnt/{dump_path} -r;echo $?"
+        device.write(cmd_dump_file)
+        status, line = device.read(wait_timeout=120)
+        if status:
+            if isinstance(line, bytes):
+                line = line.decode('utf-8', errors='replace')
+            line = line.strip()
+            if line == "0":
+                logger.info("dump files ok")
+                result = True
+            else:
+                logger.error("dump files fail")
+                result = False
+        else:
+            logger.error(f"read line fail after cmd:{cmd_dump_file}")
+            result = False
         return result

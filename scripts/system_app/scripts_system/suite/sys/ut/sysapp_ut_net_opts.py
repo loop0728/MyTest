@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-"""newwork ut test"""
+"""network ut test"""
 
 from sysapp_client import SysappClient as Client
 from suite.common.sysapp_common_logger import logger, sysapp_print

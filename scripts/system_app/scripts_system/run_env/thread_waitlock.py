@@ -1,8 +1,8 @@
-""" Sysapp_ThreadWaitLock version 0.0.1 """
+""" SysappThreadWaitLock version 0.0.1 """
 import time
 from suite.common.sysapp_common_logger import logger
 
-class Sysapp_ThreadWaitLock():
+class SysappThreadWaitLock():
     """ write/read lock for timeout """
     def __init__(self, name):
         self.name = name

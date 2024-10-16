@@ -493,6 +493,24 @@ class SysappRebootOpts():
         return result
 
     @classmethod
+    def estar_script(cls, device: object, scritp_name):
+        """
+        Do estar in uboot phase to enter to kernel.
+        Args:
+            device (object): Client instance.
+            scritp_name (str): script name
+        Returns:
+            result (bool): If enter to kernel success, return True; Else, return False
+        """
+        result = False
+        result = cls._get_cur_boot_state(device)
+        if result:
+            if device.check_uboot_phase():
+                result = cls._run_uboot_cmd_to_kernel(device, f"estar {scritp_name}")
+
+        return result
+
+    @classmethod
     def cold_reboot_to_kernel(cls, device: object) -> bool:
         """
         Cold reboot the device to kernel.
