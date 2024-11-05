@@ -1,0 +1,23 @@
+[
+   {
+     "keyword": "/ #",
+     "enable_check": 1,
+     "happen_base_cnt": 12,
+     "check_file": "uart.log",
+     "checked_todo": "NONE"
+   },
+   {
+     "keyword": "fifo full",
+     "enable_check": 1,
+     "happen_base_cnt": 2,
+     "check_file": "uart.log,kmsg.log",
+     "checked_todo": "NONE"
+   },
+   {
+     "keyword": "FIFO FULL",
+     "enable_check": 1,
+     "happen_base_cnt": 20,
+     "check_file": "uart.log,kmsg.log",
+     "checked_todo": "cold_reboot"
+   }
+ ]

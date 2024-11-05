@@ -47,12 +47,15 @@ class SysappDeviceManager:
             self.locks[device.name] = False
         return True
 
-    def acquire_device(self, device_name) -> None:
+    def acquire_device(self, device_name):
         """
         Acquire device.
 
         Args:
             device_name (str) : device name
+
+        Returns:
+            bool : result
         """
         with self.lock:
             if device_name in self.devices and not self.locks[device_name]:
@@ -61,10 +64,13 @@ class SysappDeviceManager:
                 raise Exception(
                     f"Device {device_name} is not available or already locked"
                     )
-        self.devices[device_name].connect()
+        result = self.devices[device_name].connect()
+        if result is False:
+            self.devices.pop(device_name)
+            return False
         self.devices[device_name].start_read_thread()
         self.devices[device_name].start_save_data_thread()
-        return self.devices[device_name]
+        return True
 
     def release_device(self, device_name) -> None:
         """
@@ -172,7 +178,8 @@ class SysappServer:
         """Write to device."""
         device_name = msg["device_name"]
         data_to_write = msg["data"]
-        result = self._dm.devices[device_name].write(data_to_write)
+        echo_check = msg["echo_check"]
+        result = self._dm.devices[device_name].write(data_to_write, echo_check)
         self.response_msg_to_client(client, result)
 
     def read(self, client, msg):
@@ -227,8 +234,16 @@ class SysappServer:
                 port = 23
                 telnet_log = "./out/" + device_name + ".log"
                 telnet_device = SysappDevTelnet(device_name, PLATFORM_BOARD_IP, port, telnet_log)
-                self._dm.register_device(telnet_device)
-                self._dm.acquire_device(device_name)
+                result = self._dm.register_device(telnet_device)
+                if result is False:
+                    logger.error(f"{device_name} register failed.")
+                    self.response_msg_to_client(client, result)
+                    return result
+                result = self._dm.acquire_device(device_name)
+                if result is False:
+                    logger.error(f"{device_name} connect failed.")
+                    self.response_msg_to_client(client, result)
+                    return result
                 self._dm.update_case_name(self._case_name)
                 result = True
             elif device_type == "uart":
@@ -259,6 +274,7 @@ class SysappServer:
         self.response_msg_to_client(client, True)
         client.close()
         if device_name != "uart":
+            logger.warning(f"Close {device_name}")
             self._dm.release_device(device_name)
         # exit thread_callfun
         sys.exit()

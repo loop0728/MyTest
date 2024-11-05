@@ -16,16 +16,27 @@ class SysappPtreeThread(SysappWorkThreadBase):
         cmd = ("if [ -d /customer/ptree/preload ]; then find /customer/ptree/preload"
                 " -name \"*.json\"; fi > /mnt/out/caselist.txt")
         self.uart_handle.write(cmd)
+        time.sleep(1)
+        cmd = "sed -i '/\"APP_0_0\": {/,/}/ s/\"NAME\": \".*\"/\"NAME\": \""
+        cmd = cmd +  "ptree" + "\"/' /misc/earlyinit_setting.json"
+        self.uart_handle.write(cmd)
+
 
     def dealwith_threadloop_job_first(self, casename, loopcnt):
         """ dealwith_threadloop_job_first """
         logger.warning(f"we will run {casename} lopcnt:${loopcnt}")
-        case_single_name = os.path.basename(casename).split(".")[0]
-        cmd = "sed -i '/\"APP_0_0\": {/,/}/ s/\"NAME\": \".*\"/\"NAME\": \""
+        single_name = os.path.basename(casename).split(".")[0]
+        case_single_name = single_name[:-len("_ptree")] if single_name.endswith("_ptree") \
+                           else single_name
+        cmd = "sed -i '/\"APP_0_0\": {/,/}/ s/\"PARAM\": \".*\"/\"PARAM\": \""
         cmd = cmd +  f"{case_single_name}" + "\"/' /misc/earlyinit_setting.json"
         time.sleep(1)
         logger.warning(f"run {cmd}")
         self.uart_handle.write(cmd)
+        cmd = f"cp -rf /customer/ptree/preload/{casename} /misc/ptree.json"
+        time.sleep(1)
+        self.uart_handle.write(cmd)
+        time.sleep(1)
         result = SysappRebootOpts.reboot_to_kernel(self.uart_handle)
         if result is not True:
             logger.warning(f"caseName[{casename}] not in kernel!")

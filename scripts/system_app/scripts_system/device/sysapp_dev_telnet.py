@@ -66,8 +66,8 @@ class SysappDevTelnet(SysappDevBase):
             bool: result
         """
         self._dev_info['running'] = False
-        self.queue_clear(self._dev_info['data_queue'])
-        self.queue_clear(self._dev_info['tmp_data_queue'])
+        self.queue_clear("data_queue")
+        self.queue_clear("tmp_data_queue")
         if self._dev_info['conn']:
             self._dev_info['conn'].close()
             logger.info(f"Connection to {self.host}:{self.port} closed.")

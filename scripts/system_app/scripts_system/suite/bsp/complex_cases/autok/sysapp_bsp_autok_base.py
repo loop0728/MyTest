@@ -5,7 +5,8 @@ from enum import Enum
 import suite.common.sysapp_common_utils as SysappUtils
 from suite.common.sysapp_common_logger import logger, sysapp_print
 from suite.common.sysapp_common_reboot_opts import SysappRebootOpts
-# from suite.common.sysapp_common_register_opts import SysappRegisterOpts
+from suite.bsp.common.sysapp_bsp_storage import SysappBspStorage
+from suite.common.sysapp_common_register_opts import SysappRegisterOpts
 from cases.platform.bsp.complex_cases.autok.sysapp_bsp_autok_base_var import (BOOTING_TIME_STANDARD,
                                             OTT_FORCE_FLAG,OTT_MODE_UBOOT_KEYWORD, OTT_MODE_REG,
                                             OTT_CMD_UBOOT, OTT_PARTITION_NAME)
@@ -29,6 +30,7 @@ class SysappBspAutokBase():
         """
         # super().__init__(case_name="s", case_run_cnt=1, script_path='/')
         self.uart = case_uart
+        self.storage = SysappBspStorage(self.uart)
         self.ott_time_standard = BOOTING_TIME_STANDARD["OTT_TIME_STANDARD"]
         self.autok_time_standard = BOOTING_TIME_STANDARD["AUTOK_TIME_STANDARD"]
         logger.info("SysappBspAutokBase init successful")
@@ -155,7 +157,8 @@ class SysappBspAutokBase():
             bool: True for judge success, False judge fail.
         """
         keyword = ""
-        # str_reg_value = ""
+        str_reg_value = ""
+        result = False
         logger.info(f"run judge_ubootreg_ott_mode {target_mode}")
         if self.SysappOttMode.USE_DEFULT == target_mode:
             keyword = OTT_MODE_REG["USE_DEFUL"]
@@ -169,24 +172,15 @@ class SysappBspAutokBase():
             return False
         logger.info(f"Ott keyword is {keyword}")
 
-        # result, str_reg_value = SysappRegisterOpts.read_register(self.uart, OTT_MODE_REG['BANK'],
-        #                                                          OTT_MODE_REG['OFFSET'])
-        # if result is True:
-        #     if str_reg_value == keyword:
-        #         logger.error(f"read reg {OTT_MODE_REG['BANK']} {OTT_MODE_REG['OFFSET']} fail,\
-        #                      keyword is {keyword},str_reg_value is {str_reg_value}")
-        #         return False
-        # else:
-        #     logger.error("read_register fail!")
-        #     return False
-        ss_input = f"riu_r {OTT_MODE_REG['BANK']} {OTT_MODE_REG['OFFSET']}"
-        wait_line = 10
-        result, _ = SysappUtils.write_and_match_keyword(
-            self.uart, ss_input, keyword, wait_line)
+        result, str_reg_value = SysappRegisterOpts.read_register(self.uart, OTT_MODE_REG['BANK'],
+                                                                 OTT_MODE_REG['OFFSET'])
         if result is True:
-            logger.info(f"cmd {ss_input} run ok")
+            if str_reg_value != keyword:
+                logger.error(f"read reg {OTT_MODE_REG['BANK']} {OTT_MODE_REG['OFFSET']} fail,\
+                             keyword is {keyword},str_reg_value is {str_reg_value}")
+                return False
         else:
-            logger.error(f"cmd {ss_input} run fail keyword is {keyword},data is {_}")
+            logger.error("read_register fail!")
             return False
 
         logger.info("run judge_ubootreg_ott_mode pass")
@@ -205,29 +199,22 @@ class SysappBspAutokBase():
         keyword = ""
         logger.info(f"run set_kernelreg_autok_mode {target_mode}")
         if self.SysappOttMode.USE_DEFULT == target_mode:
-            ss_input = f"/customer/riu_w {OTT_MODE_REG['BANK']} {OTT_MODE_REG['OFFSET']} \
-                {OTT_MODE_REG['USE_DEFUL']}"
             keyword = OTT_MODE_REG["USE_DEFUL"]
         elif self.SysappOttMode.USE_TRAIN_DATA == target_mode:
-            ss_input = f"/customer/riu_w {OTT_MODE_REG['BANK']} {OTT_MODE_REG['OFFSET']} \
-                {OTT_MODE_REG['USE_TRAIN_DATA']}"
             keyword = OTT_MODE_REG["USE_TRAIN_DATA"]
         elif self.SysappOttMode.RUN_AUTOK == target_mode:
-            ss_input = f"/customer/riu_w {OTT_MODE_REG['BANK']} {OTT_MODE_REG['OFFSET']} \
-                {OTT_MODE_REG['RUN_AUTOK']}"
             keyword = OTT_MODE_REG["RUN_AUTOK"]
         else:
             logger.error(
                 f"set_kernelreg_autok_mode {target_mode} parm fail")
             return False
         logger.info(f"Ott keyword is {keyword}")
-        wait_line = 10
-        result, _ = SysappUtils.write_and_match_keyword(
-            self.uart, ss_input, keyword, wait_line)
-        if result is True:
-            logger.info(f"cmd {ss_input} set ok")
-        else:
-            logger.error(f"cmd {ss_input} set fail,data is {_}")
+
+        result = SysappRegisterOpts.write_register(self.uart, OTT_MODE_REG['BANK'],
+                                                   OTT_MODE_REG['OFFSET'], keyword)
+        if result is False:
+            logger.error(f"read_register fail! bank is {OTT_MODE_REG['BANK']}, \
+                         offset is {OTT_MODE_REG['OFFSET']}")
             return False
 
         logger.info("run set_kernelreg_autok_mode pass")
@@ -244,6 +231,8 @@ class SysappBspAutokBase():
             bool: True for judge ok, False judge fail.
         """
         keyword = ""
+        str_reg_value = ""
+        result = False
         logger.info(f"run judge_kernelreg_autok_mode {target_mode}")
         if self.SysappOttMode.USE_DEFULT == target_mode:
             keyword = OTT_MODE_REG["USE_DEFUL"]
@@ -256,16 +245,18 @@ class SysappBspAutokBase():
                 f"judge_kernelreg_autok_mode {target_mode} parm fail")
             return False
         logger.info(f"Ott keyword is {keyword}")
-        ss_input = f"/customer/riu_r {OTT_MODE_REG['BANK']} {OTT_MODE_REG['OFFSET']}"
-        wait_line = 10
-        result, data = SysappUtils.write_and_match_keyword(
-            self.uart, ss_input, keyword, wait_line)
 
+        result, str_reg_value = SysappRegisterOpts.read_register(self.uart, OTT_MODE_REG['BANK'],
+                                                                 OTT_MODE_REG['OFFSET'])
         if result is True:
-            logger.info(f"cmd {ss_input} judge ok")
+            if str_reg_value != keyword:
+                logger.error(f"kernelread reg {OTT_MODE_REG['BANK']} {OTT_MODE_REG['OFFSET']} fail,\
+                             keyword is {keyword},str_reg_value is {str_reg_value}")
+                return False
         else:
-            logger.error(f"cmd {ss_input} judge fail,data is {data}")
+            logger.error("read_register fail!")
             return False
+
         logger.info("run judge_kernelreg_autok_mode pass")
         return True
 
@@ -279,6 +270,7 @@ class SysappBspAutokBase():
         Returns:
             bool: True run str ok, False run str fail.
         """
+        # The way the str scenario resumes may be different for each generation of chip
         ss_input = "ls /sys/devices/virtual/sstar/rtcpwc/alarm_timer"
         keyword = "/sys/devices/virtual/sstar/rtcpwc/alarm_timer"
         wait_line = 2
@@ -712,17 +704,22 @@ class SysappBspAutokBase():
         return True
 
     @sysapp_print.print_line_info
-    def flash_erase(self) -> bool:
+    def flash_erase_uboot(self) -> bool:
         """Determine whether to go OTT flow or autok Flow by reading bootingtime
 
         Args:
-            target_flow (enum): ott or autok
+            Na
 
         Returns:
             bool: True for success, False fail.
         """
-        self.uart.write(f"nand erase.part {OTT_PARTITION_NAME}")
-        logger.info("run flash_erase pass")
+        ret = False
+        ret = self.storage.erase(OTT_PARTITION_NAME, None)
+        if ret is False:
+            logger.error(f"erase {OTT_PARTITION_NAME} failed")
+            return False
+
+        logger.info("run flash_erase_uboot in uboot pass")
         return True
 
     @sysapp_print.print_line_info
@@ -730,14 +727,16 @@ class SysappBspAutokBase():
         """Determine whether to go OTT flow or autok Flow by reading bootingtime
 
         Args:
-            target_flow (enum): ott or autok
+            Na
 
         Returns:
             bool: True for success, False fail.
         """
+        # This must be called EMMC flash waiting for sysapp
         ss_input = "cat /proc/mtd"
         keyword = OTT_PARTITION_NAME
         wait_line = 100
+        ret = False
         result, data = SysappUtils.write_and_match_keyword(
             self.uart, ss_input, keyword, wait_line)
         if result is True:
@@ -745,8 +744,11 @@ class SysappBspAutokBase():
             str_mtd = data.split(':')[0].strip()
             if str_mtd:
                 logger.info(f'ott partiton mtd is {str_mtd}')
-                self.uart.write(f"flash_eraseall /dev/{str_mtd}")
-                time.sleep(6)
+                ret = self.storage.erase(str_mtd, None)
+                if ret is False:
+                    logger.error(f"erase {str_mtd} failed")
+                    return False
+                # time.sleep(6) this step should be storage.erase()
             else:
                 logger.error('ott partiton mtd No match, data is {data}')
                 return False

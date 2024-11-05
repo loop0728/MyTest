@@ -4,7 +4,8 @@
 #1: case_stage, 2: case_path, 3: script, 4: case_name 5: json_out onoff 6: log opt
 if [ -z "$1" ]; then
     AddCaseSystem 0x01 /aov/os_switch "suite/sys/aov/os_switch/sysapp_aov_os_switch.py" SysappAovOsSwitch on
-    AddCaseSystem 0x01 /aov/str "suite/sys/aov/str/sysapp_aov_str.py" SysappAovStr on
+    AddCaseSystem 0x01 /aov/str "suite/sys/aov/str/sysapp_aov_str.py" SysappAovStr_1snr on
+    AddCaseSystem 0x01 /aov/str "suite/sys/aov/str/sysapp_aov_str.py" SysappAovStr_2snr on
     AddCaseSystem 0x01 /aov/str_crc "suite/sys/aov/str_crc/sysapp_aov_str_crc.py" SysappAovStrCrc on
     AddCaseSystem 0x01 /aov/cold_reboot "suite/sys/aov/cold_reboot/sysapp_aov_cold_reboot.py" SysappAovColdReboot on
     AddCaseSystem 0x01 /aov/ttff_ttcl "suite/sys/aov/ttff_ttcl/sysapp_aov_ttff_ttcl.py" SysappAovTtffTtcl on
@@ -21,7 +22,7 @@ else
                 case_class="SysappAovStrCrc"
             ;;
             "str")
-                case_class="SysappAovStr"
+                case_class="SysappAovStr_1snr"
             ;;
             "ttff_ttcl")
                 case_class="SysappAovTtffTtcl"

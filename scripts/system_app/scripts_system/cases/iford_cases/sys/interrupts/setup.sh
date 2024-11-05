@@ -3,7 +3,7 @@
 ############################## Interrupts ##############################
 #1: case_stage, 2: case_path, 3: script, 4: case_name 5: json_out onoff 6: log opt
 if [ -z "$1" ]; then
-    AddCaseSystem 0x01 /interrupts/show_interrupts "suite/sys/interrupts/sysapp_sys_show_interrupts.py" SysappShowInterrupts on
+    AddCaseSystem 0x0F /interrupts/show_interrupts "suite/sys/interrupts/sysapp_sys_show_interrupts.py" SysappShowInterrupts on
 else
     module_list=${1#*=}
     for module in ${module_list}
@@ -17,7 +17,7 @@ else
                 continue
             ;;
         esac
-        AddCaseSystem 0x01 /interrupts/${module} "suite/sys/interrupts/${module}.py" ${case_class} on skip
+        AddCaseSystem 0x0F /interrupts/${module} "suite/sys/interrupts/${module}.py" ${case_class} on skip
     done
 fi
 ############################## Interrupts ##############################

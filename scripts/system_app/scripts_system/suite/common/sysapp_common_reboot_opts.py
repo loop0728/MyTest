@@ -3,6 +3,7 @@
 
 """reboot interfaces"""
 
+import re
 import time
 from suite.common.sysapp_common_logger import logger
 import sysapp_platform as platform
@@ -13,13 +14,13 @@ class SysappRebootOpts():
     A class representing reboot options
     Attributes:
         __uboot_prompt (str): the prompt of uboot phase
-        __kernel_prompt (str): the prompt of kernel phase
+        __kernel_prompt_pattern (str): the prompt pattern of kernel phase
         __reboot_timeout (int): reboot timeout setting
         __enter_uboot_try_cnt (int): the count of pressing enter to jump to uboot
         __get_state_try_cnt (int): the count of pressing enter to get current state of device
     """
     __uboot_prompt  = 'SigmaStar #'
-    __kernel_prompt = '/ #'
+    __kernel_prompt_pattern = r"/\w* #"
     __reboot_timeout = 30
     __enter_uboot_try_cnt = 30
     __get_state_try_cnt = 20
@@ -271,7 +272,8 @@ class SysappRebootOpts():
                 if "not defined" in line:
                     result = False
                     break
-                if cls.__uboot_prompt == line.strip() or cls.__kernel_prompt == line.strip():
+                if (cls.__uboot_prompt == line.strip()
+                    or re.search(cls.__kernel_prompt_pattern, line.strip())):
                     if val:
                         result = True
                     break

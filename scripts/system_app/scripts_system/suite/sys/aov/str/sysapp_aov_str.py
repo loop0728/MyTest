@@ -40,7 +40,14 @@ class SysappAovStr(CaseBase):
             case_run_cnt (int): the number of times the test case runs
             module_path_name (str): moudle path
         """
-        super().__init__(case_name, case_run_cnt, module_path_name)
+        index = case_name.find('_')
+        if index != -1:
+            casename = case_name[:index]
+            self.scenario = case_name[index+1:]
+        else:
+            casename = case_name
+            self.scenario = "1snr"
+        super().__init__(casename, case_run_cnt, module_path_name)
         self.uart = Client(self.case_name, "uart", "uart")
         self.case_env_param = {
             'max_read_lines': 10240
@@ -117,7 +124,12 @@ class SysappAovStr(CaseBase):
             None:
         """
         retry_cnt = 0
-        logger.info("start app")
+        if self.scenario == '2snr':
+            self.case_cmd_param['cmd_aov_run'] = ("/customer/sample_code/bin/"
+                                                  "prog_aov_aov_demo dual_sensor -t -d")
+        else:
+            self.scenario = '1snr'
+        logger.info(f"start app, {self.scenario} scenario")
         self.uart.write(self.case_cmd_param['cmd_aov_run'])
         time.sleep(10)
         logger.info("send str cmd to app")

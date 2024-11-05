@@ -25,13 +25,13 @@ if [ "$current_os" = "dualos" ]; then
     echo "dualos cli perf"
     echo cli perf > /proc/dualos/rtos
     sleep 5
-    echo cli perf --dump \"$resultpath/perf.bin\" > /proc/dualos/rtos
+    echo cli perf --dump "$resultpath/perf.bin" > /proc/dualos/rtos
     sleep 3
     echo cli taskstat  > /proc/dualos/rtos
     cat /proc/dualos/log | tee $resultpath/rtos_task.txt
 else
     echo "linux cpu perf"
-    ./perfbin/perf record -e cpu-clock -g -o $resultpath/sys.perf
-    sleep 3
-    ./perfbin/perf script -i /mnt/out/cpu/sys.perf > $resultpath/sys_perf.bin
+    ./perfbin/perf record -e cpu-clock -g -o $resultpath/sys.perf sleep 10
+    sleep 1
+    ./perfbin/perf script -i $resultpath/sys.perf > $resultpath/sys_perf.bin
 fi

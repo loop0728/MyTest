@@ -11,6 +11,7 @@ from suite.common.sysapp_common_net_opts import SysappNetOpts
 import suite.common.sysapp_common_utils as SysappUtils
 from suite.common.sysapp_common_case_base import SysappCaseBase
 from suite.common.sysapp_common_types import SysappErrorCodes as EC
+import suite.sys.ut.sysapp_ut_common as SysappUtCommon
 from sysapp_client import SysappClient
 
 class SysappUtDm(SysappCaseBase):
@@ -56,8 +57,8 @@ class SysappUtDm(SysappCaseBase):
             except Exception as e:
                 logger.info(f"read fail {e}")
                 break
-        result = SysappUtils.are_files_equal_line_by_line(log_path, resource_log)
-        if result == 255:
+        result = SysappUtCommon.are_files_equal_line_by_line(log_path, resource_log)
+        if result is False:
             logger.error(f"{test_cmd} fail.")
         else:
             logger.info(f"{test_cmd} pass.")

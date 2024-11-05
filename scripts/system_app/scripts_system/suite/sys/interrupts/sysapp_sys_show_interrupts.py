@@ -39,7 +39,7 @@ class SysappSysShowInterrupts(CaseBase):
         telnetmixer = Client(self.case_name, "telnet", "telnetmixer")
         mixerthread = SysappMixerThread(telnetmixer)
         time.sleep(3)
-        casecnt = mixerthread.solve_caselist()
+        casecnt = mixerthread.solve_caselist_by_stage(self.case_stage)
         if casecnt == 0:
             logger.warning("mixerthread case error!")
             return -1

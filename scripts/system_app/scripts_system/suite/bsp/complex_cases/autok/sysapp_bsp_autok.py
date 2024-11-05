@@ -34,6 +34,7 @@ class SysappBspAutok(CaseBase):
         self.case_run_cnt = case_run_cnt
         self.script_path = script_path
         self.uart = SysappClient(self.case_name, "uart", "uart")
+        self.autok_handle = AutokBase(self.uart)
         logger.info(f"{self.case_name} init successful")
 
     @sysapp_print.print_line_info
@@ -43,7 +44,6 @@ class SysappBspAutok(CaseBase):
         Args:
             na
         """
-        #result = sys_common.goto_kernel(self.uart)
         result = SysappRebootOpts.reboot_to_kernel(self.uart)
         if result is False:
             logger.error("case_deinit Fail")
@@ -62,25 +62,26 @@ class SysappBspAutok(CaseBase):
             enum: ErrorCodes code
         """
         err_code = EC.SUCCESS
-        autok_handle = AutokBase(self.uart)
-        ret = SysappRebootOpts.reboot_to_kernel(self.uart)
-        if ret is False:
-            logger.error("reboot_in_kernel fail.")
-            err_code = EC.FAIL
-            return err_code
+        try:
+            ret = SysappRebootOpts.reboot_to_kernel(self.uart)
+            if ret is False:
+                logger.error("reboot_in_kernel fail.")
+                err_code = EC.FAIL
+                return err_code
 
-        ret = autok_handle.judge_kernelreg_autok_mode(
-            autok_handle.SysappOttMode.RUN_AUTOK)
-        if ret is False:
-            logger.error("Not Run Autok")
+            ret = self.autok_handle.judge_kernelreg_autok_mode(
+                self.autok_handle.SysappOttMode.RUN_AUTOK)
+            if ret is False:
+                logger.error("Not Run Autok")
+                err_code = EC.FAIL
+                return err_code
+        except Exception as e:
+            logger.error(f"Exception occurred: {str(e)}")
             err_code = EC.FAIL
-            return err_code
-
-        ret = self.case_deinit()
-        if ret is False:
-            logger.error(f"{self.case_name} case_deinit fail.")
-            err_code = EC.FAIL
-            return err_code
+        finally:
+            ret = self.case_deinit()
+            if ret is False:
+                logger.error(f"{self.case_name} case_deinit fail.")
 
         return err_code
 

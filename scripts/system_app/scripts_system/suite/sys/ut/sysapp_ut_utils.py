@@ -6,6 +6,7 @@
 from sysapp_client import SysappClient as Client
 from suite.common.sysapp_common_logger import logger, sysapp_print
 from suite.common.sysapp_common_case_base import SysappCaseBase as CaseBase
+from suite.common.sysapp_common_reboot_opts import SysappRebootOpts
 import suite.common.sysapp_common_utils as SysappUtils
 from suite.common.sysapp_common_types import SysappErrorCodes
 
@@ -25,9 +26,9 @@ class SysappUtUtils(CaseBase):
         super().__init__(case_name, case_run_cnt, module_path_name)
         self.uart = Client(self.case_name, "uart", "uart")
 
-    def utils_api_test(self):
+    def utils_write_read_test(self):
         """
-        Register test.
+        Write command and read result test.
         Args:
             None:
         Returns:
@@ -56,6 +57,94 @@ class SysappUtUtils(CaseBase):
         result = (ret_read_single_line and ret_read_multi_line)
         return result
 
+    @staticmethod
+    def utils_run_server_cmd_test():
+        """
+        Run server cmd test.
+        Args:
+            None:
+        Returns:
+            result (bool): Test success, return True; Else, return False.
+        """
+        result = False
+        cmd_list_files = (['ls', '-l'])
+        logger.warning("create files on server ...")
+        result, data = SysappUtils.run_server_cmd(cmd_list_files)
+        logger.info(f"execute cmd result:{result}, data:{data}")
+
+        cmd_create_dir = (['mkdir', '-p', 'test_run_server_cmd'])
+        logger.warning("create directory on server ...")
+        result, data = SysappUtils.run_server_cmd(cmd_create_dir)
+        logger.info(f"execute cmd result:{result}, data:{data}")
+
+        SysappUtils.change_server_dir('test_run_server_cmd')
+        result, data = SysappUtils.run_server_cmd(cmd_list_files)
+
+        cmd_touch_files = (['touch', 'a.c', 'b.c', 'c.c', 'd.c'])
+        logger.warning("touch files on server ...")
+        result, data = SysappUtils.run_server_cmd(cmd_touch_files)
+        logger.info(f"execute cmd result:{result}, data:{data}")
+        result, data = SysappUtils.run_server_cmd(cmd_list_files)
+
+        cmd_tar_czf = (['tar', '-czvf', 'test.tar.gz', 'a.c', 'b.c', 'c.c', 'd.c'])
+        result, data = SysappUtils.run_server_cmd(cmd_tar_czf)
+        logger.info(f"execute cmd result:{result}, data:{data}")
+        result, data = SysappUtils.run_server_cmd(cmd_list_files)
+
+        cmd_create_dir = (['mkdir', '-p', 'out'])
+        result, data = SysappUtils.run_server_cmd(cmd_create_dir)
+
+        cmd_tar_xzf = (['tar', '-xzvf', 'test.tar.gz', '-C', 'out'])
+        result, data = SysappUtils.run_server_cmd(cmd_tar_xzf)
+        logger.info(f"execute cmd result:{result}, data:{data}")
+
+        SysappUtils.change_server_dir('out')
+        result, data = SysappUtils.run_server_cmd(cmd_list_files)
+
+        return result
+
+    def utils_test_insmod_ko(self):
+        """
+        Insmod/rmmod driver and check the driver loading status.
+        Args:
+            None:
+        Returns:
+            result (bool): Test success, return True; Else, return False.
+        """
+        result = False
+        ko_path = "/config/modules/5.10/sc4336p_mipi.ko"
+        ko_param = "chmap=1 mclk=27M sleep_mode=2"
+        result = False
+        result = SysappRebootOpts.init_kernel_env(self.uart)
+        if not result:
+            return result
+
+        result = SysappUtils.check_ko_insmod_status(self.uart, ko_path)
+        if result:
+            result = SysappUtils.rmmod_ko(self.uart, ko_path)
+            if not result:
+                return result
+        result = SysappUtils.insmod_ko(self.uart, ko_path, ko_param)
+        return result
+
+    def utils_test_file_exist(self):
+        """
+        Test if the file on server and the file on device exist.
+        Args:
+            None:
+        Returns:
+            result (bool): Test success, return True; Else, return False.
+        """
+        result = False
+        device_file_path = "/customer/sample_code/bin"
+        result = SysappRebootOpts.init_kernel_env(self.uart)
+        if not result:
+            return result
+        result = SysappUtils.check_device_file_exist(self.uart, device_file_path)
+        if not result:
+            logger.error(f"device_file: {device_file_path} is not exist")
+        return result
+
     @sysapp_print.print_line_info
     def runcase(self):
         """
@@ -66,7 +155,8 @@ class SysappUtUtils(CaseBase):
             error_code (SysappErrorCodes): Result of test.
         """
         error_code = SysappErrorCodes.FAIL
-        result = self.utils_api_test()
+        result = self.utils_test_insmod_ko()
+        result &= self.utils_test_file_exist()
         if result:
             error_code = SysappErrorCodes.SUCCESS
 

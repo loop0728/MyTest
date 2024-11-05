@@ -34,6 +34,7 @@ class SysappBspAutokOttKernel(CaseBase):
         self.case_run_cnt = case_run_cnt
         self.script_path = script_path
         self.uart = SysappClient(self.case_name, "uart", "uart")
+        self.autok_handle = AutokBase(self.uart)
         logger.info(f"{self.case_name} init successful")
 
     @sysapp_print.print_line_info
@@ -62,39 +63,39 @@ class SysappBspAutokOttKernel(CaseBase):
             enum: ErrorCodes code
         """
         err_code = EC.SUCCESS
-        autok_handle = AutokBase(self.uart)
+        try:
+            ret = SysappRebootOpts.reboot_to_kernel(self.uart)
+            if ret is False:
+                logger.error("reboot_in_kernel fail.")
+                err_code = EC.FAIL
+                return err_code
 
-        ret = SysappRebootOpts.reboot_to_kernel(self.uart)
-        if ret is False:
-            logger.error("reboot_in_kernel fail.")
-            err_code = EC.FAIL
-            return err_code
+            ret = self.autok_handle.flash_erase_kernel()
+            if ret is False:
+                logger.error("flash_erase_kernel fail.")
+                err_code = EC.FAIL
+                return err_code
 
-        ret = autok_handle.flash_erase_kernel()
-        if ret is False:
-            logger.error("flash_erase_kernel fail.")
-            err_code = EC.FAIL
-            return err_code
+            ret = self.autok_handle.judge_flow_autok_ott(
+                self.autok_handle.SysappDdrTrainFlow.AUTOK, "linux")
+            if ret is False:
+                logger.error("judge_flow_autok fail.")
+                err_code = EC.FAIL
+                return err_code
 
-        ret = autok_handle.judge_flow_autok_ott(
-            autok_handle.SysappDdrTrainFlow.AUTOK, "linux")
-        if ret is False:
-            logger.error("judge_flow_autok fail.")
+            ret = self.autok_handle.judge_flow_autok_ott(
+                self.autok_handle.SysappDdrTrainFlow.OTT, "linux")
+            if ret is False:
+                logger.error("judge_flow_autok fail.")
+                err_code = EC.FAIL
+                return err_code
+        except Exception as e:
+            logger.error(f"Exception occurred: {str(e)}")
             err_code = EC.FAIL
-            return err_code
-
-        ret = autok_handle.judge_flow_autok_ott(
-            autok_handle.SysappDdrTrainFlow.OTT, "linux")
-        if ret is False:
-            logger.error("judge_flow_autok fail.")
-            err_code = EC.FAIL
-            return err_code
-
-        ret = self.case_deinit()
-        if ret is False:
-            logger.error(f"{self.case_name} case_deinit fail.")
-            err_code = EC.FAIL
-            return err_code
+        finally:
+            ret = self.case_deinit()
+            if ret is False:
+                logger.error(f"{self.case_name} case_deinit fail.")
 
         return err_code
 

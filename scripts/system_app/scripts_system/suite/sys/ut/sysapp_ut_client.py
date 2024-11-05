@@ -12,6 +12,7 @@ from suite.common.sysapp_common_net_opts import SysappNetOpts
 import suite.common.sysapp_common_utils as SysappUtils
 from suite.common.sysapp_common_case_base import SysappCaseBase
 from suite.common.sysapp_common_types import SysappErrorCodes as EC
+import suite.sys.ut.sysapp_ut_common as SysappUtCommon
 
 
 class SysappUtClient(SysappCaseBase):
@@ -81,8 +82,8 @@ class SysappUtClient(SysappCaseBase):
             else:
                 logger.warning("Read time out.")
                 break
-        result = SysappUtils.are_files_equal_line_by_line(log_path, resource_log)
-        if result == 255:
+        result = SysappUtCommon.are_files_equal_line_by_line(log_path, resource_log)
+        if result is False:
             logger.error(f"{test_cmd} fail.")
             return result
         else:
@@ -104,8 +105,6 @@ class SysappUtClient(SysappCaseBase):
 
         uart = SysappClient(self.case_name, "uart", "uart")
         SysappRebootOpts.init_kernel_env(uart)
-        #sys_common.set_board_kernel_ip(uart)
-        #sys_common.mount_to_server(uart)
         SysappNetOpts.setup_network(uart)
         SysappNetOpts.mount_server_path_to_board(uart)
 

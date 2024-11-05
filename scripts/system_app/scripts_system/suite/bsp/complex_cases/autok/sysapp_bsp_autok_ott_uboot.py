@@ -70,9 +70,9 @@ class SysappBspAutokOttUboot(CaseBase):
             logger.error("Go to Uboot fail.")
             return False
 
-        ret = self.autok_handle.flash_erase()
+        ret = self.autok_handle.flash_erase_uboot()
         if ret is False:
-            logger.error("flash_erase fail.")
+            logger.error("flash_erase_uboot fail.")
             return False
 
         ret = self.autok_handle.reboot_in_uboot()
@@ -139,35 +139,38 @@ class SysappBspAutokOttUboot(CaseBase):
             enum: ErrorCodes code
         """
         err_code = EC.SUCCESS
-        ret = self._case_init_autok()
-        if ret is False:
-            logger.error("case_init_autok fail.")
-            err_code = EC.FAIL
-            return err_code
+        try:
+            ret = self._case_init_autok()
+            if ret is False:
+                logger.error("case_init_autok fail.")
+                err_code = EC.FAIL
+                return err_code
 
-        ret = self.autok_handle.judge_ubootcmd_ott_flag(self.autok_handle.SysappOttFlag.FORCE_OTT)
-        if ret is False:
-            logger.error("judge_ubootcmd_ott_flag fail.")
-            err_code = EC.FAIL
-            return err_code
+            ret = self.autok_handle.judge_ubootcmd_ott_flag(
+                self.autok_handle.SysappOttFlag.FORCE_OTT)
+            if ret is False:
+                logger.error("judge_ubootcmd_ott_flag fail.")
+                err_code = EC.FAIL
+                return err_code
 
-        ret = self.judge_force_autok_ott()
-        if ret is False:
-            logger.error("judge_force_autok_ott fail")
-            err_code = EC.FAIL
-            return err_code
+            ret = self.judge_force_autok_ott()
+            if ret is False:
+                logger.error("judge_force_autok_ott fail")
+                err_code = EC.FAIL
+                return err_code
 
-        ret = self.judge_force_mode()
-        if ret is False:
-            logger.error(f"{self.case_name} judge_force_mode fail.")
+            ret = self.judge_force_mode()
+            if ret is False:
+                logger.error(f"{self.case_name} judge_force_mode fail.")
+                err_code = EC.FAIL
+                return err_code
+        except Exception as e:
+            logger.error(f"Exception occurred: {str(e)}")
             err_code = EC.FAIL
-            return err_code
-
-        ret = self.case_deinit_autok()
-        if ret is False:
-            logger.error("Go to Uboot fail.")
-            err_code = EC.FAIL
-            return err_code
+        finally:
+            ret = self.case_deinit_autok()
+            if ret is False:
+                logger.error("Go to Uboot fail.")
 
         return err_code
 

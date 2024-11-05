@@ -19,32 +19,20 @@ class SysappCaseBase:
         """
         self.case_name = case_name
         self.case_run_cnt = case_run_cnt
-        # self.script_path = script_path
         self.case_stage = case_stage
         self.uart_log_path = LOG_PATH
-        self.module_path = "/".join(script_path.split("/")[:-1])
-        self.case_res_path = f"scripts_system/{self.module_path}"
+        module_path = "/".join(script_path.split("/")[:-1])
+        self.case_res_path = f"scripts_system/{module_path}"
         self.local_mount_path = f"{PLATFORM_LOCAL_MOUNT_PATH}/{self.case_res_path}"
-
-    def is_stress(self):
-        """
-        Determine if it is stress.
-
-        Returns:
-            bool: result
-        """
-        is_stress = False
+        self.b_stress = False
         if (
                 self.case_name[len(self.case_name) - 1 :].isdigit()
                 and "_stress_" in self.case_name
         ):
             parase_list = self.case_name.split("_stress_")
-            if len(parase_list) != 2:
-                return 255
             self.case_run_cnt = int(parase_list[1])
             self.case_name = parase_list[0]
-            is_stress = True
-        return is_stress
+            self.b_stress = True
 
     def enter_debug_mode(self, device_handle: object):
         """If debug mode existed, run corresponding events."""

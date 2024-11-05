@@ -25,7 +25,7 @@ def _match_keyword(device: object, keyword, read_all_data=False, max_read_lines=
     Returns:
         tuple:
             - result (bool): If reads keyword success, return True; Else, return False.
-            - data (str): Read line data
+            - data (str): Read data
     """
     read_cnt = 0
     all_data = ""
@@ -42,7 +42,10 @@ def _match_keyword(device: object, keyword, read_all_data=False, max_read_lines=
         else:
             logger.error("Read timeout!")
             break
-    return False, ""
+    if read_all_data:
+        return False, all_data
+    else:
+        return False, ""
 
 def write_and_match_keyword(device: object, cmd, keyword, read_all_data=False,
                             max_read_lines=100, timeout=5):
@@ -91,9 +94,12 @@ def run_server_cmd(cmd):
     Args:
         cmd (str): command string
     Returns:
-        result (bool): execute success, return True; else, return False
+        tuple:
+            - result (bool): execute success, return True; else, return False
+            - data (str): cmd log
     """
     result = False
+    data = ""
     logger.info(f"server run {cmd}")
     try:
         ret = subprocess.run(cmd, universal_newlines=True, stdout=subprocess.PIPE,
@@ -107,10 +113,11 @@ def run_server_cmd(cmd):
     if ret.returncode == 0:
         logger.info(f"run {cmd} ok")
         result = True
+        data = ret.stdout
     else:
         logger.error(f"run {cmd} fail, errorcode: {ret.returncode}")
         result = False
-    return result
+    return result, data
 
 # show timestamp of printk log
 @sysapp_print.print_line_info
@@ -142,7 +149,6 @@ def disable_printk_time(device_handle):
     cmd_printk_time_off = "echo n > /sys/module/printk/parameters/time"
     device_handle.write(cmd_printk_time_off)
 
-# used by sysapp_dev_sys & ut cases
 def ensure_file_exists(file_path) -> None:
     """
     Ensure file exists.
@@ -165,30 +171,29 @@ def ensure_file_exists(file_path) -> None:
     else:
         logger.info(f"File existed: {file_path}")
 
-# used by ut cases
-def are_files_equal_line_by_line(file1, file2) -> int:
+def check_device_file_exist(device: object, file_path):
     """
-    Are files equal line by line.
-
+    Check if the file on the device exists.
     Args:
-        file1 (str): file1 path
-        file2 (str): file2 path
-
+        device (objecet): device handle
+        file_path: file path
     Returns:
-        int: result
+        result (bool): If the file exists, return True; Else, return False.
     """
-    with open(file1, "r", encoding="utf-8") as test_file1, open(
-            file2, "r", encoding="utf-8"
-    ) as test_file2:
-        for line1, line2 in zip(test_file1, test_file2):
-            if line1 != line2:
-                print(f"{line1} not equal {line2}")
-                return 255
-        if test_file1.readline() == test_file2.readline():
-            result = 0
-        else:
-            result = 255
-        return result
+    result = False
+    result = device.check_kernel_phase()
+    if result:
+        cmd = f"ls {file_path} > /dev/null;echo $?"
+        result = device.write(cmd)
+        if result:
+            result, data = device.read()
+            if result and "0" in data:
+                result = True
+            else:
+                result = False
+    else:
+        logger.error("the device is not in kernel phase now")
+    return result
 
 def _get_json_content(json_path) -> dict:
     """
@@ -235,4 +240,131 @@ def get_case_json_key_value(key_str, case_name, json_file_path=""):
             logger.warning(
                 f"no find {key_str} key, will use default value"
             )
+    return result
+
+def _get_ko_symbol_name_from_path(device: object, ko_path):
+    """
+    Get the symbol name of ko from path.
+    Args:
+        device (): device handle
+        ko_path (str): the file path of ko
+    Returns:
+        tuple:
+            - result (bool): if ko removes success, return True; Else, return False.
+            - symbol_name (str): the symbol name of ko.
+    """
+    result = False
+    symbol_name = ""
+    # workaround for the dev_base does not clear the send cmd probability when executing write cmd
+    parse_result = False
+    result = device.check_kernel_phase()
+    if result:
+        cmd = f'strings {ko_path} | grep "name="'
+        result = device.write(cmd)
+        if result:
+            while not parse_result:
+                result, line = device.read()
+                if result:
+                    if isinstance(line, bytes):
+                        line = line.decode('utf-8', errors='replace')
+                    line = line.strip()
+                    if cmd in line:
+                        continue
+                    parse_result = True
+                    if "name=" in line:
+                        symbol_name = line.split('=')[1]
+                    else:
+                        result = False
+    else:
+        logger.error("the device is not in kernel phase now")
+    # print(f"{result}: symbol_name[{symbol_name}], line:{line}")
+    return result, symbol_name
+
+def check_ko_insmod_status(device: object, ko_path):
+    """
+    Check if ko has been insmoded.
+    Args:
+        device (object): device handle
+        ko_path (str): the file path of ko
+    Returns:
+        result (bool): if ko has been insmoded, return True; Else, return False.
+    """
+    result = False
+    result = device.check_kernel_phase()
+    if result:
+        result, ko_name = _get_ko_symbol_name_from_path(device, ko_path)
+        if result:
+            cmd = f"lsmod | grep {ko_name} | wc -l"
+            result = device.write(cmd)
+            if result:
+                result, data = device.read()
+                if result and "0" in data:
+                    result = False
+    else:
+        logger.error("the device is not in kernel phase now")
+    return result
+
+def insmod_ko(device: object, ko_path, ko_param):
+    """
+    Insmod ko.
+    Args:
+        device (objecet): device handle
+        ko_path (str): the file path of ko
+        ko_param (str): the insmod param of ko
+    Returns:
+        result (bool): if ko has been insmoded or insmods success, return True;
+        Else, return False.
+    """
+    result = False
+    result = device.check_kernel_phase()
+    if result:
+        result = check_ko_insmod_status(device, ko_path)
+        if not result:
+            cmd_insmod_ko = f"insmod {ko_path} {ko_param}"
+            result = device.write(cmd_insmod_ko)
+            if result:
+                result = check_ko_insmod_status(device, ko_path)
+            else:
+                logger.error(f"write cmd:{cmd_insmod_ko} fail")
+    else:
+        logger.error("the device is not in kernel phase now")
+
+    if result:
+        logger.warning(f"insmod {ko_path} success")
+    else:
+        logger.error(f"insmod {ko_path} fail")
+    return result
+
+def rmmod_ko(device: object, ko_path):
+    """
+    Remove ko.
+    Args:
+        device (): device handle
+        ko_path (str): the file path of ko
+    Returns:
+        result (bool): if ko removes success, return True; Else, return False
+    """
+    result = False
+    result = device.check_kernel_phase()
+    if result:
+        result, ko_name = _get_ko_symbol_name_from_path(device, ko_path)
+        if result:
+            if check_ko_insmod_status(device, ko_path):
+                cmd_rmmod_ko = f"rmmod {ko_name}"
+                result = device.write(cmd_rmmod_ko)
+                if result:
+                    result = check_ko_insmod_status(device, ko_path)
+                    result = not result
+                else:
+                    logger.error(f"write cmd:{cmd_rmmod_ko} fail")
+            else:
+                result = True
+    else:
+        logger.error("the device is not in kernel phase now")
+
+    if result:
+        logger.warning(f"rmmod {ko_name} success")
+    else:
+        logger.error(f"rmmod {ko_name} fail")
+
     return result

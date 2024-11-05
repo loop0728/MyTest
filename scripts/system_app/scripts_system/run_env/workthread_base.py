@@ -4,6 +4,7 @@ import time
 import threading
 from suite.common.sysapp_common_logger import logger
 from run_env.thread_waitlock import SysappThreadWaitLock
+from cases.platform.casemaper_platform import SysappCaseMaperPlatform
 
 class SysappWorkThreadBase(threading.Thread):
     """ thread which can auto run sync thread case one by one """
@@ -40,13 +41,23 @@ class SysappWorkThreadBase(threading.Thread):
         return self.current_casename
 
     def solve_caselist(self):
+        """ solve_caselist """
+        return self.solve_caselist_by_stage(0xff)
+
+    def solve_caselist_by_stage(self, stage):
         """
         read castlist.txt, record every case to list, return list length
         """
         try:
             with open(self.caselist_path, "r") as file:
                 lines = file.readlines()
-                self.cleaned_lines = [line.strip() for line in lines]
+                tmplines = [line.strip() for line in lines]
+                if stage == 0xff:
+                    self.cleaned_lines = tmplines
+                else:
+                    casemaper = SysappCaseMaperPlatform()
+                    stagesupportcases = casemaper.get_cases_from_stage(stage)
+                    self.cleaned_lines = casemaper.find_matching_files(tmplines, stagesupportcases)
                 logger.warning(f"total case:{self.cleaned_lines}")
                 return len(self.cleaned_lines)
         except FileNotFoundError:

@@ -29,6 +29,7 @@ class SysappBspMidBase:
         """ test function for module_loading. """
         pass
 
+
     @staticmethod
     @sysapp_print.print_definition_info
     def reboot(args):

@@ -234,6 +234,42 @@ check_env()
     fi
 }
 
+CheckConfigExsit() {
+    # Check if the Config is set
+    # $1: which config. KERNEL_CONFIG RTOS_CONFIG PROJECT_DEFCONFIG UBOOT_CONFIG
+    # $2: CONFIG_XXX
+
+    config_dir="./cases/platform/config"
+    file_find=0
+    current_config=""
+    for file in $(find $config_dir -type f); do
+        config_name=$(basename "$file")
+        if [[ "$1" == "$config_name" ]]; then
+            current_config=$file
+            file_find=1
+            break
+        fi
+    done
+
+    if [ "$file_find" -eq 0 ]; then
+        echo "NONE"
+        return 255
+    fi
+
+    if grep -qw "$2" $current_config; then
+        result=$(grep -w "$2" "$current_config")
+        if [[ $result == \#* ]]; then
+            echo "NONE"
+            return 255
+        else
+            echo  $(echo "$result" | sed 's/.*= *//')
+            return 0
+        fi
+    else
+        echo "NONE"
+        return 255
+    fi
+}
 
 check_env
 run_case_help=case_help

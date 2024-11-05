@@ -11,7 +11,7 @@ class SysappMixerThread(SysappWorkThreadBase):
         self.telnet_handle = telnet_handle
         self.caselist_path = (f"{platform.PLATFORM_LOCAL_MOUNT_PATH}"
                               "/out/caselist.txt")
-        cmd = ("find /mnt/scripts/pipeline_iford/ -path */external "
+        cmd = (f"find /mnt/scripts/pipeline_{platform.CHIP_NAME}/ -path */external "
                "-prune -o  -name \"*.json\" -not -path \"*dualos*\" -not"
                " -name \"*earlyinit*\" -print "
                "> /mnt/out/caselist.txt")
@@ -20,7 +20,7 @@ class SysappMixerThread(SysappWorkThreadBase):
     def dealwith_threadloop_job_first(self, casename, loopcnt):
         """ dealwith_threadloop_job_first """
         logger.warning(f"we will run {casename}{loopcnt}")
-        cmd = f"cd /mnt/scripts/pipeline_iford; ./preview -r {casename}"
+        cmd = f"cd /mnt/scripts/pipeline_{platform.CHIP_NAME}; ./preview -r {casename}"
         time.sleep(1)
         logger.warning(f"run {cmd}")
         self.telnet_handle.write(cmd)

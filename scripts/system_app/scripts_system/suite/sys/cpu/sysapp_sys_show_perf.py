@@ -58,7 +58,7 @@ class SysappSysShowPerf(CaseBase):
         else:
             workthread = PtreeThread(self.uart)
         time.sleep(3)
-        casecnt = workthread.solve_caselist()
+        casecnt = workthread.solve_caselist_by_stage(self.case_stage)
         time.sleep(3)
         if casecnt == 0:
             logger.warning("workthread case error!")

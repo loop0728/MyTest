@@ -43,6 +43,9 @@ class SysappUtDeviceOpts(CaseBase):
         if not result:
             return result
 
+        result = SysappDeviceOpts.is_trimed_ic(self.uart)
+        logger.warning(f"uboot test:Is the chip trimed? [{result}]")
+
         logger.info("test get package type at uboot phase ...")
         package_type = SysappDeviceOpts.get_package_type(self.uart)
         logger.warning(f"The package type is {package_type.name}")
@@ -52,7 +55,7 @@ class SysappUtDeviceOpts(CaseBase):
         logger.warning(f"The bootstrap type is {bootstrap_type.name}")
 
         logger.info("test get partitions at uboot phase ...")
-        result, partition_list = SysappDeviceOpts.get_mtdparts(self.uart)
+        result, partition_list = SysappDeviceOpts.get_partition_list(self.uart)
         if result:
             logger.warning(f"get partitons: {partition_list}")
         else:
@@ -64,6 +67,9 @@ class SysappUtDeviceOpts(CaseBase):
         if not result:
             return result
 
+        result = SysappDeviceOpts.is_trimed_ic(self.uart)
+        logger.warning(f"kernel test:Is the chip trimed? [{result}]")
+
         package_type = SysappDeviceOpts.get_package_type(self.uart)
         logger.warning(f"The package type is {package_type.name}")
 
@@ -72,7 +78,7 @@ class SysappUtDeviceOpts(CaseBase):
         logger.warning(f"The bootstrap type is {bootstrap_type.name}")
 
         logger.info("test get partitions at kernel phase ...")
-        result, partition_list = SysappDeviceOpts.get_mtdparts(self.uart)
+        result, partition_list = SysappDeviceOpts.get_partition_list(self.uart)
         if result:
             logger.warning(f"get partitons: {partition_list}")
         else:

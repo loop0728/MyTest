@@ -4,6 +4,7 @@
 # -*- coding: utf-8 -*-
 
 from abc import ABC, abstractmethod
+import re
 import queue
 from datetime import datetime
 import threading
@@ -27,7 +28,7 @@ class SysappDevBase(ABC):
         self.name = name
         self.case_name = ""
         self.uboot_prompt = "SigmaStar #"
-        self.kernel_prompt = "/ #"
+        self.kernel_prompt_pattern = r"/\w* #"
         self.bootstage = SysappBootStage.E_BOOTSTAGE_UNKNOWN
 
         self._dev_info = {
@@ -74,10 +75,10 @@ class SysappDevBase(ABC):
                 curr_data = ""
                 while curr_line < 100:  # wait 100 lines
                     data_new = (
-                        self.read().decode("utf-8", errors="replace").strip(" \r\n")
+                        self.read().decode("utf-8", errors="replace").strip("\r\n")
                     )
                     curr_data += data_new
-                    if data in curr_data or "?" in curr_data:
+                    if data in curr_data:
                         result = True
                         break
                     curr_line += 1
@@ -100,6 +101,8 @@ class SysappDevBase(ABC):
         try:
             data = self._dev_info["tmp_data_queue"].get(timeout=wait_timeout - 0.5)
             data += terminator
+            self._dev_info["tmp_data_queue"].task_done()
+            #print(f"dev_base read: {data}")
             return data
         except queue.Empty:
             logger.warning(
@@ -174,7 +177,7 @@ class SysappDevBase(ABC):
                 )
                 if self.uboot_prompt in item:
                     self.bootstage = SysappBootStage.E_BOOTSTAGE_UBOOT
-                if self.kernel_prompt in item:
+                if re.search(self.kernel_prompt_pattern, item):
                     self.bootstage = SysappBootStage.E_BOOTSTAGE_KERNEL
                 now = datetime.now()
                 formatted_time = now.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]

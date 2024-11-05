@@ -70,7 +70,7 @@ class SysappDevSocket(SysappDevBase):
         Returns:
             bool: result
         """
-        self.queue_clear(self._dev_info['tmp_data_queue'])
+        self.queue_clear("tmp_data_queue")
         if self._dev_info['conn']:
             self._dev_info['conn'].sendall(data.encode("utf-8") + b"\n")
             return True

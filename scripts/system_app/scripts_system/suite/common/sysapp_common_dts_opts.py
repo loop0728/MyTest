@@ -53,7 +53,7 @@ class SysappDtsOpts():
             return result
 
         # convert to dts
-        result = SysappUtils.run_server_cmd(cmd_convert_dts)
+        result, _ = SysappUtils.run_server_cmd(cmd_convert_dts)
         return result
 
     @classmethod

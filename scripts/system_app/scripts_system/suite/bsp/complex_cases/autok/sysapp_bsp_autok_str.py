@@ -34,6 +34,7 @@ class SysappBspAutokStr(CaseBase):
         self.case_run_cnt = case_run_cnt
         self.script_path = script_path
         self.uart = SysappClient(self.case_name, "uart", "uart")
+        self.autok_handle = AutokBase(self.uart)
         logger.info(f"{self.case_name} init successful")
 
     @sysapp_print.print_line_info
@@ -63,38 +64,39 @@ class SysappBspAutokStr(CaseBase):
         """
         err_code = EC.SUCCESS
         alarm_time = 3
-        autok_handle = AutokBase(self.uart)
-        ret = SysappRebootOpts.reboot_to_kernel(self.uart)
-        if ret is False:
-            logger.error("Go to kernel fail.")
-            err_code = EC.FAIL
-            return err_code
+        try:
+            ret = SysappRebootOpts.reboot_to_kernel(self.uart)
+            if ret is False:
+                logger.error("Go to kernel fail.")
+                err_code = EC.FAIL
+                return err_code
 
-        ret = autok_handle.set_kernelreg_autok_mode(
-            autok_handle.SysappOttMode.USE_DEFULT)
-        if ret is False:
-            logger.error("Not Run Autok")
-            err_code = EC.FAIL
-            return err_code
+            ret = self.autok_handle.set_kernelreg_autok_mode(
+                self.autok_handle.SysappOttMode.USE_DEFULT)
+            if ret is False:
+                logger.error("Not Run Autok")
+                err_code = EC.FAIL
+                return err_code
 
-        ret = autok_handle.run_scene_str(alarm_time)
-        if ret is False:
-            logger.error("Go to Uboot fail.")
-            err_code = EC.FAIL
-            return err_code
+            ret = self.autok_handle.run_scene_str(alarm_time)
+            if ret is False:
+                logger.error("Go to Uboot fail.")
+                err_code = EC.FAIL
+                return err_code
 
-        ret = autok_handle.judge_kernelreg_autok_mode(
-            autok_handle.SysappOttMode.RUN_AUTOK)
-        if ret is False:
-            logger.error("Not Run Autok")
+            ret = self.autok_handle.judge_kernelreg_autok_mode(
+                self.autok_handle.SysappOttMode.RUN_AUTOK)
+            if ret is False:
+                logger.error("Not Run Autok")
+                err_code = EC.FAIL
+                return err_code
+        except Exception as e:
+            logger.error(f"Exception occurred: {str(e)}")
             err_code = EC.FAIL
-            return err_code
-
-        ret = self.case_deinit()
-        if ret is False:
-            logger.error(f"{self.case_name} case_deinit fail.")
-            err_code = EC.FAIL
-            return err_code
+        finally:
+            ret = self.case_deinit()
+            if ret is False:
+                logger.error(f"{self.case_name} case_deinit fail.")
 
         return err_code
 
