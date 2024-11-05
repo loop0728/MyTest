@@ -178,8 +178,7 @@ class SysappServer:
         """Write to device."""
         device_name = msg["device_name"]
         data_to_write = msg["data"]
-        echo_check = msg["echo_check"]
-        result = self._dm.devices[device_name].write(data_to_write, echo_check)
+        result = self._dm.devices[device_name].write(data_to_write)
         self.response_msg_to_client(client, result)
 
     def read(self, client, msg):

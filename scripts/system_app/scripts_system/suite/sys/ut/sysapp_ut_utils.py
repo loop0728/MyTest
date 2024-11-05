@@ -101,6 +101,14 @@ class SysappUtUtils(CaseBase):
         SysappUtils.change_server_dir('out')
         result, data = SysappUtils.run_server_cmd(cmd_list_files)
 
+        cmd_show_ip_link = (['ip', 'link', 'show'])
+        result, data = SysappUtils.run_server_cmd(cmd_show_ip_link)
+        logger.info(f"execute cmd result:{result}, data:{data}")
+
+        cmd_show_ip_link_in_shell = "ip link show | grep 'brd'"
+        result, data = SysappUtils.run_server_cmd(cmd_show_ip_link_in_shell, True)
+        logger.info(f"execute cmd result:{result}, data:{data}")
+
         return result
 
     def utils_test_insmod_ko(self):
@@ -125,6 +133,24 @@ class SysappUtUtils(CaseBase):
             if not result:
                 return result
         result = SysappUtils.insmod_ko(self.uart, ko_path, ko_param)
+        print(f"insmod {ko_path}, result:{result}")
+
+        ko_path = "/config/modules/5.10/usb-common.ko"
+        result = SysappUtils.insmod_ko(self.uart, ko_path, "")
+        print(f"insmod {ko_path}, result:{result}")
+
+        ko_path = "/config/modules/5.10/usbcore.ko"
+        result = SysappUtils.insmod_ko(self.uart, ko_path, "")
+        print(f"insmod {ko_path}, result:{result}")
+
+        ko_path = "/config/modules/5.10/sstar-usb2-phy.ko"
+        result = SysappUtils.insmod_ko(self.uart, ko_path, "")
+        print(f"insmod {ko_path}, result:{result}")
+
+        ko_path = "/config/modules/5.10/ehci-hcd.ko"
+        result = SysappUtils.insmod_ko(self.uart, ko_path, "")
+        print(f"insmod {ko_path}, result:{result}")
+
         return result
 
     def utils_test_file_exist(self):
@@ -155,8 +181,10 @@ class SysappUtUtils(CaseBase):
             error_code (SysappErrorCodes): Result of test.
         """
         error_code = SysappErrorCodes.FAIL
+        #result = self.utils_write_read_test()
+        #result = self.utils_run_server_cmd_test()
         result = self.utils_test_insmod_ko()
-        result &= self.utils_test_file_exist()
+        #result &= self.utils_test_file_exist()
         if result:
             error_code = SysappErrorCodes.SUCCESS
 

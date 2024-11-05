@@ -228,7 +228,7 @@ class SysappBspSecurityBootManual(CaseBase):
         )
         if isinstance(ret, bool):
             if ret is True:
-                self.uart.write(data="ls", echo_check=False)
+                self.uart.write(data="ls")
                 ret = match_keyword(
                     self.uart, keyword="/ #", max_read_lines=1500, timeout=50
                 )

@@ -212,7 +212,7 @@ class SysappBspSecurityBootBase:
             while True:
                 _, data = self.uart.read(wait_timeout=int(timeout_seconds))
                 if any(log in data for log in except_log):
-                    self.uart.write(data=send_str, echo_check=False)
+                    self.uart.write(data=send_str)
                     break
             ret, data = match_keyword(
                 self.uart,
@@ -347,7 +347,6 @@ class SysappBspSecurityBootBase:
                     if "E:CD" in data:
                         self.uart.write(
                             data=send_str,
-                            echo_check=False,
                         )
                         break
 
@@ -425,7 +424,7 @@ class SysappBspSecurityBootBase:
         """
         ret = False
 
-        ret, partition_list = SysappDeviceOpts.get_mtdparts(self.uart)
+        ret, partition_list = SysappDeviceOpts.get_partition_list(self.uart)
         if ret:
             logger.debug(f"get partitons: {partition_list}")
         else:

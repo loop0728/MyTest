@@ -88,11 +88,13 @@ def change_server_dir(path):
         return False
     return True
 
-def run_server_cmd(cmd):
+def run_server_cmd(cmd, run_in_shell=False):
     """
     Run cmd on server.
     Args:
         cmd (str): command string
+        run_in_shell (bool): If run_in_shell is True, exec cmd by shell; Else, exec cmd by os.
+            run_in_shell is False defaultly.
     Returns:
         tuple:
             - result (bool): execute success, return True; else, return False
@@ -103,7 +105,7 @@ def run_server_cmd(cmd):
     logger.info(f"server run {cmd}")
     try:
         ret = subprocess.run(cmd, universal_newlines=True, stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE, check=True)
+                                stderr=subprocess.PIPE, shell=run_in_shell, check=True)
         logger.info(f"Command output: {ret.stdout}")
     except subprocess.CalledProcessError as error:
         logger.error(f'Command failed with return code: {error.returncode}')
